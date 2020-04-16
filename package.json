@@ -1,0 +1,253 @@
+{
+	"name": "cxvscode",
+	"displayName": "cxvscode",
+	"description": "vscode extension to enable scan/view on Checkmarx",
+	"version": "0.0.1",
+	"publisher": "ghannamz",
+	"repository": "",
+	"engines": {
+		"vscode": "^1.41.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onCommand:extension.CxVSCodeTree"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"configuration": {
+			"type": "object",
+			"title": "cxsettings",
+			"properties": {
+				"cx.server": {
+					"type": "object",
+					"default": {},
+					"properties": {
+						"url": {
+							"type": "string",
+							"description": "Cx Server URL"
+						},
+						"alias": {
+							"type": "string",
+							"description": "Cx Server Alias"
+						},
+						"username": {
+							"type": "string",
+							"description": "Cx Username"
+						},
+						"password": {
+							"type": "string",
+							"description": "Cx Password"
+						}
+					}
+				}
+			}
+		},
+		"views": {
+			"explorer": [
+				{
+					"id": "cxportalwin",
+					"name": "Cx Portal"
+				},
+				{
+					"id": "cxscanswin",
+					"name": "Cx Scan Results"
+				}
+			]
+		},
+		"commands": [
+			{
+				"command": "extension.CxVSCodeTree",
+				"title": "Checkmarx: Enable CxPortal"
+			},
+			{
+				"command": "cxportalwin.editCxServer",
+				"title": "Edit CxPortal Server",
+				"icon": {
+					"light": "resources/icons/light/edit.svg",
+					"dark": "resources/icons/dark/edit.svg"
+				}
+			},
+			{
+				"command": "cxportalwin.updateFolderExclusion",
+				"title": "Add/Modify Folder Exclusion",
+				"icon": {
+					"light": "resources/icons/light/exclude.svg",
+					"dark": "resources/icons/dark/exclude.svg"
+				}
+			},
+			{
+				"command": "cxportalwin.updateFileExtension",
+				"title": "Add/Modify File Extension",
+				"icon": {
+					"light": "resources/icons/light/gear.svg",
+					"dark": "resources/icons/dark/gear.svg"
+				}
+			},
+			{
+				"command": "cxportalwin.login",
+				"title": "Login",
+				"icon": {
+					"light": "resources/icons/light/start.svg",
+					"dark": "resources/icons/dark/start.svg"
+				}
+			},
+			{
+				"command": "cxportalwin.scanFile",
+				"title": "Scan File",
+				"icon": {
+					"light": "resources/icons/light/new-file.svg",
+					"dark": "resources/icons/dark/new-file.svg"
+				}
+			},
+			{
+				"command": "cxportalwin.scanFolder",
+				"title": "Scan Folder",
+				"icon": {
+					"light": "resources/icons/light/new-folder.svg",
+					"dark": "resources/icons/dark/new-folder.svg"
+				}
+			},
+			{
+				"command": "cxportalwin.bindProject",
+				"title": "Bind Project",
+				"icon": {
+					"light": "resources/icons/light/book.svg",
+					"dark": "resources/icons/dark/book.svg"
+				}
+			},
+			{
+				"command": "cxportalwin.unbindProject",
+				"title": "Unbind Project",
+				"icon": {
+					"light": "resources/icons/light/discard.svg",
+					"dark": "resources/icons/dark/discard.svg"
+				}
+			},
+			{
+				"command": "cxportalwin.seeScanResults",
+				"title": "See Scan Results",
+				"icon": {
+					"light": "resources/icons/light/search.svg",
+					"dark": "resources/icons/dark/search.svg"
+				}
+			},
+			{
+				"command": "cxscanswin.saveReport",
+				"title": "Save Report",
+				"icon": {
+					"light": "resources/icons/light/go-to-file.svg",
+					"dark": "resources/icons/dark/go-to-file.svg"
+				}
+			},
+			{
+				"command": "cxscanswin.seeQueryResults",
+				"title": "See Query Results",
+				"icon": {
+					"light": "resources/icons/light/search.svg",
+					"dark": "resources/icons/dark/search.svg"
+				}
+			},
+			{
+				"command": "cxscanswin.showQueryDescription",
+				"title": "Show Query Description",
+				"icon": {
+					"light": "resources/icons/light/file.svg",
+					"dark": "resources/icons/dark/file.svg"
+				}
+			}
+		],
+		"menus": {
+			"view/title": [
+				{
+					"command": "cxportalwin.editCxServer",
+					"when": "view == cxportalwin",
+					"group": "navigation"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "cxportalwin.updateFolderExclusion",
+					"when": "view == cxportalwin && viewItem == server_node",
+					"group": "inline"
+				},
+				{
+					"command": "cxportalwin.updateFileExtension",
+					"when": "view == cxportalwin && viewItem == server_node",
+					"group": "inline"
+				},
+				{
+					"command": "cxportalwin.login",
+					"when": "view == cxportalwin && viewItem == server_node",
+					"group": "inline"
+				},
+				{
+					"command": "cxportalwin.scanFile",
+					"when": "view == cxportalwin && viewItem == server_node",
+					"group": "inline"
+				},
+				{
+					"command": "cxportalwin.scanFolder",
+					"when": "view == cxportalwin && viewItem == server_node",
+					"group": "inline"
+				},
+				{
+					"command": "cxportalwin.bindProject",
+					"when": "view == cxportalwin && viewItem == server_node",
+					"group": "inline"
+				},
+				{
+					"command": "cxportalwin.unbindProject",
+					"when": "view == cxportalwin && viewItem == server_node",
+					"group": "inline"
+				},
+				{
+					"command": "cxportalwin.seeScanResults",
+					"when": "view == cxportalwin && viewItem == scan_node",
+					"group": "inline"
+				},
+				{
+					"command": "cxscanswin.saveReport",
+					"when": "view == cxscanswin && viewItem == scan_node",
+					"group": "inline"
+				},
+				{
+					"command": "cxscanswin.seeQueryResults",
+					"when": "view == cxscanswin && viewItem == query_node",
+					"group": "inline"
+				},
+				{
+					"command": "cxscanswin.showQueryDescription",
+					"when": "view == cxscanswin && viewItem == query_node",
+					"group": "inline"
+				}
+			]
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"pretest": "npm run compile",
+		"test": "node ./out/test/runTest.js"
+	},
+	"devDependencies": {
+		"@types/glob": "^7.1.1",
+		"@types/mocha": "^5.2.7",
+		"@types/node": "^12.11.7",
+		"@types/tmp": "^0.1.0",
+		"@types/vscode": "^1.41.0",
+		"@types/xml2js": "^0.4.5",
+		"glob": "^7.1.5",
+		"mocha": "^7.1.1",
+		"tslint": "^5.20.0",
+		"typescript": "^3.6.4",
+		"vscode-test": "^1.2.2"
+	},
+	"dependencies": {
+		"@checkmarx/cx-common-js-client": "file:../cx-common-js-client",
+		"form-data": "^3.0.0",
+		"tmp": "^0.1.0"
+	}
+}
