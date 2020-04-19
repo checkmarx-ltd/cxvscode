@@ -15,6 +15,8 @@ import { SastClient } from '../services/sastClient'
 
 export class ServerNode implements INode {
 
+    private username: string;
+    private password: string;
     public workspaceFolder: vscode.Uri | undefined;
     private httpClient: HttpClient | any;
     private scanedSources: Set<ScanNode>;
@@ -23,9 +25,11 @@ export class ServerNode implements INode {
     private fileExtension: string;
     private projectName: string;
     private teamPath: string;
+    private currentScanedSource: ScanNode | undefined;
 
-    constructor(private readonly sastUrl: string, private readonly alias: string, private readonly username: string,
-        private readonly password: string, private readonly log: Logger) {
+    constructor(private readonly sastUrl: string, private readonly alias: string, private readonly log: Logger) {
+        this.username = '';
+        this.password = '';
         const workspaceFolders = vscode.workspace.workspaceFolders;
         this.workspaceFolder = workspaceFolders ? workspaceFolders[0].uri : undefined;
         this.folderExclusion = "cvs, .svn, .hg, .git, .bzr, bin, obj, backup, .idea";
@@ -108,6 +112,12 @@ File extensions: ${formatOptionalString(config.fileExtension)}
 
     public async login() {
         try {
+            if (this.httpClient.accessToken) {
+                vscode.window.showInformationMessage('You are already logged in!');
+                return;
+            }
+            this.username = await Utility.showInputBox("Enter Cx Username", false);
+            this.password = await Utility.showInputBox("Enter Cx Password", true);
             await this.httpClient.login(this.username, this.password);
             this.log.info('Login successful');
             vscode.window.showInformationMessage('Login successful');
@@ -279,17 +289,47 @@ File extensions: ${formatOptionalString(config.fileExtension)}
         let found: boolean = false;
         for (const source of this.scanedSources) {
             if (this.isEquivalent(newSource, source)) {
+                this.currentScanedSource = source;
                 found = true;
                 break;
             }
         }
         if (!found) {
             this.scanedSources.add(newSource);
+            this.currentScanedSource = newSource;
+        }
+    }
+
+    public displayCurrentScanedSource() {
+        if (this.currentScanedSource) {
+            vscode.commands.executeCommand("cxportalwin.seeScanResults", this.currentScanedSource);
+        }
+    }
+
+    private async isProjectExists() {
+        const [teamsById, teamsByName] = await this.getAllTeams();
+        const encodedName = encodeURIComponent(this.projectName);
+        const path = `projects?projectname=${encodedName}&teamid=${teamsByName.get(this.teamPath)}`;
+        try {
+            const projects = await this.httpClient.getRequest(path, { suppressWarnings: true });
+            if (projects && projects.length) {
+                throw Error(`Project [${this.projectName}] already exists`);
+            }
+        } catch (err) {
+            const isExpectedError = err.response && err.response.notFound;
+            if (!isExpectedError) {
+                throw err;
+            }
         }
     }
 
     public async scan(projectNode: ProjectNode, isFolder: boolean, labelType: string) {
         try {
+            if (!this.httpClient.accessToken) {
+                throw Error('Access token expired. Please login.');
+            }
+
+            this.currentScanedSource = undefined;
             this.projectName = '';
             this.teamPath = '';
 
@@ -305,10 +345,15 @@ File extensions: ${formatOptionalString(config.fileExtension)}
             }
             else {
                 this.projectName = await Utility.showInputBox("Enter project name", false);
+                vscode.window.showInformationMessage('Chosen Project: ' + this.projectName);
+
                 this.teamPath = await this.chooseTeam();
                 if (!this.teamPath) {
                     return;
                 }
+
+                await this.isProjectExists();
+
                 presetName = await this.choosePreset();
                 if (!presetName) {
                     return;
@@ -319,8 +364,22 @@ File extensions: ${formatOptionalString(config.fileExtension)}
             if (!sourceLocation) {
                 return;
             }
+
             const isScanIncremental = await Utility.showInputBox("Is scan incremental? (y/n)", false);
+            const isIncremental: boolean = Utility.modeIsEnabled(isScanIncremental);
+            if (isIncremental) {
+                vscode.window.showInformationMessage('Scan is incremental');
+            } else {
+                vscode.window.showInformationMessage('Scan is not incremental');
+            }
+
             const isScanPublic = await Utility.showInputBox("Is scan public? (y/n)", false);
+            const isPublic: boolean = Utility.modeIsEnabled(isScanPublic);
+            if (isPublic) {
+                vscode.window.showInformationMessage('Scan is public');
+            } else {
+                vscode.window.showInformationMessage('Scan is private');
+            }
 
             const config: ScanConfig = {
                 serverUrl: this.sastUrl,
@@ -334,7 +393,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
                 denyProject: false,
                 folderExclusion: this.folderExclusion,
                 fileExtension: this.fileExtension,
-                isIncremental: Utility.modeIsEnabled(isScanIncremental),
+                isIncremental: isIncremental,
                 isSyncMode: false,
                 presetId,
                 presetName,
@@ -346,7 +405,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
                 mediumThreshold: undefined,
                 lowThreshold: undefined,
                 forceScan: false,
-                isPublic: Utility.modeIsEnabled(isScanPublic),
+                isPublic: isPublic,
                 cxOrigin: 'Visual Studio Code',
                 enableDependencyScan: false,
                 enableSastScan: true

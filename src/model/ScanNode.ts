@@ -118,7 +118,7 @@ Scan results location:  ${this.scanResult.sastScanResultsLink}
         try {
             const client = new ReportingClient(this.httpClient, this.log);
             vscode.window.showInformationMessage('Waiting for server to generate scan report');
-            const reportXml = await client.generateReport(this.scanId);
+            const reportXml = await client.generateReport(this.scanId, undefined);
             const doc = reportXml.CxXMLResults;
             this.scanResult.scanStart = doc.$.ScanStart;
             this.scanResult.scanTime = doc.$.ScanTime;
@@ -148,6 +148,15 @@ Scan results location:  ${this.scanResult.sastScanResultsLink}
 
     public async attachJsonReport() {
         const jsonReportPath = await Utility.showInputBox("Enter JSON report full path", false);
+        if (!path.isAbsolute(jsonReportPath)) {
+            vscode.window.showErrorMessage(`Path [${jsonReportPath}] is not absolute`);
+            return;
+        }
+        if (!jsonReportPath.endsWith('.json')) {
+            vscode.window.showErrorMessage('File name should ends with .json');
+            return;
+        }
+
         const reportJson = JSON.stringify(this.scanResult);
 
         this.log.info(`Writing report to ${jsonReportPath}`);

@@ -4,7 +4,7 @@
 	"description": "vscode extension to enable scan/view on Checkmarx",
 	"version": "0.0.1",
 	"publisher": "ghannamz",
-	"repository": "",
+	"repository": "https://github.com/checkmarx-ltd/cxvscode",
 	"engines": {
 		"vscode": "^1.41.0"
 	},
@@ -60,6 +60,14 @@
 			{
 				"command": "extension.CxVSCodeTree",
 				"title": "Checkmarx: Enable CxPortal"
+			},
+			{
+				"command": "cxportalwin.addCxServer",
+				"title": "Add CxPortal Server",
+				"icon": {
+					"light": "resources/icons/light/add.svg",
+					"dark": "resources/icons/dark/add.svg"
+				}
 			},
 			{
 				"command": "cxportalwin.editCxServer",
@@ -161,6 +169,11 @@
 		"menus": {
 			"view/title": [
 				{
+					"command": "cxportalwin.addCxServer",
+					"when": "view == cxportalwin",
+					"group": "navigation"
+				},
+				{
 					"command": "cxportalwin.editCxServer",
 					"when": "view == cxportalwin",
 					"group": "navigation"
@@ -246,7 +259,7 @@
 		"vscode-test": "^1.2.2"
 	},
 	"dependencies": {
-		"@checkmarx/cx-common-js-client": "file:../cx-common-js-client",
+		"@checkmarx/cx-common-js-client": "^0.1.14",
 		"form-data": "^3.0.0",
 		"tmp": "^0.1.0"
 	}
