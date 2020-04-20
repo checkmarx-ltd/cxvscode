@@ -1,10 +1,18 @@
 {
 	"name": "cxvscode",
-	"displayName": "cxvscode",
-	"description": "vscode extension to enable scan/view on Checkmarx",
-	"version": "0.0.1",
-	"publisher": "ghannamz",
-	"repository": "https://github.com/checkmarx-ltd/cxvscode",
+	"displayName": "CxCode",
+	"description": "VSCode extension to enable scan and view on Checkmarx",
+	"version": "2020.2.1",
+	"publisher": "Checkmarx",
+	"icon": "resources/icons/Checkmarx.png",
+	"license": "SEE LICENSE IN checkmarx-license-terms.md",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/checkmarx-ltd/cxvscode.git"
+	},
+	"author": {
+		"name": "ghannamz"
+	},
 	"engines": {
 		"vscode": "^1.41.0"
 	},
@@ -97,8 +105,8 @@
 				"command": "cxportalwin.login",
 				"title": "Login",
 				"icon": {
-					"light": "resources/icons/light/start.svg",
-					"dark": "resources/icons/dark/start.svg"
+					"light": "resources/icons/light/play.svg",
+					"dark": "resources/icons/dark/play.svg"
 				}
 			},
 			{

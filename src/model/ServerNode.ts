@@ -370,7 +370,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
             if (isIncremental) {
                 vscode.window.showInformationMessage('Scan is incremental');
             } else {
-                vscode.window.showInformationMessage('Scan is not incremental');
+                vscode.window.showInformationMessage('Scan is full');
             }
 
             const isScanPublic = await Utility.showInputBox("Is scan public? (y/n)", false);
