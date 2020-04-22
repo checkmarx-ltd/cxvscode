@@ -147,10 +147,8 @@ File extensions: ${formatOptionalString(config.fileExtension)}
 
         const projectList: any[] = await this.httpClient.getRequest('projects');
         if (projectList) {
-            const allTeams: any[] = await this.httpClient.getRequest('auth/teams');
-            const teams: Map<string, number> = new Map<string, number>();
-            allTeams.forEach(team => teams.set(team.fullName, team.id));
-            const project = projectList.find(project => project['name'] === this.projectName && project['teamId'] === teams.get(this.teamPath));
+            const teamsByName = await this.getTeamsByName();
+            const project = projectList.find(proj => proj['name'] === this.projectName && proj['teamId'] === teamsByName.get(this.teamPath));
             if (project) {
                 return project['id'];
             }
@@ -164,38 +162,34 @@ File extensions: ${formatOptionalString(config.fileExtension)}
     }
 
     private async choosePreset(): Promise<string> {
-        let chosenPreset: string | any;
         const allPresets: any[] = await this.httpClient.getRequest('sast/presets');
         const allPresetNames: string[] = allPresets.map(preset => preset.name);
 
-        await vscode.window.showQuickPick(allPresetNames, { placeHolder: 'Choose Preset Name' }).then((preset) => {
-            chosenPreset = preset;
-            if (chosenPreset) {
-                vscode.window.showInformationMessage('Chosen Preset: ' + chosenPreset);
-            }
+        return new Promise<string>(async (resolve) => {
+            await vscode.window.showQuickPick(allPresetNames, { placeHolder: 'Choose Preset Name' }).then((preset) => {
+                if (preset) {
+                    vscode.window.showInformationMessage('Chosen Preset: ' + preset);
+                    resolve(preset);
+                }
+            });
         });
-
-        return chosenPreset;
     }
 
     private async chooseTeam(): Promise<string> {
-        let chosenTeam: string | any;
         const allTeams: any[] = await this.httpClient.getRequest('auth/teams');
         const allTeamNames: string[] = allTeams.map(team => team.fullName);
 
-        await vscode.window.showQuickPick(allTeamNames, { placeHolder: 'Choose Team Path' }).then((team) => {
-            chosenTeam = team;
-            if (chosenTeam) {
-                vscode.window.showInformationMessage('Chosen Team: ' + chosenTeam);
-            }
+        return new Promise<string>(async (resolve) => {
+            await vscode.window.showQuickPick(allTeamNames, { placeHolder: 'Choose Team Path' }).then((team) => {
+                if (team) {
+                    vscode.window.showInformationMessage('Chosen Team: ' + team);
+                    resolve(team);
+                }
+            });
         });
-
-        return chosenTeam;
     }
 
-    private async selectSourceLocation(isFolder: boolean, labelType: string): Promise<string | any> {
-        let sourceLocation: string | any;
-
+    private async selectSourceLocation(isFolder: boolean, labelType: string): Promise<string> {
         const options: vscode.OpenDialogOptions = {
             defaultUri: this.workspaceFolder,
             openLabel: labelType,
@@ -204,14 +198,21 @@ File extensions: ${formatOptionalString(config.fileExtension)}
             canSelectMany: false
         };
 
-        await vscode.window.showOpenDialog(options).then((fileUri) => {
-            if (fileUri && fileUri[0]) {
-                sourceLocation = fileUri[0].fsPath;
-                vscode.window.showInformationMessage('Selected source for scan: ' + sourceLocation);
-            }
+        return new Promise<string>(async (resolve) => {
+            await vscode.window.showOpenDialog(options).then((fileUri) => {
+                if (fileUri && fileUri[0]) {
+                    vscode.window.showInformationMessage('Selected source: ' + fileUri[0].fsPath);
+                    resolve(fileUri[0].fsPath);
+                }
+            });
         });
+    }
 
-        return sourceLocation;
+    private async getTeamsByName(): Promise<Map<string, number>> {
+        const allTeams: any[] = await this.httpClient.getRequest('auth/teams');
+        const teamsByName: Map<string, number> = new Map<string, number>();
+        allTeams.forEach(team => teamsByName.set(team.fullName, team.id));
+        return teamsByName;
     }
 
     private async getAllTeams(): Promise<[Map<number, string>, Map<string, number>]> {
@@ -307,11 +308,11 @@ File extensions: ${formatOptionalString(config.fileExtension)}
     }
 
     private async isProjectExists() {
-        const [teamsById, teamsByName] = await this.getAllTeams();
+        const teamsByName = await this.getTeamsByName();
         const encodedName = encodeURIComponent(this.projectName);
-        const path = `projects?projectname=${encodedName}&teamid=${teamsByName.get(this.teamPath)}`;
+        const projectRestApi = `projects?projectname=${encodedName}&teamid=${teamsByName.get(this.teamPath)}`;
         try {
-            const projects = await this.httpClient.getRequest(path, { suppressWarnings: true });
+            const projects = await this.httpClient.getRequest(projectRestApi, { suppressWarnings: true });
             if (projects && projects.length) {
                 throw Error(`Project [${this.projectName}] already exists`);
             }
@@ -346,26 +347,14 @@ File extensions: ${formatOptionalString(config.fileExtension)}
             else {
                 this.projectName = await Utility.showInputBox("Enter project name", false);
                 vscode.window.showInformationMessage('Chosen Project: ' + this.projectName);
-
                 this.teamPath = await this.chooseTeam();
-                if (!this.teamPath) {
-                    return;
-                }
-
                 await this.isProjectExists();
-
                 presetName = await this.choosePreset();
-                if (!presetName) {
-                    return;
-                }
             }
 
-            const sourceLocation: string | any = await this.selectSourceLocation(isFolder, labelType);
-            if (!sourceLocation) {
-                return;
-            }
+            const sourceLocation: string = await this.selectSourceLocation(isFolder, labelType);
 
-            const isScanIncremental = await Utility.showInputBox("Is scan incremental? (y/n)", false);
+            const isScanIncremental = await Utility.showInputBox("Is scan incremental? (y/n)", false, "y");
             const isIncremental: boolean = Utility.modeIsEnabled(isScanIncremental);
             if (isIncremental) {
                 vscode.window.showInformationMessage('Scan is incremental');
@@ -373,12 +362,12 @@ File extensions: ${formatOptionalString(config.fileExtension)}
                 vscode.window.showInformationMessage('Scan is full');
             }
 
-            const isScanPublic = await Utility.showInputBox("Is scan public? (y/n)", false);
-            const isPublic: boolean = Utility.modeIsEnabled(isScanPublic);
-            if (isPublic) {
-                vscode.window.showInformationMessage('Scan is public');
-            } else {
+            const isScanPrivate = await Utility.showInputBox("Is scan private? (y/n)", false, "y");
+            const isPrivate: boolean = Utility.modeIsEnabled(isScanPrivate);
+            if (isPrivate) {
                 vscode.window.showInformationMessage('Scan is private');
+            } else {
+                vscode.window.showInformationMessage('Scan is public');
             }
 
             const config: ScanConfig = {
@@ -405,7 +394,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
                 mediumThreshold: undefined,
                 lowThreshold: undefined,
                 forceScan: false,
-                isPublic: isPublic,
+                isPublic: !isPrivate,
                 cxOrigin: 'Visual Studio Code',
                 enableDependencyScan: false,
                 enableSastScan: true

@@ -17,7 +17,9 @@ export class WebViews {
 	}
 
 	async createQueryDescriptionWebView(queryId: number) {
-		this.queryDescriptionPanel?.dispose();
+		if (this.queryDescriptionPanel) {
+			this.queryDescriptionPanel.dispose();
+		}
 
 		vscode.window.showInformationMessage('Loading the HTML content...');
 
@@ -37,7 +39,9 @@ export class WebViews {
 	}
 
 	queryResultClicked(query: any | undefined) {
-		this.resultTablePanel?.webview.postMessage(query);
+		if (this.resultTablePanel) {
+			this.resultTablePanel.webview.postMessage(query);
+		}
 	}
 
 	private createAttackVectorWebView(context: vscode.ExtensionContext) {
@@ -105,7 +109,9 @@ export class WebViews {
 						// Handle messages from the webview
 						this.resultTablePanel.webview.onDidReceiveMessage(
 							message => {
-								this.attackVectorPanel?.webview.postMessage(message.path);
+								if (this.attackVectorPanel) {
+									this.attackVectorPanel.webview.postMessage(message.path);
+								}
 							},
 							undefined,
 							context.subscriptions
@@ -137,9 +143,15 @@ export class WebViews {
 	}
 
 	destroyWebViews() {
-		this.attackVectorPanel?.dispose();
-		this.resultTablePanel?.dispose();
-		this.queryDescriptionPanel?.dispose();
+		if (this.attackVectorPanel) {
+			this.attackVectorPanel.dispose();
+		}
+		if (this.resultTablePanel) {
+			this.resultTablePanel.dispose();
+		}
+		if (this.queryDescriptionPanel) {
+			this.queryDescriptionPanel.dispose();
+		}
 	}
 
 	private isTextEditorVisible(node: any, fullSourcePath: string): boolean {

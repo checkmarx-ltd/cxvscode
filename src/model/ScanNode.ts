@@ -68,7 +68,13 @@ export class ScanNode implements INode {
             if (treeName === "CxTreeScans") {
                 (this.queries || []).forEach(query => {
                     let node = ScanNode.getExistingNodeBySeverity(query.$.Severity, severityNodes);
-                    node ? node.queries?.push(query) : severityNodes.push(new SeverityNode(query.$.Severity, [query], this));
+                    if (node) {
+                        if (node.queries) {
+                            node.queries.push(query);
+                        }
+                    } else {
+                        severityNodes.push(new SeverityNode(query.$.Severity, [query], this));
+                    }
                 });
             }
         } catch (err) {

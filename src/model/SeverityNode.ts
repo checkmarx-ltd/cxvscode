@@ -31,9 +31,11 @@ export class SeverityNode implements INode {
 
     public async getChildren(): Promise<INode[]> {
         const queryNodes: QueryNode[] = [];
-        this.queries?.map(query => {
-            queryNodes.push(new QueryNode(query, this));
-        });
+        if (this.queries) {
+            this.queries.forEach(query => {
+                queryNodes.push(new QueryNode(query, this));
+            });
+        }
         return queryNodes;
     }
 }

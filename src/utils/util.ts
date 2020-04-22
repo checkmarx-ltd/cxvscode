@@ -12,16 +12,18 @@ export class Utility {
         return false;
     }
 
-    public static async showInputBox(prompt: string, isPass: boolean, validate?: (value: string) => Promise<string | undefined>) {
-        return await new Promise<string>((resolve, reject) => {
-            const input = vscode.window.createInputBox();
-            input.prompt = prompt;
-            input.password = isPass;
-            input.onDidAccept(async () => {
-                const value = input.value;
-                resolve(value);
+    public static async showInputBox(prompt: string, isPassword: boolean, value?: string): Promise<string> {
+        const options: vscode.InputBoxOptions = {
+            prompt: prompt,
+            password: isPassword,
+            value: value
+        };
+        return new Promise<string>(async (resolve) => {
+            await vscode.window.showInputBox(options).then((input) => {
+                if (input) {
+                    resolve(input);
+                }
             });
-            input.show();
         });
     }
 }
