@@ -28,6 +28,6 @@ steps:
   displayName: 'generate VSCode extension'
 
 - script: |
-    vsce publish
+    vsce publish patch
   displayName: 'publish VSCode extension'
 
