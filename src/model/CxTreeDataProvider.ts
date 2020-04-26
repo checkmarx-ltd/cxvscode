@@ -14,7 +14,7 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     public readonly onDidChangeTreeData: vscode.Event<INode> = this._onDidChangeTreeData.event;
 
     private readonly log: Logger;
-    private serverNodes: INode[];
+    private serverNodes: ServerNode[];
 
     constructor() {
         this.log = new ConsoleLogger();
@@ -34,9 +34,12 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     // Edit Tree Item (Node)
     public async editTreeItem() {
         try {
-            if (this.serverNodes.length > 0) {
-                const cxServer = await CxSettings.setServer();
-                this.convertToNode(cxServer);
+            const cxServer = await CxSettings.getServer();
+            if (this.serverNodes.length > 0 && this.serverNodes[0].sastUrl === cxServer['url']) {
+                await CxSettings.setServer();
+                this.refresh();
+                vscode.window.showInformationMessage('Server node edited');
+            } else if (this.serverNodes.length > 0 && this.serverNodes[0].sastUrl !== cxServer['url']) {
                 this.refresh();
                 vscode.window.showInformationMessage('Server node edited');
             } else {
@@ -51,8 +54,7 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     public async addTreeItem() {
         try {
             if (this.serverNodes.length === 0) {
-                const cxServer = await CxSettings.setServer();
-                this.convertToNode(cxServer);
+                await CxSettings.setServer();
                 this.refresh();
                 vscode.window.showInformationMessage('New server node added');
             } else {
@@ -72,6 +74,10 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     // Get Children of Item (Nodes)
     public async getChildren(element?: INode): Promise<INode[]> {
         if (!element) {
+            const cxServer = await CxSettings.getServer();
+            if (cxServer) {
+                this.convertToNode(cxServer);
+            }
             return this.serverNodes;
         }
         return element.getChildren("CxTreeDataProvider");

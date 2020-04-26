@@ -6,7 +6,7 @@ export class CxSettings {
     }
 
     // Sets Cx Server saved on settings.json
-    public static async setServer(): Promise<any> {
+    public static async setServer() {
         let cxServer: any = {};
         let url: string = await Utility.showInputBox("Enter Cx Server URL", false);
 
@@ -18,7 +18,6 @@ export class CxSettings {
         const alias: string = await Utility.showInputBox("Enter Cx Server Alias", false);
         cxServer = { "url": url, "alias": alias };
         await vscode.workspace.getConfiguration().update("cx.server", cxServer);
-        return cxServer;
     }
 
     // Returns Cx Server saved on settings.json

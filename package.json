@@ -2,7 +2,7 @@
 	"name": "cxvscode",
 	"displayName": "CxCode",
 	"description": "VSCode extension to enable scan and view on Checkmarx",
-	"version": "2020.2.2",
+	"version": "2020.2.3",
 	"publisher": "Checkmarx",
 	"icon": "resources/icons/Checkmarx.png",
 	"license": "SEE LICENSE IN checkmarx-license-terms.md",
@@ -47,6 +47,10 @@
 						"password": {
 							"type": "string",
 							"description": "Cx Password"
+						},
+						"reportpath": {
+							"type": "string",
+							"description": "Report Path"
 						}
 					}
 				}
@@ -110,6 +114,14 @@
 				}
 			},
 			{
+				"command": "cxportalwin.logout",
+				"title": "Logout",
+				"icon": {
+					"light": "resources/icons/light/disconnect.svg",
+					"dark": "resources/icons/dark/disconnect.svg"
+				}
+			},
+			{
 				"command": "cxportalwin.scanFile",
 				"title": "Scan File",
 				"icon": {
@@ -142,8 +154,8 @@
 				}
 			},
 			{
-				"command": "cxportalwin.seeScanResults",
-				"title": "See Scan Results",
+				"command": "cxportalwin.retrieveScanResults",
+				"title": "Retrieve Scan Results",
 				"icon": {
 					"light": "resources/icons/light/search.svg",
 					"dark": "resources/icons/dark/search.svg"
@@ -204,6 +216,11 @@
 					"group": "inline"
 				},
 				{
+					"command": "cxportalwin.logout",
+					"when": "view == cxportalwin && viewItem == server_node",
+					"group": "inline"
+				},
+				{
 					"command": "cxportalwin.scanFile",
 					"when": "view == cxportalwin && viewItem == server_node",
 					"group": "inline"
@@ -224,7 +241,7 @@
 					"group": "inline"
 				},
 				{
-					"command": "cxportalwin.seeScanResults",
+					"command": "cxportalwin.retrieveScanResults",
 					"when": "view == cxportalwin && viewItem == scan_node",
 					"group": "inline"
 				},
@@ -267,7 +284,7 @@
 		"vscode-test": "^1.2.2"
 	},
 	"dependencies": {
-		"@checkmarx/cx-common-js-client": "^0.1.14",
+		"@checkmarx/cx-common-js-client": "^0.1.15",
 		"form-data": "^3.0.0",
 		"tmp": "^0.1.0"
 	}

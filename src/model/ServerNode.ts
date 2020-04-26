@@ -9,9 +9,10 @@ import { ScanConfig } from "@checkmarx/cx-common-js-client";
 import { TeamApiClient } from "@checkmarx/cx-common-js-client";
 import { HttpClient } from "@checkmarx/cx-common-js-client";
 import { ProjectNode } from "./ProjectNode";
-import { ScanNode } from "./ScanNode"
+import { ScanNode } from "./ScanNode";
 import { Utility } from "../utils/util";
-import { SastClient } from '../services/sastClient'
+import { SastClient } from '../services/sastClient';
+import { CxSettings } from "../services/CxSettings";
 
 export class ServerNode implements INode {
 
@@ -27,7 +28,7 @@ export class ServerNode implements INode {
     private teamPath: string;
     private currentScanedSource: ScanNode | undefined;
 
-    constructor(private readonly sastUrl: string, private readonly alias: string, private readonly log: Logger) {
+    constructor(public readonly sastUrl: string, private readonly alias: string, private readonly log: Logger) {
         this.username = '';
         this.password = '';
         const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -116,16 +117,40 @@ File extensions: ${formatOptionalString(config.fileExtension)}
                 vscode.window.showInformationMessage('You are already logged in!');
                 return;
             }
-            this.username = await Utility.showInputBox("Enter Cx Username", false);
-            this.password = await Utility.showInputBox("Enter Cx Password", true);
+            const cxServer = await CxSettings.getServer();
+            if (cxServer['username'] && cxServer['password']) {
+                this.username = cxServer['username'];
+                this.password = cxServer['password'];
+            } else {
+                this.username = await Utility.showInputBox("Enter Cx Username", false);
+                this.password = await Utility.showInputBox("Enter Cx Password", true);
+            }
             await this.httpClient.login(this.username, this.password);
             this.log.info('Login successful');
             vscode.window.showInformationMessage('Login successful');
+            if (!cxServer['username'] && !cxServer['password']) {
+                cxServer['username'] = this.username;
+                cxServer['password'] = this.password;
+                await vscode.workspace.getConfiguration().update("cx.server", cxServer);
+            }
         }
         catch (err) {
             this.log.error(err);
             vscode.window.showErrorMessage(err.message);
         }
+    }
+
+    public async logout() {
+        if (!this.httpClient.accessToken) {
+            vscode.window.showErrorMessage('You are not logged in.');
+            return;
+        }
+        this.httpClient.logout();
+        vscode.window.showInformationMessage('Logout successful');
+        const cxServer = await CxSettings.getServer();
+        cxServer['username'] = undefined;
+        cxServer['password'] = undefined;
+        await vscode.workspace.getConfiguration().update("cx.server", cxServer);
     }
 
     public getTreeItem(): vscode.TreeItem {
@@ -146,7 +171,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
         }
 
         const projectList: any[] = await this.httpClient.getRequest('projects');
-        if (projectList) {
+        if (projectList && projectList.length > 0) {
             const teamsByName = await this.getTeamsByName();
             const project = projectList.find(proj => proj['name'] === this.projectName && proj['teamId'] === teamsByName.get(this.teamPath));
             if (project) {
@@ -251,7 +276,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
         let chosenProject: vscode.QuickPickItem | undefined;
         try {
             const projectList: any[] = await this.httpClient.getRequest('projects');
-            if (projectList) {
+            if (projectList && projectList.length > 0) {
                 const [teamsById, teamsByName] = await this.getAllTeams();
                 chosenProject = await this.chooseProjectToBind(projectList, teamsById);
                 if (chosenProject) {
@@ -263,6 +288,8 @@ File extensions: ${formatOptionalString(config.fileExtension)}
                         chosenProjectNode = new ProjectNode(boundProject['id'], boundProject['teamId'], boundProject['name']);
                     }
                 }
+            } else {
+                vscode.window.showErrorMessage('There are no projects to bind.');
             }
         } catch (err) {
             this.log.error(err);
@@ -303,7 +330,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
 
     public displayCurrentScanedSource() {
         if (this.currentScanedSource) {
-            vscode.commands.executeCommand("cxportalwin.seeScanResults", this.currentScanedSource);
+            vscode.commands.executeCommand("cxportalwin.retrieveScanResults", this.currentScanedSource);
         }
     }
 

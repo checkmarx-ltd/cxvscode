@@ -17,14 +17,26 @@ export class WebViews {
 	}
 
 	async createQueryDescriptionWebView(queryId: number) {
+		if (!this.httpClient.accessToken) {
+			vscode.window.showErrorMessage('Access token expired. Please login.');
+			return;
+		}
+
 		if (this.queryDescriptionPanel) {
 			this.queryDescriptionPanel.dispose();
 		}
 
 		vscode.window.showInformationMessage('Loading the HTML content...');
 
-		let content: any = await this.httpClient.getRequest(`Queries/${queryId}/CxDescription`);
-		content += "</html>";
+		const codeBashing: any = await this.httpClient.getRequest(`Queries/${queryId}/AppSecCoachLessonsRequestData`);
+		const codeBashingLink: string = codeBashing.url + '?serviceProviderId=' + codeBashing.paramteres.serviceProviderId
+			+ '&utm_source=' + codeBashing.paramteres.utm_source
+			+ '&utm_campaign=' + codeBashing.paramteres.utm_campaign;
+
+		let content: string = await this.httpClient.getRequest(`Queries/${queryId}/CxDescription`);
+		content = content.replace("</body>", '');
+		content += `<br/><br/><a href="${codeBashingLink}" target="_blank">CodeBashing Link</a>`;
+		content += "</body></html>";
 
 		this.queryDescriptionPanel = vscode.window.createWebviewPanel(
 			'queryDescription',

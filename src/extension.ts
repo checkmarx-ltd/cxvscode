@@ -6,7 +6,7 @@ import { ScanNode } from './model/ScanNode';
 
 export function activate(context: vscode.ExtensionContext) {
 
-	const numOfContextSubsForCxPortalWin: number = 12;
+	const numOfContextSubsForCxPortalWin: number = 13;
 
 	let disposable = vscode.commands.registerCommand('extension.CxVSCodeTree', () => {
 		let currProjectToScan: ProjectNode | any;
@@ -32,6 +32,10 @@ export function activate(context: vscode.ExtensionContext) {
 			await serverNode.login();
 			cxTreeDataProvider.refresh(serverNode);
 		}));
+		context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.logout", async (serverNode: ServerNode) => {
+			await serverNode.logout();
+			cxTreeDataProvider.refresh(serverNode);
+		}));
 		context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.scanFile", async (serverNode: ServerNode) => {
 			await serverNode.scan(currProjectToScan, false, 'Open Source File');
 			cxTreeDataProvider.refresh(serverNode);
@@ -43,23 +47,30 @@ export function activate(context: vscode.ExtensionContext) {
 			serverNode.displayCurrentScanedSource();
 		}));
 		context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.bindProject", async (serverNode: ServerNode) => {
-			currProjectToScan = await serverNode.bindProject();
+			const chosenProject = await serverNode.bindProject();
+			if (chosenProject) {
+				currProjectToScan = chosenProject;
+			}
 		}));
 		context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.unbindProject", () => {
-			currProjectToScan = undefined;
-		}));
-		context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.seeScanResults", async (scanNode: ScanNode) => {
-			if (context.subscriptions.length > numOfContextSubsForCxPortalWin) {
-				for (let idx = numOfContextSubsForCxPortalWin; idx < context.subscriptions.length; idx++) {
-					context.subscriptions[idx].dispose();
-				}
-				context.subscriptions.splice(numOfContextSubsForCxPortalWin);
+			if (currProjectToScan) {
+				vscode.window.showInformationMessage(`Project [${currProjectToScan.name}] got unbound`);
+				currProjectToScan = undefined;
 			}
-
-			await scanNode.addStatisticsToScanResults();
-			scanNode.printStatistics();
-			await scanNode.addDetailedReportToScanResults();
-			await cxTreeDataProvider.createTreeScans(context, scanNode);
+		}));
+		context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.retrieveScanResults", async (scanNode: ScanNode) => {
+			if (scanNode.canRetrieveResults()) {
+				if (context.subscriptions.length > numOfContextSubsForCxPortalWin) {
+					for (let idx = numOfContextSubsForCxPortalWin; idx < context.subscriptions.length; idx++) {
+						context.subscriptions[idx].dispose();
+					}
+					context.subscriptions.splice(numOfContextSubsForCxPortalWin);
+				}
+				await scanNode.retrieveScanResults();
+				await cxTreeDataProvider.createTreeScans(context, scanNode);
+			} else {
+				vscode.window.showErrorMessage('Access token expired. Please login.');
+			}
 		}));
 
 		vscode.window.showInformationMessage('Checkmarx Extension Enabled!');

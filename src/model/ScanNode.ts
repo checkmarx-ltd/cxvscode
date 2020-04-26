@@ -89,7 +89,25 @@ export class ScanNode implements INode {
         return severityNodes;
     }
 
-    public async addStatisticsToScanResults() {
+    public canRetrieveResults(): boolean {
+        if (this.httpClient.accessToken) {
+            return true;
+        }
+        return false;
+    }
+
+    public async retrieveScanResults() {
+        try {
+            await this.addStatisticsToScanResults();
+            this.printStatistics();
+            await this.addDetailedReportToScanResults();
+        } catch (err) {
+            this.log.error(err);
+            vscode.window.showErrorMessage(err.message);
+        }
+    }
+
+    private async addStatisticsToScanResults() {
         const cxServer = await CxSettings.getServer();
         const statistics: any = await this.httpClient.getRequest(`sast/scans/${this.scanId}/resultsStatistics`);
 
@@ -108,7 +126,7 @@ export class ScanNode implements INode {
         this.scanResult.sastResultsReady = true;
     }
 
-    public printStatistics() {
+    private printStatistics() {
         this.log.info(`----------------------------Checkmarx Scan Results(CxSAST):-------------------------------
 High severity results: ${this.scanResult.highResults}
 Medium severity results: ${this.scanResult.mediumResults}
@@ -120,23 +138,18 @@ Scan results location:  ${this.scanResult.sastScanResultsLink}
 `);
     }
 
-    public async addDetailedReportToScanResults() {
-        try {
-            const client = new ReportingClient(this.httpClient, this.log);
-            vscode.window.showInformationMessage('Waiting for server to generate scan report');
-            const reportXml = await client.generateReport(this.scanId, undefined);
-            const doc = reportXml.CxXMLResults;
-            this.scanResult.scanStart = doc.$.ScanStart;
-            this.scanResult.scanTime = doc.$.ScanTime;
-            this.scanResult.locScanned = doc.$.LinesOfCodeScanned;
-            this.scanResult.filesScanned = doc.$.FilesScanned;
-            this.queries = doc.Query;
-            this.scanResult.queryList = ScanNode.toJsonQueries(doc.Query);
-            vscode.window.showInformationMessage('Scan report was generated successfully');
-        } catch (err) {
-            this.log.error(err);
-            vscode.window.showErrorMessage(err.message);
-        }
+    private async addDetailedReportToScanResults() {
+        const client = new ReportingClient(this.httpClient, this.log);
+        vscode.window.showInformationMessage('Waiting for server to generate scan report');
+        const reportXml = await client.generateReport(this.scanId, undefined);
+        const doc = reportXml.CxXMLResults;
+        this.scanResult.scanStart = doc.$.ScanStart;
+        this.scanResult.scanTime = doc.$.ScanTime;
+        this.scanResult.locScanned = doc.$.LinesOfCodeScanned;
+        this.scanResult.filesScanned = doc.$.FilesScanned;
+        this.queries = doc.Query;
+        this.scanResult.queryList = ScanNode.toJsonQueries(doc.Query);
+        vscode.window.showInformationMessage('Scan report was generated successfully');
     }
 
     private static toJsonQueries(queries: any[] | undefined) {
@@ -153,7 +166,8 @@ Scan results location:  ${this.scanResult.sastScanResultsLink}
     }
 
     public async attachJsonReport() {
-        const jsonReportPath = await Utility.showInputBox("Enter JSON report full path", false);
+        const cxServer = await CxSettings.getServer();
+        const jsonReportPath: string = await Utility.showInputBox("Enter JSON report full path", false, cxServer['reportpath']);
         if (!path.isAbsolute(jsonReportPath)) {
             vscode.window.showErrorMessage(`Path [${jsonReportPath}] is not absolute`);
             return;
@@ -179,5 +193,10 @@ Scan results location:  ${this.scanResult.sastScanResultsLink}
 
         this.log.info('Generated Checkmarx summary results.');
         vscode.window.showInformationMessage('Generated Checkmarx summary results.');
+
+        if (cxServer['reportpath'] !== jsonReportPath) {
+            cxServer['reportpath'] = jsonReportPath;
+            await vscode.workspace.getConfiguration().update("cx.server", cxServer);
+        }
     }
 }
