@@ -28,6 +28,8 @@ steps:
   displayName: 'generate VSCode extension'
 
 - script: |
-    vsce publish -p dhda4qt4ji5rkkeryt2kwxtvghae5e2sak6vrujlsubbvcdhq52a
+    vsce publish -p $VSCE_KEY
   displayName: 'publish VSCode extension'
+  env:
+    VSCE_KEY: $(vscekey)
 
