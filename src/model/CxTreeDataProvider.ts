@@ -16,8 +16,8 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     private readonly log: Logger;
     private serverNodes: ServerNode[];
 
-    constructor() {
-        this.log = new ConsoleLogger();
+    constructor(checkmarxOutput: vscode.OutputChannel) {
+        this.log = new ConsoleLogger(checkmarxOutput);
         this.serverNodes = [];
     }
 
