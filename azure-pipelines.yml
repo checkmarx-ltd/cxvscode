@@ -27,9 +27,9 @@ steps:
     vsce package
   displayName: 'generate VSCode extension'
 
-- script: |
-    vsce publish -p $VSCE_KEY
-  displayName: 'publish VSCode extension'
-  env:
-    VSCE_KEY: $(vscekey)
+# - script: |
+#     vsce publish -p $VSCE_KEY
+#   displayName: 'publish VSCode extension'
+#   env:
+#     VSCE_KEY: $(vscekey)
 

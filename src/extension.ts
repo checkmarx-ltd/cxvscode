@@ -5,6 +5,11 @@ import { ProjectNode } from './model/ProjectNode';
 import { ScanNode } from './model/ScanNode';
 
 export function activate(context: vscode.ExtensionContext) {
+	if (context && context.subscriptions && context.subscriptions.length > 0) {
+		context.subscriptions.forEach(item => item.dispose());
+		context.subscriptions.splice(0);
+	}
+
 	const numOfContextSubsForCxPortalWin: number = 13;
 	const checkmarxOutput: vscode.OutputChannel = vscode.window.createOutputChannel('Checkmarx');
 	context.subscriptions.push(checkmarxOutput);
