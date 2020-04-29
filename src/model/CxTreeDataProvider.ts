@@ -1,13 +1,13 @@
 import * as vscode from "vscode";
 import { INode } from "../interface/INode";
 import { ServerNode } from "./ServerNode";
-import { ScanNode } from './ScanNode'
+import { ScanNode } from './ScanNode';
 import { CxSettings } from "../services/CxSettings";
 import { Logger } from "@checkmarx/cx-common-js-client";
 import { ConsoleLogger } from "../services/consoleLogger";
-import { CxTreeScans } from './CxTreeScans'
-import { WebViews } from "../services/WebViews"
-import { QueryNode } from './QueryNode'
+import { CxTreeScans } from './CxTreeScans';
+import { WebViews } from "../services/WebViews";
+import { QueryNode } from './QueryNode';
 
 export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     public _onDidChangeTreeData: vscode.EventEmitter<INode> = new vscode.EventEmitter<INode>();
@@ -38,12 +38,12 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
             if (this.serverNodes.length > 0 && this.serverNodes[0].sastUrl === cxServer['url']) {
                 await CxSettings.setServer();
                 this.refresh();
-                vscode.window.showInformationMessage('Server node edited');
+                if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Server node edited'); }
             } else if (this.serverNodes.length > 0 && this.serverNodes[0].sastUrl !== cxServer['url']) {
                 this.refresh();
-                vscode.window.showInformationMessage('Server node edited');
+                if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Server node edited'); }
             } else {
-                vscode.window.showErrorMessage('Server node cannot be edited. It must be added first.');
+                if(!CxSettings.isQuiet()) { vscode.window.showErrorMessage('Server node cannot be edited. It must be added first.'); }
             }
         } catch (err) {
             this.log.error(err);

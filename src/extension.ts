@@ -3,6 +3,7 @@ import { CxTreeDataProvider } from "./model/CxTreeDataProvider";
 import { ServerNode } from './model/ServerNode';
 import { ProjectNode } from './model/ProjectNode';
 import { ScanNode } from './model/ScanNode';
+import { CxSettings } from "./services/CxSettings";
 
 export function activate(context: vscode.ExtensionContext) {
 	if (context && context.subscriptions && context.subscriptions.length > 0) {
@@ -77,7 +78,7 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showErrorMessage('Access token expired. Please login.');
 		}
 	}));
-	vscode.window.showInformationMessage('Checkmarx Extension Enabled!');
+	if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Checkmarx Extension Enabled!'); }
 }
 
 export function deactivate() { }

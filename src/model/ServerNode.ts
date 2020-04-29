@@ -127,7 +127,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
             }
             await this.httpClient.login(this.username, this.password);
             this.log.info('Login successful');
-            vscode.window.showInformationMessage('Login successful');
+            if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Login successful'); }
             if (!cxServer['username'] && !cxServer['password']) {
                 cxServer['username'] = this.username;
                 cxServer['password'] = this.password;
@@ -146,7 +146,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
             return;
         }
         this.httpClient.logout();
-        vscode.window.showInformationMessage('Logout successful');
+        if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Logout successful'); }
         const cxServer = await CxSettings.getServer();
         cxServer['username'] = undefined;
         cxServer['password'] = undefined;
@@ -193,7 +193,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
         return new Promise<string>(async (resolve) => {
             await vscode.window.showQuickPick(allPresetNames, { placeHolder: 'Choose Preset Name' }).then((preset) => {
                 if (preset) {
-                    vscode.window.showInformationMessage('Chosen Preset: ' + preset);
+                    if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Chosen Preset: ' + preset); }
                     resolve(preset);
                 }
             });
@@ -207,7 +207,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
         return new Promise<string>(async (resolve) => {
             await vscode.window.showQuickPick(allTeamNames, { placeHolder: 'Choose Team Path' }).then((team) => {
                 if (team) {
-                    vscode.window.showInformationMessage('Chosen Team: ' + team);
+                    if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Chosen Team: ' + team); }
                     resolve(team);
                 }
             });
@@ -226,7 +226,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
         return new Promise<string>(async (resolve) => {
             await vscode.window.showOpenDialog(options).then((fileUri) => {
                 if (fileUri && fileUri[0]) {
-                    vscode.window.showInformationMessage('Selected source: ' + fileUri[0].fsPath);
+                    if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Selected source: ' + fileUri[0].fsPath); }
                     resolve(fileUri[0].fsPath);
                 }
             });
@@ -280,7 +280,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
                 const [teamsById, teamsByName] = await this.getAllTeams();
                 chosenProject = await this.chooseProjectToBind(projectList, teamsById);
                 if (chosenProject) {
-                    vscode.window.showInformationMessage('Chosen: ' + chosenProject.label + ', ' + chosenProject.detail);
+                    if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Chosen: ' + chosenProject.label + ', ' + chosenProject.detail); }
                     chosenProject.label = chosenProject.label.replace("project: ", '');
                     chosenProject.detail = chosenProject.detail?.replace("team: ", '');
                     const boundProject: any = projectList.find(project => project['name'] === chosenProject?.label && project['teamId'] === teamsByName.get(chosenProject?.detail || ''));
@@ -289,7 +289,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
                     }
                 }
             } else {
-                vscode.window.showErrorMessage('There are no projects to bind.');
+                vscode.window.showErrorMessage('There are no projects to bind to.');
             }
         } catch (err) {
             this.log.error(err);
@@ -313,7 +313,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
     }
 
     private addSource(sourceLocation: string, scanId: number, projectId: number, isFolder: boolean) {
-        const newSource: ScanNode = new ScanNode(scanId, projectId, sourceLocation, isFolder, this.httpClient, this.log, this)
+        const newSource: ScanNode = new ScanNode(scanId, projectId, sourceLocation, isFolder, this.httpClient, this.log, this);
         let found: boolean = false;
         for (const source of this.scanedSources) {
             if (this.isEquivalent(newSource, source)) {
@@ -373,7 +373,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
             }
             else {
                 this.projectName = await Utility.showInputBox("Enter project name", false);
-                vscode.window.showInformationMessage('Chosen Project: ' + this.projectName);
+                if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Chosen Project: ' + this.projectName); }
                 this.teamPath = await this.chooseTeam();
                 await this.isProjectExists();
                 presetName = await this.choosePreset();
@@ -383,18 +383,22 @@ File extensions: ${formatOptionalString(config.fileExtension)}
 
             const isScanIncremental = await Utility.showInputBox("Is scan incremental? (y/n)", false, "y");
             const isIncremental: boolean = Utility.modeIsEnabled(isScanIncremental);
-            if (isIncremental) {
-                vscode.window.showInformationMessage('Scan is incremental');
-            } else {
-                vscode.window.showInformationMessage('Scan is full');
+            if(!CxSettings.isQuiet()) {
+                if (isIncremental) {
+                    vscode.window.showInformationMessage('Scan is incremental');
+                } else {
+                    vscode.window.showInformationMessage('Scan is full');
+                }
             }
 
             const isScanPrivate = await Utility.showInputBox("Is scan private? (y/n)", false, "y");
             const isPrivate: boolean = Utility.modeIsEnabled(isScanPrivate);
-            if (isPrivate) {
-                vscode.window.showInformationMessage('Scan is private');
-            } else {
-                vscode.window.showInformationMessage('Scan is public');
+            if(!CxSettings.isQuiet()) {
+                if (isPrivate) {
+                    vscode.window.showInformationMessage('Scan is private');
+                } else {
+                    vscode.window.showInformationMessage('Scan is public');
+                }
             }
 
             const config: ScanConfig = {

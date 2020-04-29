@@ -2,8 +2,8 @@
 	"name": "cxvscode",
 	"displayName": "CxCode",
 	"description": "VSCode extension to enable scan and view on Checkmarx",
-	"version": "2020.2.6",
-	"publisher": "ghannamz",
+	"version": "2020.2.6-QUIET",
+	"publisher": "Checkmarx",
 	"icon": "resources/icons/Checkmarx.png",
 	"license": "SEE LICENSE IN checkmarx-license-terms.md",
 	"repository": {
