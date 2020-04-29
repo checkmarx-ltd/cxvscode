@@ -1,14 +1,14 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { INode } from "../interface/INode";
-import { ServerNode } from './ServerNode'
+import { ServerNode } from './ServerNode';
 import { HttpClient } from "@checkmarx/cx-common-js-client";
 import { CxSettings } from "../services/CxSettings";
 import { ScanResults } from "@checkmarx/cx-common-js-client";
 import { Logger } from "@checkmarx/cx-common-js-client";
 import { ReportingClient } from "@checkmarx/cx-common-js-client";
 import { Utility } from "../utils/util";
-import { SeverityNode } from './SeverityNode'
+import { SeverityNode } from './SeverityNode';
 import * as fs from "fs";
 import * as url from "url";
 
@@ -30,7 +30,7 @@ export class ScanNode implements INode {
         if (result.includes(workspace)) {
             result = result.replace(workspace, '');
             if (result.length === 0) {
-                result = "TheEntireProject";
+                result = "Workspace";
             }
             if (result.startsWith(path.sep)) {
                 result = result.replace(path.sep, '');

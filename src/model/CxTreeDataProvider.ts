@@ -1,13 +1,13 @@
 import * as vscode from "vscode";
 import { INode } from "../interface/INode";
 import { ServerNode } from "./ServerNode";
-import { ScanNode } from './ScanNode'
+import { ScanNode } from './ScanNode';
 import { CxSettings } from "../services/CxSettings";
 import { Logger } from "@checkmarx/cx-common-js-client";
 import { ConsoleLogger } from "../services/consoleLogger";
-import { CxTreeScans } from './CxTreeScans'
-import { WebViews } from "../services/WebViews"
-import { QueryNode } from './QueryNode'
+import { CxTreeScans } from './CxTreeScans';
+import { WebViews } from "../services/WebViews";
+import { QueryNode } from './QueryNode';
 
 export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     public _onDidChangeTreeData: vscode.EventEmitter<INode> = new vscode.EventEmitter<INode>();
@@ -103,5 +103,9 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
         context.subscriptions.push(vscode.commands.registerCommand("cxscanswin.showQueryDescription", async (queryNode: QueryNode) => {
             await WebViews.webViews.createQueryDescriptionWebView(queryNode.query?.$.id);
         }));
+    }
+
+    public getCurrentServerNode() {
+        return this.serverNodes[0] as ServerNode;
     }
 }

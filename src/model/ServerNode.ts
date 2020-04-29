@@ -313,7 +313,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
     }
 
     private addSource(sourceLocation: string, scanId: number, projectId: number, isFolder: boolean) {
-        const newSource: ScanNode = new ScanNode(scanId, projectId, sourceLocation, isFolder, this.httpClient, this.log, this)
+        const newSource: ScanNode = new ScanNode(scanId, projectId, sourceLocation, isFolder, this.httpClient, this.log, this);
         let found: boolean = false;
         for (const source of this.scanedSources) {
             if (this.isEquivalent(newSource, source)) {
@@ -351,7 +351,12 @@ File extensions: ${formatOptionalString(config.fileExtension)}
         }
     }
 
-    public async scan(projectNode: ProjectNode, isFolder: boolean, labelType: string) {
+    /**
+     * @param projectNode  CxSAST project, or undefined if this workspace not yet bound to a project
+     * @param isFolder True if scanning a folder; false if scanning a single file
+     * @param scanPath Path to a file or a folder to be scanned; empty string will prompt user to select 
+     */
+    public async scan(projectNode: ProjectNode, isFolder: boolean, scanPath: string) {
         try {
             if (!this.httpClient.accessToken) {
                 throw Error('Access token expired. Please login.');
@@ -379,9 +384,17 @@ File extensions: ${formatOptionalString(config.fileExtension)}
                 presetName = await this.choosePreset();
             }
 
-            const sourceLocation: string = await this.selectSourceLocation(isFolder, labelType);
+            // get the source location; if scanPath is empty, prompt user to select
+            let sourceLocation: string;
+            if(!scanPath || scanPath.length === 0) {
+                const labelType : string = (isFolder) ? 'Select Folder to scan' : 'Select File to scan';
+                sourceLocation = await this.selectSourceLocation(isFolder, labelType);
+            }
+            else {
+                sourceLocation = scanPath;
+            }
 
-            const isScanIncremental = await Utility.showInputBox("Is scan incremental? (y/n)", false, "y");
+            const isScanIncremental = await Utility.showPickString("Is scan incremental?", ['Yes', 'No']);
             const isIncremental: boolean = Utility.modeIsEnabled(isScanIncremental);
             if (isIncremental) {
                 vscode.window.showInformationMessage('Scan is incremental');
@@ -389,7 +402,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
                 vscode.window.showInformationMessage('Scan is full');
             }
 
-            const isScanPrivate = await Utility.showInputBox("Is scan private? (y/n)", false, "y");
+            const isScanPrivate = await Utility.showPickString("Is scan private?", ['Yes', 'No']);
             const isPrivate: boolean = Utility.modeIsEnabled(isScanPrivate);
             if (isPrivate) {
                 vscode.window.showInformationMessage('Scan is private');
