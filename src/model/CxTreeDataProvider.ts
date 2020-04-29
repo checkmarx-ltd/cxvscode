@@ -38,12 +38,12 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
             if (this.serverNodes.length > 0 && this.serverNodes[0].sastUrl === cxServer['url']) {
                 await CxSettings.setServer();
                 this.refresh();
-                vscode.window.showInformationMessage('Server node edited');
+                if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Server node edited'); }
             } else if (this.serverNodes.length > 0 && this.serverNodes[0].sastUrl !== cxServer['url']) {
                 this.refresh();
-                vscode.window.showInformationMessage('Server node edited');
+                if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Server node edited'); }
             } else {
-                vscode.window.showErrorMessage('Server node cannot be edited. It must be added first.');
+                if(!CxSettings.isQuiet()) { vscode.window.showErrorMessage('Server node cannot be edited. It must be added first.'); }
             }
         } catch (err) {
             this.log.error(err);

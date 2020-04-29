@@ -5,6 +5,7 @@ import { ScanStage } from "@checkmarx/cx-common-js-client";
 import { Waiter } from "@checkmarx/cx-common-js-client";
 import { Logger } from "@checkmarx/cx-common-js-client";
 import { PollingSettings } from "@checkmarx/cx-common-js-client";
+import { CxSettings } from "../services/CxSettings";
 
 export class SastClient {
     private static readonly POLLING_INTERVAL_IN_SECONDS = 10;
@@ -19,7 +20,7 @@ export class SastClient {
 
     async waitForScanToFinish() {
         this.log.info('Waiting for CxSAST scan to finish.');
-        vscode.window.showInformationMessage('Waiting for CxSAST scan to finish.');
+        if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Waiting for CxSAST scan to finish.'); }
 
         const polling: PollingSettings = {
             masterTimeoutMinutes: this.scanTimeoutInMinutes,
@@ -39,7 +40,7 @@ export class SastClient {
 
         if (SastClient.isFinishedSuccessfully(lastStatus)) {
             this.log.info('SAST scan finished successfully.');
-            vscode.window.showInformationMessage('SAST scan finished successfully.');
+            if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('SAST scan finished successfully.'); }
         } else {
             SastClient.throwScanError(lastStatus);
         }
@@ -70,7 +71,7 @@ export class SastClient {
     private logWaitingProgress = (scanStatus: ScanStatus) => {
         const stage = scanStatus && scanStatus.stage ? scanStatus.stage.value : 'n/a';
         this.log.info(`Waiting for SAST scan results. ${scanStatus.totalPercent}% processed. Status: ${stage}.`);
-        vscode.window.showInformationMessage(`Waiting for SAST scan results. ${scanStatus.totalPercent}% processed. Status: ${stage}.`);
+        if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage(`Waiting for SAST scan results. ${scanStatus.totalPercent}% processed. Status: ${stage}.`); }
     }
 
     private static isFinishedSuccessfully(status: ScanStatus) {

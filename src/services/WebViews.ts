@@ -26,7 +26,7 @@ export class WebViews {
 			this.queryDescriptionPanel.dispose();
 		}
 
-		vscode.window.showInformationMessage('Loading the HTML content...');
+		this.log.info('Loading the HTML content...');
 
 		const codeBashing: any = await this.httpClient.getRequest(`Queries/${queryId}/AppSecCoachLessonsRequestData`);
 		const codeBashingLink: string = codeBashing.url + '?serviceProviderId=' + codeBashing.paramteres.serviceProviderId
@@ -151,7 +151,7 @@ export class WebViews {
 			]
 		});
 		this.createAttackVectorWebView(context);
-		this.createResultTableWebView(context)
+		this.createResultTableWebView(context);
 	}
 
 	destroyWebViews() {
