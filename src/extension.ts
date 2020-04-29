@@ -6,7 +6,7 @@ import { ScanNode } from './model/ScanNode';
 
 export function activate(context: vscode.ExtensionContext) {
 	if (context && context.subscriptions && context.subscriptions.length > 0) {
-		context.subscriptions.forEach(item => item.dispose());
+		context.subscriptions.forEach((item: { dispose: () => any; }) => item.dispose());
 		context.subscriptions.splice(0);
 	}
 
@@ -42,14 +42,38 @@ export function activate(context: vscode.ExtensionContext) {
 		cxTreeDataProvider.refresh(serverNode);
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.scanFile", async (serverNode: ServerNode) => {
-		await serverNode.scan(currProjectToScan, false, 'Open Source File');
+		await serverNode.scan(currProjectToScan, false, '');
 		cxTreeDataProvider.refresh(serverNode);
 		serverNode.displayCurrentScanedSource();
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.scanFolder", async (serverNode: ServerNode) => {
-		await serverNode.scan(currProjectToScan, true, 'Open Source Folder');
+		await serverNode.scan(currProjectToScan, true, '');
 		cxTreeDataProvider.refresh(serverNode);
 		serverNode.displayCurrentScanedSource();
+	}));
+	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanFile", async (uri:vscode.Uri) => {
+		let cxServerNode = cxTreeDataProvider.getCurrentServerNode();
+		if(cxServerNode) {
+			await cxServerNode.scan(currProjectToScan, false, uri.fsPath);
+			cxTreeDataProvider.refresh(cxServerNode);
+			cxServerNode.displayCurrentScanedSource();
+		}
+	}));
+	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanFolder", async (uri:vscode.Uri) => {
+		let cxServerNode = cxTreeDataProvider.getCurrentServerNode();
+		if(cxServerNode) {
+			await cxServerNode.scan(currProjectToScan, true, uri.fsPath);
+			cxTreeDataProvider.refresh(cxServerNode);
+			cxServerNode.displayCurrentScanedSource();
+		}
+	}));
+	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanWorkspace", async () => {
+		let cxServerNode = cxTreeDataProvider.getCurrentServerNode();
+		if(cxServerNode && vscode.workspace.rootPath) {
+			await cxServerNode.scan(currProjectToScan, true, vscode.workspace.rootPath);
+			cxTreeDataProvider.refresh(cxServerNode);
+			cxServerNode.displayCurrentScanedSource();
+		}
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.bindProject", async (serverNode: ServerNode) => {
 		const chosenProject = await serverNode.bindProject();
