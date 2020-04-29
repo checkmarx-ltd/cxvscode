@@ -65,13 +65,13 @@ export class SastClient {
                     }
                 });
         });
-    };
+    }
 
     private logWaitingProgress = (scanStatus: ScanStatus) => {
         const stage = scanStatus && scanStatus.stage ? scanStatus.stage.value : 'n/a';
         this.log.info(`Waiting for SAST scan results. ${scanStatus.totalPercent}% processed. Status: ${stage}.`);
         vscode.window.showInformationMessage(`Waiting for SAST scan results. ${scanStatus.totalPercent}% processed. Status: ${stage}.`);
-    };
+    }
 
     private static isFinishedSuccessfully(status: ScanStatus) {
         return status && status.stage &&

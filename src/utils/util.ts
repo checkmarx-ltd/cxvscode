@@ -27,6 +27,12 @@ export class Utility {
         });
     }
 
+    /**
+     * Gets user input from a list of options.  First option is always selected by default.
+     * @param prompt Prompt to display 
+     * @param items Array of srtings with options
+     * @returns Selected option as String
+     */
     public static async showPickString(prompt: string, items: string[]) : Promise<string> {
         const options: vscode.QuickPickOptions = {
             placeHolder: prompt,

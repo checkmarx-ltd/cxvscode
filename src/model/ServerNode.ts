@@ -387,7 +387,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
             // get the source location; if scanPath is empty, prompt user to select
             let sourceLocation: string;
             if(!scanPath || scanPath.length === 0) {
-                const labelType : string = (isFolder) ? 'Select Folder to scan' : 'Select File to scan';
+                const labelType : string = (isFolder) ? 'Scan Folder' : 'Scan File';
                 sourceLocation = await this.selectSourceLocation(isFolder, labelType);
             }
             else {

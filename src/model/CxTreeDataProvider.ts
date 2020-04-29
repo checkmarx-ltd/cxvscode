@@ -105,7 +105,16 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
         }));
     }
 
+    /**
+     * TODO: Change to return the currently selected ServerNode, once support for multiple servers is added.
+     * @returns Top ServerNode or undefined if none has been configured
+     */
     public getCurrentServerNode() {
-        return this.serverNodes[0] as ServerNode;
+        if(this.serverNodes && this.serverNodes.length > 0) {
+            return this.serverNodes[0] as ServerNode;
+        }
+        else {
+            return undefined;
+        }
     }
 }
