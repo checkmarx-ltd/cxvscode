@@ -2,7 +2,7 @@
 	"name": "cxvscode",
 	"displayName": "CxCode",
 	"description": "VSCode extension to enable scan and view on Checkmarx",
-	"version": "2020.2.6-QUIET",
+	"version": "2020.2.6-TS",
 	"publisher": "Checkmarx",
 	"icon": "resources/icons/Checkmarx.png",
 	"license": "SEE LICENSE IN checkmarx-license-terms.md",
@@ -134,6 +134,30 @@
 				}
 			},
 			{
+				"command": "Explorer.scanFile",
+				"title": "Scan Current File",
+				"icon": {
+					"light": "resources/icons/light/new-file.svg",
+					"dark": "resources/icons/dark/new-file.svg"
+				}
+			},
+			{
+				"command": "Explorer.scanFolder",
+				"title": "Scan Current Folder",
+				"icon": {
+					"light": "resources/icons/light/new-folder.svg",
+					"dark": "resources/icons/dark/new-folder.svg"
+				}
+			},
+			{
+				"command": "Explorer.scanWorkspace",
+				"title": "Scan Workspace",
+				"icon": {
+					"light": "resources/icons/light/new-folder.svg",
+					"dark": "resources/icons/dark/new-folder.svg"
+				}
+			},
+			{
 				"command": "cxportalwin.bindProject",
 				"title": "Bind Project",
 				"icon": {
@@ -255,6 +279,23 @@
 					"command": "cxscanswin.showQueryDescription",
 					"when": "view == cxscanswin && viewItem == query_node",
 					"group": "inline"
+				}
+			],
+			"explorer/context": [
+				{
+					"command": "Explorer.scanFolder",
+					"when": "explorerResourceIsFolder",
+					"group": "Cx"
+				},
+				{
+					"command": "Explorer.scanFile",
+					"when": "!explorerResourceIsFolder",
+					"group": "Cx"
+				},
+				{
+					"command": "Explorer.scanWorkspace",
+					"when": "workspaceFolderCount != 0",
+					"group": "Cx"
 				}
 			]
 		}

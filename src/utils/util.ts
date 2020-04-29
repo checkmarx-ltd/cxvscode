@@ -6,7 +6,7 @@ export class Utility {
     }
 
     public static modeIsEnabled(mode: string): boolean {
-        if (mode && mode.trim().toLowerCase() === "y") {
+        if (mode && mode.trim().toLowerCase().charAt(0) === 'y') {
             return true;
         }
         return false;
@@ -20,6 +20,26 @@ export class Utility {
         };
         return new Promise<string>(async (resolve) => {
             await vscode.window.showInputBox(options).then((input) => {
+                if (input) {
+                    resolve(input);
+                }
+            });
+        });
+    }
+
+    /**
+     * Gets user input from a list of options.  First option is always selected by default.
+     * @param prompt Prompt to display 
+     * @param items Array of srtings with options
+     * @returns Selected option as String
+     */
+    public static async showPickString(prompt: string, items: string[]) : Promise<string> {
+        const options: vscode.QuickPickOptions = {
+            placeHolder: prompt,
+            canPickMany: false
+          };
+        return new Promise<string>(async (resolve) => {
+            await vscode.window.showQuickPick(items, options).then((input) => {
                 if (input) {
                     resolve(input);
                 }

@@ -351,7 +351,12 @@ File extensions: ${formatOptionalString(config.fileExtension)}
         }
     }
 
-    public async scan(projectNode: ProjectNode, isFolder: boolean, labelType: string) {
+    /**
+     * @param projectNode  CxSAST project, or undefined if this workspace not yet bound to a project
+     * @param isFolder True if scanning a folder; false if scanning a single file
+     * @param scanPath Path to a file or a folder to be scanned; empty string will prompt user to select 
+     */
+    public async scan(projectNode: ProjectNode, isFolder: boolean, scanPath: string) {
         try {
             if (!this.httpClient.accessToken) {
                 throw Error('Access token expired. Please login.');
@@ -379,9 +384,17 @@ File extensions: ${formatOptionalString(config.fileExtension)}
                 presetName = await this.choosePreset();
             }
 
-            const sourceLocation: string = await this.selectSourceLocation(isFolder, labelType);
+            // get the source location; if scanPath is empty, prompt user to select
+            let sourceLocation: string;
+            if(!scanPath || scanPath.length === 0) {
+                const labelType : string = (isFolder) ? 'Scan Folder' : 'Scan File';
+                sourceLocation = await this.selectSourceLocation(isFolder, labelType);
+            }
+            else {
+                sourceLocation = scanPath;
+            }
 
-            const isScanIncremental = await Utility.showInputBox("Is scan incremental? (y/n)", false, "y");
+            const isScanIncremental = await Utility.showPickString("Is scan incremental?", ['Yes', 'No']);
             const isIncremental: boolean = Utility.modeIsEnabled(isScanIncremental);
             if(!CxSettings.isQuiet()) {
                 if (isIncremental) {
@@ -391,7 +404,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
                 }
             }
 
-            const isScanPrivate = await Utility.showInputBox("Is scan private? (y/n)", false, "y");
+            const isScanPrivate = await Utility.showPickString("Is scan private?", ['Yes', 'No']);
             const isPrivate: boolean = Utility.modeIsEnabled(isScanPrivate);
             if(!CxSettings.isQuiet()) {
                 if (isPrivate) {
