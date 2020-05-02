@@ -1,9 +1,9 @@
 {
 	"name": "cxvscode",
 	"displayName": "CxCode",
-	"description": "VSCode extension to enable scan and view on Checkmarx",
-	"version": "2020.2.6",
-	"publisher": "ghannamz",
+	"description": "CxCode is an IDE extension that enables scanning/retrieving results on/from Checkmarx CxSAST",
+	"version": "2020.2.1-BETA",
+	"publisher": "Checkmarx",
 	"icon": "resources/icons/Checkmarx.png",
 	"license": "SEE LICENSE IN checkmarx-license-terms.md",
 	"repository": {
@@ -30,7 +30,7 @@
 			"properties": {
 				"cx.server": {
 					"type": "object",
-					"default": {},
+					"description": "Cx Settings",
 					"properties": {
 						"url": {
 							"type": "string",
@@ -119,7 +119,7 @@
 			},
 			{
 				"command": "cxportalwin.scanFile",
-				"title": "Scan File",
+				"title": "Scan Any File",
 				"icon": {
 					"light": "resources/icons/light/new-file.svg",
 					"dark": "resources/icons/dark/new-file.svg"
@@ -127,11 +127,23 @@
 			},
 			{
 				"command": "cxportalwin.scanFolder",
-				"title": "Scan Folder",
+				"title": "Scan Any Folder",
 				"icon": {
 					"light": "resources/icons/light/new-folder.svg",
 					"dark": "resources/icons/dark/new-folder.svg"
 				}
+			},
+			{
+				"command": "Explorer.scanFile",
+				"title": "Scan Current File"
+			},
+			{
+				"command": "Explorer.scanFolder",
+				"title": "Scan Current Folder"
+			},
+			{
+				"command": "Explorer.scanWorkspace",
+				"title": "Scan Workspace"
 			},
 			{
 				"command": "cxportalwin.bindProject",
@@ -255,6 +267,23 @@
 					"command": "cxscanswin.showQueryDescription",
 					"when": "view == cxscanswin && viewItem == query_node",
 					"group": "inline"
+				}
+			],
+			"explorer/context": [
+				{
+					"command": "Explorer.scanFolder",
+					"when": "explorerResourceIsFolder",
+					"group": "Cx"
+				},
+				{
+					"command": "Explorer.scanFile",
+					"when": "!explorerResourceIsFolder",
+					"group": "Cx"
+				},
+				{
+					"command": "Explorer.scanWorkspace",
+					"when": "workspaceFolderCount != 0",
+					"group": "Cx"
 				}
 			]
 		}
