@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from "path";
 
 export class Utility {
 
@@ -45,5 +46,36 @@ export class Utility {
                 }
             });
         });
+    }
+
+    public static encryptPassword(key: string, password: string): string {
+        const aes256 = require('aes256');
+        const encryptedPass = aes256.encrypt(key, password);
+        return encryptedPass;
+    }
+
+    public static decryptPassword(key: string, encryptedPass: string): string {
+        const aes256 = require('aes256');
+        const decryptedPass = aes256.decrypt(key, encryptedPass);
+        return decryptedPass;
+    }
+
+    public static getIconPerSeverity(severity: string, colorTheme: string): string {
+        let iconPath: string = "";
+        switch (severity) {
+            case "High":
+                iconPath = path.join(__filename, "..", "..", "..", "resources", "icons", colorTheme, "error.svg");
+                break;
+            case "Medium":
+                iconPath = path.join(__filename, "..", "..", "..", "resources", "icons", colorTheme, "warning.svg");
+                break;
+            case "Low":
+                iconPath = path.join(__filename, "..", "..", "..", "resources", "icons", colorTheme, "field.svg");
+                break;
+            case "Information":
+                iconPath = path.join(__filename, "..", "..", "..", "resources", "icons", colorTheme, "info.svg");
+                break;
+        }
+        return iconPath;
     }
 }

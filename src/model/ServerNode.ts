@@ -122,7 +122,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
             const cxServer = await CxSettings.getServer();
             if (cxServer['username'] && cxServer['password']) {
                 this.username = cxServer['username'];
-                this.password = cxServer['password'];
+                this.password = Utility.decryptPassword(this.username, cxServer['password']);
             } else {
                 this.username = await Utility.showInputBox("Enter Cx Username", false);
                 this.password = await Utility.showInputBox("Enter Cx Password", true);
@@ -134,7 +134,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
             }
             if (!cxServer['username'] && !cxServer['password']) {
                 cxServer['username'] = this.username;
-                cxServer['password'] = this.password;
+                cxServer['password'] = Utility.encryptPassword(this.username, this.password);
                 await vscode.workspace.getConfiguration().update("cx.server", cxServer);
             }
         }
