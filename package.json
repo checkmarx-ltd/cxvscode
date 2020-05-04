@@ -105,16 +105,16 @@
 				"command": "cxportalwin.login",
 				"title": "Login",
 				"icon": {
-					"light": "resources/icons/light/play.svg",
-					"dark": "resources/icons/dark/play.svg"
+					"light": "resources/icons/light/lock.svg",
+					"dark": "resources/icons/dark/lock.svg"
 				}
 			},
 			{
 				"command": "cxportalwin.logout",
 				"title": "Logout",
 				"icon": {
-					"light": "resources/icons/light/disconnect.svg",
-					"dark": "resources/icons/dark/disconnect.svg"
+					"light": "resources/icons/light/unlock.svg",
+					"dark": "resources/icons/dark/unlock.svg"
 				}
 			},
 			{
