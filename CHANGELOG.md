@@ -1,9 +1,10 @@
-# Change Log
+## 2020.2.1-BETA
 
-All notable changes to the "cxvscode" extension will be documented in this file.
-
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
-
-## [Unreleased]
-
-- Initial release
+* First release as beta version
+* Bind an existing project for scan
+* Create a new project for scan
+* Execute CxSAST scan
+* Retrieve CxSAST scan results
+* Show vulnerabilities on Result Table and Attack Vector views
+* Save CxSAST scan report to external JSON file
+* Show vulnerability query description

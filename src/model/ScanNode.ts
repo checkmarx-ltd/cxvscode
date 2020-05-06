@@ -30,7 +30,11 @@ export class ScanNode implements INode {
         if (result.includes(workspace)) {
             result = result.replace(workspace, '');
             if (result.length === 0) {
+<<<<<<< HEAD
                 result = "Workplace";
+=======
+                result = "Workspace";
+>>>>>>> 0c7d312f2580d8f3fd4f1d9033d28c089e48e646
             }
             if (result.startsWith(path.sep)) {
                 result = result.replace(path.sep, '');
@@ -83,6 +87,7 @@ export class ScanNode implements INode {
         }
 
         if (treeName === "CxTreeScans" && severityNodes.length === 0) {
+            this.log.info("There are no vulnerabilities");
             vscode.window.showInformationMessage("There are no vulnerabilities");
         }
 
@@ -140,7 +145,13 @@ Scan results location:  ${this.scanResult.sastScanResultsLink}
 
     private async addDetailedReportToScanResults() {
         const client = new ReportingClient(this.httpClient, this.log);
+<<<<<<< HEAD
         this.log.info('Waiting for server to generate scan report');
+=======
+        if (!CxSettings.isQuiet()) {
+            vscode.window.showInformationMessage('Waiting for server to generate scan report');
+        }
+>>>>>>> 0c7d312f2580d8f3fd4f1d9033d28c089e48e646
         const reportXml = await client.generateReport(this.scanId, undefined);
         const doc = reportXml.CxXMLResults;
         this.scanResult.scanStart = doc.$.ScanStart;
@@ -149,7 +160,13 @@ Scan results location:  ${this.scanResult.sastScanResultsLink}
         this.scanResult.filesScanned = doc.$.FilesScanned;
         this.queries = doc.Query;
         this.scanResult.queryList = ScanNode.toJsonQueries(doc.Query);
+<<<<<<< HEAD
         if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Scan report was generated successfully'); }
+=======
+        if (!CxSettings.isQuiet()) {
+            vscode.window.showInformationMessage('Scan report was generated successfully');
+        }
+>>>>>>> 0c7d312f2580d8f3fd4f1d9033d28c089e48e646
     }
 
     private static toJsonQueries(queries: any[] | undefined) {
@@ -180,7 +197,9 @@ Scan results location:  ${this.scanResult.sastScanResultsLink}
         const reportJson = JSON.stringify(this.scanResult);
 
         this.log.info(`Writing report to ${jsonReportPath}`);
-        if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage(`Writing report to ${jsonReportPath}`); }
+        if (!CxSettings.isQuiet()) {
+            vscode.window.showInformationMessage(`Writing report to ${jsonReportPath}`);
+        }
         await new Promise((resolve, reject) => {
             fs.writeFile(jsonReportPath, reportJson, err => {
                 if (err) {
@@ -192,7 +211,9 @@ Scan results location:  ${this.scanResult.sastScanResultsLink}
         });
 
         this.log.info('Generated Checkmarx summary results.');
-        if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Generated Checkmarx summary results.'); }
+        if (!CxSettings.isQuiet()) {
+            vscode.window.showInformationMessage('Generated Checkmarx summary results.');
+        }
 
         if (cxServer['reportpath'] !== jsonReportPath) {
             cxServer['reportpath'] = jsonReportPath;

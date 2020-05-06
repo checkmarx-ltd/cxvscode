@@ -54,26 +54,26 @@ export function activate(context: vscode.ExtensionContext) {
 		cxTreeDataProvider.refresh(serverNode);
 		serverNode.displayCurrentScanedSource();
 	}));
-	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanFile", async (uri:vscode.Uri) => {
-		let cxServerNode = cxTreeDataProvider.getCurrentServerNode();
-		if(cxServerNode) {
+	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanFile", async (uri: vscode.Uri) => {
+		const cxServerNode = cxTreeDataProvider.getCurrentServerNode();
+		if (cxServerNode) {
 			await cxServerNode.scan(currProjectToScan, false, uri.fsPath);
 			cxTreeDataProvider.refresh(cxServerNode);
 			cxServerNode.displayCurrentScanedSource();
 		}
 	}));
-	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanFolder", async (uri:vscode.Uri) => {
-		let cxServerNode = cxTreeDataProvider.getCurrentServerNode();
-		if(cxServerNode) {
+	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanFolder", async (uri: vscode.Uri) => {
+		const cxServerNode = cxTreeDataProvider.getCurrentServerNode();
+		if (cxServerNode) {
 			await cxServerNode.scan(currProjectToScan, true, uri.fsPath);
 			cxTreeDataProvider.refresh(cxServerNode);
 			cxServerNode.displayCurrentScanedSource();
 		}
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanWorkspace", async () => {
-		let cxServerNode = cxTreeDataProvider.getCurrentServerNode();
-		if(cxServerNode && vscode.workspace.rootPath) {
-			await cxServerNode.scan(currProjectToScan, true, vscode.workspace.rootPath);
+		const cxServerNode = cxTreeDataProvider.getCurrentServerNode();
+		if (cxServerNode && cxServerNode.workspaceFolder) {
+			await cxServerNode.scan(currProjectToScan, true, cxServerNode.workspaceFolder.fsPath);
 			cxTreeDataProvider.refresh(cxServerNode);
 			cxServerNode.displayCurrentScanedSource();
 		}

@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
-import * as path from "path";
 import { INode } from "../interface/INode";
 import { ScanNode } from "./ScanNode";
 import { QueryNode } from "./QueryNode";
+import { Utility } from "../utils/util";
 
 export class SeverityNode implements INode {
 
@@ -15,16 +15,8 @@ export class SeverityNode implements INode {
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             contextValue: "severity_node",
             iconPath: {
-                "light": this.severityName === "High" ?
-                    path.join(__filename, "..", "..", "..", "resources", "icons", "light", "error.svg") :
-                    (this.severityName === "Low" ?
-                        path.join(__filename, "..", "..", "..", "resources", "icons", "light", "info.svg") :
-                        path.join(__filename, "..", "..", "..", "resources", "icons", "light", "warning.svg")),
-                "dark": this.severityName === "High" ?
-                    path.join(__filename, "..", "..", "..", "resources", "icons", "dark", "error.svg") :
-                    (this.severityName === "Low" ?
-                        path.join(__filename, "..", "..", "..", "resources", "icons", "dark", "info.svg") :
-                        path.join(__filename, "..", "..", "..", "resources", "icons", "dark", "warning.svg"))
+                "light": Utility.getIconPerSeverity(this.severityName, "light"),
+                "dark": Utility.getIconPerSeverity(this.severityName, "dark")
             }
         };
     }

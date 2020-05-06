@@ -1,8 +1,8 @@
 {
 	"name": "cxvscode",
 	"displayName": "CxCode",
-	"description": "VSCode extension to enable scan and view on Checkmarx",
-	"version": "2020.2.6-TS",
+	"description": "CxCode is an IDE extension that enables scanning/retrieving results on/from Checkmarx CxSAST",
+	"version": "2020.2.1-BETA",
 	"publisher": "Checkmarx",
 	"icon": "resources/icons/Checkmarx.png",
 	"license": "SEE LICENSE IN checkmarx-license-terms.md",
@@ -30,7 +30,7 @@
 			"properties": {
 				"cx.server": {
 					"type": "object",
-					"default": {},
+					"description": "Cx Settings",
 					"properties": {
 						"url": {
 							"type": "string",
@@ -105,16 +105,16 @@
 				"command": "cxportalwin.login",
 				"title": "Login",
 				"icon": {
-					"light": "resources/icons/light/play.svg",
-					"dark": "resources/icons/dark/play.svg"
+					"light": "resources/icons/light/lock.svg",
+					"dark": "resources/icons/dark/lock.svg"
 				}
 			},
 			{
 				"command": "cxportalwin.logout",
 				"title": "Logout",
 				"icon": {
-					"light": "resources/icons/light/disconnect.svg",
-					"dark": "resources/icons/dark/disconnect.svg"
+					"light": "resources/icons/light/unlock.svg",
+					"dark": "resources/icons/dark/unlock.svg"
 				}
 			},
 			{
@@ -156,6 +156,18 @@
 					"light": "resources/icons/light/new-folder.svg",
 					"dark": "resources/icons/dark/new-folder.svg"
 				}
+			},
+			{
+				"command": "Explorer.scanFile",
+				"title": "Scan Current File"
+			},
+			{
+				"command": "Explorer.scanFolder",
+				"title": "Scan Current Folder"
+			},
+			{
+				"command": "Explorer.scanWorkspace",
+				"title": "Scan Workspace"
 			},
 			{
 				"command": "cxportalwin.bindProject",
@@ -322,6 +334,7 @@
 	},
 	"dependencies": {
 		"@checkmarx/cx-common-js-client": "^0.1.15",
+		"aes256": "^1.0.4",
 		"form-data": "^3.0.0",
 		"tmp": "^0.1.0"
 	}

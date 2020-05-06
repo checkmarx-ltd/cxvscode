@@ -27,13 +27,13 @@ export class CxSettings {
     }
 
     /**
-     * Returns value of the cx.quiet setting.  The setting controls the amount of popup messages displayed to the user.
-     * Add "cx.quiet" : "true" to the settings.json
+     * Returns value of the cx.quiet setting. The setting controls the amount of popup messages displayed to the user.
+     * Add "cx.quiet": "true" to the settings.json
      * @returns Value of cx.quiet setting
      */
     public static isQuiet(): boolean {
-        const isQuietSetting : string = vscode.workspace.getConfiguration().get("cx.quiet") as string;
-        if(isQuietSetting && isQuietSetting.trim().toLowerCase() === 'true') {
+        const isQuietSetting: string = vscode.workspace.getConfiguration().get("cx.quiet") as string;
+        if (isQuietSetting && isQuietSetting.trim().toLowerCase() === 'true') {
             return true;
         }
         else {

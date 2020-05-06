@@ -21,6 +21,17 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
         this.serverNodes = [];
     }
 
+    /**
+     * TODO: Change to return the currently selected ServerNode, once support for multiple servers is added.
+     * @returns Top ServerNode or undefined if none has been configured
+     */
+    public getCurrentServerNode(): ServerNode | undefined {
+        if (this.serverNodes && this.serverNodes.length > 0) {
+            return this.serverNodes[0];
+        }
+        return undefined;
+    }
+
     // Refresh Tree
     public refresh(element?: INode): void {
         try {
@@ -38,10 +49,16 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
             if (this.serverNodes.length > 0 && this.serverNodes[0].sastUrl === cxServer['url']) {
                 await CxSettings.setServer();
                 this.refresh();
-                if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Server node edited'); }
+                this.log.info('Server node edited');
+                if (!CxSettings.isQuiet()) {
+                    vscode.window.showInformationMessage('Server node edited');
+                }
             } else if (this.serverNodes.length > 0 && this.serverNodes[0].sastUrl !== cxServer['url']) {
                 this.refresh();
-                if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Server node edited'); }
+                this.log.info('Server node edited');
+                if (!CxSettings.isQuiet()) {
+                    vscode.window.showInformationMessage('Server node edited');
+                }
             } else {
                 if(!CxSettings.isQuiet()) { vscode.window.showErrorMessage('Server node cannot be edited. It must be added first.'); }
             }
@@ -56,7 +73,10 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
             if (this.serverNodes.length === 0) {
                 await CxSettings.setServer();
                 this.refresh();
-                vscode.window.showInformationMessage('New server node added');
+                this.log.info('New server node added');
+                if (!CxSettings.isQuiet()) {
+                    vscode.window.showInformationMessage('New server node added');
+                }
             } else {
                 vscode.window.showErrorMessage('Cannot add more than one server node.');
             }

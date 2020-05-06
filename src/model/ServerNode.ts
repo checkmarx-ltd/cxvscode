@@ -103,7 +103,6 @@ Team ${idOrName}: ${team}
 Preset ${idOrName}: ${preset}
 Source location: ${config.sourceLocation}
 Is incremental scan: ${config.isIncremental}
-Is synchronous scan: ${config.isSyncMode}
 Is public scan: ${config.isPublic}
 Folder exclusions: ${formatOptionalString(config.folderExclusion)}
 File extensions: ${formatOptionalString(config.fileExtension)}
@@ -114,23 +113,28 @@ File extensions: ${formatOptionalString(config.fileExtension)}
     public async login() {
         try {
             if (this.httpClient.accessToken) {
-                vscode.window.showInformationMessage('You are already logged in!');
+                this.log.info('You are already logged in!');
+                if (!CxSettings.isQuiet()) {
+                    vscode.window.showInformationMessage('You are already logged in!');
+                }
                 return;
             }
             const cxServer = await CxSettings.getServer();
             if (cxServer['username'] && cxServer['password']) {
                 this.username = cxServer['username'];
-                this.password = cxServer['password'];
+                this.password = Utility.decryptPassword(this.username, cxServer['password']);
             } else {
                 this.username = await Utility.showInputBox("Enter Cx Username", false);
                 this.password = await Utility.showInputBox("Enter Cx Password", true);
             }
             await this.httpClient.login(this.username, this.password);
             this.log.info('Login successful');
-            if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Login successful'); }
+            if (!CxSettings.isQuiet()) {
+                vscode.window.showInformationMessage('Login successful');
+            }
             if (!cxServer['username'] && !cxServer['password']) {
                 cxServer['username'] = this.username;
-                cxServer['password'] = this.password;
+                cxServer['password'] = Utility.encryptPassword(this.username, this.password);
                 await vscode.workspace.getConfiguration().update("cx.server", cxServer);
             }
         }
@@ -146,7 +150,10 @@ File extensions: ${formatOptionalString(config.fileExtension)}
             return;
         }
         this.httpClient.logout();
-        if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Logout successful'); }
+        this.log.info('Logout successful');
+        if (!CxSettings.isQuiet()) {
+            vscode.window.showInformationMessage('Logout successful');
+        }
         const cxServer = await CxSettings.getServer();
         cxServer['username'] = undefined;
         cxServer['password'] = undefined;
@@ -193,7 +200,9 @@ File extensions: ${formatOptionalString(config.fileExtension)}
         return new Promise<string>(async (resolve) => {
             await vscode.window.showQuickPick(allPresetNames, { placeHolder: 'Choose Preset Name' }).then((preset) => {
                 if (preset) {
-                    if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Chosen Preset: ' + preset); }
+                    if (!CxSettings.isQuiet()) {
+                        vscode.window.showInformationMessage('Chosen Preset: ' + preset);
+                    }
                     resolve(preset);
                 }
             });
@@ -207,7 +216,9 @@ File extensions: ${formatOptionalString(config.fileExtension)}
         return new Promise<string>(async (resolve) => {
             await vscode.window.showQuickPick(allTeamNames, { placeHolder: 'Choose Team Path' }).then((team) => {
                 if (team) {
-                    if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Chosen Team: ' + team); }
+                    if (!CxSettings.isQuiet()) {
+                        vscode.window.showInformationMessage('Chosen Team: ' + team);
+                    }
                     resolve(team);
                 }
             });
@@ -226,7 +237,9 @@ File extensions: ${formatOptionalString(config.fileExtension)}
         return new Promise<string>(async (resolve) => {
             await vscode.window.showOpenDialog(options).then((fileUri) => {
                 if (fileUri && fileUri[0]) {
-                    if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Selected source: ' + fileUri[0].fsPath); }
+                    if (!CxSettings.isQuiet()) {
+                        vscode.window.showInformationMessage('Selected source: ' + fileUri[0].fsPath);
+                    }
                     resolve(fileUri[0].fsPath);
                 }
             });
@@ -280,7 +293,9 @@ File extensions: ${formatOptionalString(config.fileExtension)}
                 const [teamsById, teamsByName] = await this.getAllTeams();
                 chosenProject = await this.chooseProjectToBind(projectList, teamsById);
                 if (chosenProject) {
-                    if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Chosen: ' + chosenProject.label + ', ' + chosenProject.detail); }
+                    if (!CxSettings.isQuiet()) {
+                        vscode.window.showInformationMessage('Chosen: ' + chosenProject.label + ', ' + chosenProject.detail);
+                    }
                     chosenProject.label = chosenProject.label.replace("project: ", '');
                     chosenProject.detail = chosenProject.detail?.replace("team: ", '');
                     const boundProject: any = projectList.find(project => project['name'] === chosenProject?.label && project['teamId'] === teamsByName.get(chosenProject?.detail || ''));
@@ -378,7 +393,9 @@ File extensions: ${formatOptionalString(config.fileExtension)}
             }
             else {
                 this.projectName = await Utility.showInputBox("Enter project name", false);
-                if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Chosen Project: ' + this.projectName); }
+                if (!CxSettings.isQuiet()) {
+                    vscode.window.showInformationMessage('Chosen Project: ' + this.projectName);
+                }
                 this.teamPath = await this.chooseTeam();
                 await this.isProjectExists();
                 presetName = await this.choosePreset();
@@ -386,8 +403,8 @@ File extensions: ${formatOptionalString(config.fileExtension)}
 
             // get the source location; if scanPath is empty, prompt user to select
             let sourceLocation: string;
-            if(!scanPath || scanPath.length === 0) {
-                const labelType : string = (isFolder) ? 'Scan Folder' : 'Scan File';
+            if (!scanPath || scanPath.length === 0) {
+                const labelType: string = (isFolder) ? 'Scan Folder' : 'Scan File';
                 sourceLocation = await this.selectSourceLocation(isFolder, labelType);
             }
             else {
@@ -396,7 +413,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
 
             const isScanIncremental = await Utility.showPickString("Is scan incremental?", ['Yes', 'No']);
             const isIncremental: boolean = Utility.modeIsEnabled(isScanIncremental);
-            if(!CxSettings.isQuiet()) {
+            if (!CxSettings.isQuiet()) {
                 if (isIncremental) {
                     vscode.window.showInformationMessage('Scan is incremental');
                 } else {
@@ -406,7 +423,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
 
             const isScanPrivate = await Utility.showPickString("Is scan private?", ['Yes', 'No']);
             const isPrivate: boolean = Utility.modeIsEnabled(isScanPrivate);
-            if(!CxSettings.isQuiet()) {
+            if (!CxSettings.isQuiet()) {
                 if (isPrivate) {
                     vscode.window.showInformationMessage('Scan is private');
                 } else {
