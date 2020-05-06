@@ -108,7 +108,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// record the number of registered commands
 	numOfContextSubsForCxPortalWin = context.subscriptions.length;
-	if(!CxSettings.isQuiet()) { vscode.window.showInformationMessage('Checkmarx Extension Enabled!'); }
+	if (!CxSettings.isQuiet()) { 
+		vscode.window.showInformationMessage('Checkmarx Extension Enabled!'); 
+	}
 }
 
 export function deactivate() { }

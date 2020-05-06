@@ -135,30 +135,6 @@
 			},
 			{
 				"command": "Explorer.scanFile",
-				"title": "Scan Current File",
-				"icon": {
-					"light": "resources/icons/light/new-file.svg",
-					"dark": "resources/icons/dark/new-file.svg"
-				}
-			},
-			{
-				"command": "Explorer.scanFolder",
-				"title": "Scan Current Folder",
-				"icon": {
-					"light": "resources/icons/light/new-folder.svg",
-					"dark": "resources/icons/dark/new-folder.svg"
-				}
-			},
-			{
-				"command": "Explorer.scanWorkspace",
-				"title": "Scan Workspace",
-				"icon": {
-					"light": "resources/icons/light/new-folder.svg",
-					"dark": "resources/icons/dark/new-folder.svg"
-				}
-			},
-			{
-				"command": "Explorer.scanFile",
 				"title": "Scan Current File"
 			},
 			{
