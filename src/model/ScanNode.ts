@@ -3,7 +3,7 @@ import * as path from "path";
 import { INode } from "../interface/INode";
 import { ServerNode } from './ServerNode';
 import { HttpClient } from "@checkmarx/cx-common-js-client";
-import { CxSettings } from "../services/CxSettings";
+import { CxSettings, CxServerSettings } from "../services/CxSettings";
 import { ScanResults } from "@checkmarx/cx-common-js-client";
 import { Logger } from "@checkmarx/cx-common-js-client";
 import { ReportingClient } from "@checkmarx/cx-common-js-client";
@@ -109,7 +109,7 @@ export class ScanNode implements INode {
     }
 
     private async addStatisticsToScanResults() {
-        const cxServer = await CxSettings.getServer();
+        const cxServer = CxSettings.getServer();
         const statistics: any = await this.httpClient.getRequest(`sast/scans/${this.scanId}/resultsStatistics`);
 
         this.scanResult.scanId = this.scanId;
@@ -172,8 +172,7 @@ Scan results location:  ${this.scanResult.sastScanResultsLink}
     }
 
     public async attachJsonReport() {
-        const cxServer = await CxSettings.getServer();
-        const jsonReportPath: string = await Utility.showInputBox("Enter JSON report full path", false, cxServer['reportpath']);
+        const jsonReportPath: string = await Utility.showInputBox("Enter JSON report full path", false);
         if (!path.isAbsolute(jsonReportPath)) {
             vscode.window.showErrorMessage(`Path [${jsonReportPath}] is not absolute`);
             return;
@@ -202,11 +201,6 @@ Scan results location:  ${this.scanResult.sastScanResultsLink}
         this.log.info('Generated Checkmarx summary results.');
         if (!CxSettings.isQuiet()) {
             vscode.window.showInformationMessage('Generated Checkmarx summary results.');
-        }
-
-        if (cxServer['reportpath'] !== jsonReportPath) {
-            cxServer['reportpath'] = jsonReportPath;
-            await vscode.workspace.getConfiguration().update("cx.server", cxServer);
         }
     }
 }

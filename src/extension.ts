@@ -4,6 +4,7 @@ import { ServerNode } from './model/ServerNode';
 import { ProjectNode } from './model/ProjectNode';
 import { ScanNode } from './model/ScanNode';
 import { CxSettings } from "./services/CxSettings";
+import { CxServerSettings } from "./services/CxSettings";
 
 export function activate(context: vscode.ExtensionContext) {
 	if (context && context.subscriptions && context.subscriptions.length > 0) {
@@ -17,18 +18,17 @@ export function activate(context: vscode.ExtensionContext) {
 	const checkmarxOutput: vscode.OutputChannel = vscode.window.createOutputChannel('Checkmarx');
 	context.subscriptions.push(checkmarxOutput);
 
-	let currProjectToScan: ProjectNode | any;
+	//let currProjectToScan: ProjectNode | any;
 	const cxTreeDataProvider = new CxTreeDataProvider(checkmarxOutput);
+
 	// Register Window (Explorer CxPortal)
 	context.subscriptions.push(vscode.window.registerTreeDataProvider("cxportalwin", cxTreeDataProvider));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.addCxServer", async () => {
 		await cxTreeDataProvider.addTreeItem();
-		currProjectToScan = undefined;
 	}));
 	// Register Command Edit Cx Server Node
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.editCxServer", async () => {
 		await cxTreeDataProvider.editTreeItem();
-		currProjectToScan = undefined;
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.updateFolderExclusion", async (serverNode: ServerNode) => {
 		await serverNode.updateFolderExclusion();
@@ -45,19 +45,19 @@ export function activate(context: vscode.ExtensionContext) {
 		cxTreeDataProvider.refresh(serverNode);
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.scanFile", async (serverNode: ServerNode) => {
-		await serverNode.scan(currProjectToScan, false, '');
+		await serverNode.scan(false, '');
 		cxTreeDataProvider.refresh(serverNode);
 		serverNode.displayCurrentScanedSource();
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.scanFolder", async (serverNode: ServerNode) => {
-		await serverNode.scan(currProjectToScan, true, '');
+		await serverNode.scan(true, '');
 		cxTreeDataProvider.refresh(serverNode);
 		serverNode.displayCurrentScanedSource();
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanFile", async (uri: vscode.Uri) => {
 		const cxServerNode = cxTreeDataProvider.getCurrentServerNode();
 		if (cxServerNode) {
-			await cxServerNode.scan(currProjectToScan, false, uri.fsPath);
+			await cxServerNode.scan(false, uri.fsPath);
 			cxTreeDataProvider.refresh(cxServerNode);
 			cxServerNode.displayCurrentScanedSource();
 		}
@@ -65,7 +65,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanFolder", async (uri: vscode.Uri) => {
 		const cxServerNode = cxTreeDataProvider.getCurrentServerNode();
 		if (cxServerNode) {
-			await cxServerNode.scan(currProjectToScan, true, uri.fsPath);
+			await cxServerNode.scan(true, uri.fsPath);
 			cxTreeDataProvider.refresh(cxServerNode);
 			cxServerNode.displayCurrentScanedSource();
 		}
@@ -73,22 +73,18 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanWorkspace", async () => {
 		const cxServerNode = cxTreeDataProvider.getCurrentServerNode();
 		if (cxServerNode && cxServerNode.workspaceFolder) {
-			await cxServerNode.scan(currProjectToScan, true, cxServerNode.workspaceFolder.fsPath);
+			await cxServerNode.scan(true, cxServerNode.workspaceFolder.fsPath);
 			cxTreeDataProvider.refresh(cxServerNode);
 			cxServerNode.displayCurrentScanedSource();
 		}
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.bindProject", async (serverNode: ServerNode) => {
-		const chosenProject = await serverNode.bindProject();
-		if (chosenProject) {
-			currProjectToScan = chosenProject;
-		}
+		await serverNode.bindProject();
+		cxTreeDataProvider.refresh(serverNode);
 	}));
-	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.unbindProject", () => {
-		if (currProjectToScan) {
-			vscode.window.showInformationMessage(`Project [${currProjectToScan.name}] got unbound`);
-			currProjectToScan = undefined;
-		}
+	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.unbindProject", async (serverNode: ServerNode) => {
+		serverNode.unbindProject();
+		cxTreeDataProvider.refresh(serverNode);
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.retrieveScanResults", async (scanNode: ScanNode) => {
 		if (scanNode.canRetrieveResults()) {

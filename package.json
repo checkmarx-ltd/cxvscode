@@ -48,11 +48,31 @@
 							"type": "string",
 							"description": "Cx Password"
 						},
-						"reportpath": {
+						"project_id": {
+							"type": "number",
+							"description": "Bound project's ID"
+						},
+						"team_id": {
 							"type": "string",
-							"description": "Report Path"
+							"description": "Bound project's Team ID"
+						},
+						"project_name": {
+							"type": "string",
+							"description": "Bound project's name"
 						}
 					}
+				},
+				"cx.folderExclusions": {
+					"type": "string",
+					"description": "Folder Exclusions"
+				},
+				"cx.fileExtensions": {
+					"type": "string",
+					"description": "File Extensions to include or exclude"
+				},
+				"cx.quiet": {
+					"type": "boolean",
+					"description": "Controls statis popups"
 				}
 			}
 		},
