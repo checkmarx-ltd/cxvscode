@@ -48,11 +48,27 @@
 							"type": "string",
 							"description": "Cx Password"
 						},
+						"token": {
+							"type": "string",
+							"description": "Access token"
+						},
 						"reportpath": {
 							"type": "string",
 							"description": "Report Path"
 						}
 					}
+				},
+				"cx.folderExclusions": {
+					"type": "string",
+					"description": "Folder Exclusions"
+				},
+				"cx.fileExtensions": {
+					"type": "string",
+					"description": "File Extensions to include or exclude"
+				},
+				"cx.quiet": {
+					"type": "boolean",
+					"description": "Controls statis popups"
 				}
 			}
 		},
