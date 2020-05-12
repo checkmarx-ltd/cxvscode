@@ -48,13 +48,17 @@
 							"type": "string",
 							"description": "Cx Password"
 						},
-						"token": {
-							"type": "string",
-							"description": "Access token"
+						"project_id": {
+							"type": "number",
+							"description": "Bound project's ID"
 						},
-						"reportpath": {
+						"team_id": {
 							"type": "string",
-							"description": "Report Path"
+							"description": "Bound project's Team ID"
+						},
+						"project_name": {
+							"type": "string",
+							"description": "Bound project's name"
 						}
 					}
 				},
