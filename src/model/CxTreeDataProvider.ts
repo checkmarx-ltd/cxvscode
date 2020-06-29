@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { INode } from "../interface/INode";
-import { ServerNode } from "./ServerNode";
+import { ServerNode as ServerNodeTreeItem } from "./ServerNode";
 import { ScanNode } from './ScanNode';
 import { CxSettings } from "../services/CxSettings";
 import { Logger } from "@checkmarx/cx-common-js-client";
@@ -14,7 +14,7 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     public readonly onDidChangeTreeData: vscode.Event<INode> = this._onDidChangeTreeData.event;
 
     private readonly log: Logger;
-    private serverNodes: ServerNode[];
+    private serverNodes: ServerNodeTreeItem[];
 
     constructor(checkmarxOutput: vscode.OutputChannel) {
         this.log = new ConsoleLogger(checkmarxOutput);
@@ -25,7 +25,7 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
      * TODO: Change to return the currently selected ServerNode, once support for multiple servers is added.
      * @returns Top ServerNode or undefined if none has been configured
      */
-    public getCurrentServerNode(): ServerNode | undefined {
+    public getCurrentServerNode(): ServerNodeTreeItem | undefined {
         if (this.serverNodes && this.serverNodes.length > 0) {
             return this.serverNodes[0];
         }
@@ -45,22 +45,27 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     // Edit Tree Item (Node)
     public async editTreeItem() {
         try {
-            const cxServer = await CxSettings.getServer();
-            if (this.serverNodes.length > 0 && this.serverNodes[0].sastUrl === cxServer['url']) {
-                await CxSettings.setServer();
-                this.refresh();
-                this.log.info('Server node edited');
-                if (!CxSettings.isQuiet()) {
-                    vscode.window.showInformationMessage('Server node edited');
-                }
-            } else if (this.serverNodes.length > 0 && this.serverNodes[0].sastUrl !== cxServer['url']) {
-                this.refresh();
-                this.log.info('Server node edited');
-                if (!CxSettings.isQuiet()) {
-                    vscode.window.showInformationMessage('Server node edited');
+            const cxServer = CxSettings.getServer();
+            if (this.serverNodes.length > 0) {
+                if(this.serverNodes[0].sastUrl === cxServer.url) {
+                    await CxSettings.configureServer();
+                    if(this.serverNodes[0].isLoggedIn()) {
+                        this.serverNodes[0].logout(); 
+                    }
+                    this.refresh();
+                    this.log.info('Server node edited');
+                    if(!CxSettings.isQuiet()) { 
+                        vscode.window.showInformationMessage('Server node edited'); 
+                    }
+                } else if (this.serverNodes.length > 0 && this.serverNodes[0].sastUrl !== cxServer.url) {
+                    this.refresh();
+                    this.log.info('Server node edited');
+                    if(!CxSettings.isQuiet()) {
+                        vscode.window.showInformationMessage('Server node edited'); 
+                    }
                 }
             } else {
-                vscode.window.showErrorMessage('Server node cannot be edited. It must be added first.');
+                vscode.window.showErrorMessage('Server node cannot be edited. It must be added first.'); 
             }
         } catch (err) {
             this.log.error(err);
@@ -71,7 +76,7 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     public async addTreeItem() {
         try {
             if (this.serverNodes.length === 0) {
-                await CxSettings.setServer();
+                await CxSettings.configureServer();
                 this.refresh();
                 this.log.info('New server node added');
                 if (!CxSettings.isQuiet()) {
@@ -94,7 +99,7 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     // Get Children of Item (Nodes)
     public async getChildren(element?: INode): Promise<INode[]> {
         if (!element) {
-            const cxServer = await CxSettings.getServer();
+            const cxServer = CxSettings.getServer();
             if (cxServer) {
                 this.convertToNode(cxServer);
             }
@@ -107,7 +112,7 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     private convertToNode(server: any) {
         this.serverNodes = [];
         if (Object.entries(server).length > 0) {
-            this.serverNodes.push(new ServerNode(server['url'], server['alias'], this.log));
+            this.serverNodes.push(new ServerNodeTreeItem(CxSettings.getServer().url, CxSettings.getServer().alias, this.log));
         }
     }
 
@@ -125,3 +130,4 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
         }));
     }
 }
+  
