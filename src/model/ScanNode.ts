@@ -14,14 +14,15 @@ import * as url from "url";
 
 export class ScanNode implements INode {
 
-    private scanResult: ScanResults | any;
+    private scanResult: ScanResults;
     public queries: any[] | undefined;
 
     constructor(public scanId: number, public projectId: number,
         public readonly sourceLocation: string, public readonly isFolder: boolean,
         public readonly httpClient: HttpClient, private readonly log: Logger,
         public parentNode: ServerNode) {
-        this.scanResult = new ScanResults(this.parentNode.config);
+        this.scanResult = new ScanResults();
+        this.scanResult.updateSastDefaultResults(parentNode.config.sastConfig);
     }
 
     private chooseLabelName(): string {
@@ -109,7 +110,7 @@ export class ScanNode implements INode {
     }
 
     private async addStatisticsToScanResults() {
-        const cxServer = CxSettings.getServer();
+        const cxServer: CxServerSettings = CxSettings.getServer();
         const statistics: any = await this.httpClient.getRequest(`sast/scans/${this.scanId}/resultsStatistics`);
 
         this.scanResult.scanId = this.scanId;
@@ -119,10 +120,10 @@ export class ScanNode implements INode {
         this.scanResult.infoResults = statistics.infoSeverity;
 
         const sastScanPath = `CxWebClient/ViewerMain.aspx?scanId=${this.scanId}&ProjectID=${this.projectId}`;
-        this.scanResult.sastScanResultsLink = url.resolve(cxServer['url'], sastScanPath);
+        this.scanResult.sastScanResultsLink = url.resolve(cxServer.url, sastScanPath);
 
         const sastProjectLink = `CxWebClient/portal#/projectState/${this.projectId}/Summary`;
-        this.scanResult.sastSummaryResultsLink = url.resolve(cxServer['url'], sastProjectLink);
+        this.scanResult.sastSummaryResultsLink = url.resolve(cxServer.url, sastProjectLink);
 
         this.scanResult.sastResultsReady = true;
     }
@@ -141,7 +142,6 @@ Scan results location:  ${this.scanResult.sastScanResultsLink}
 
     private async addDetailedReportToScanResults() {
         const client = new ReportingClient(this.httpClient, this.log);
-        this.log.info('Waiting for server to generate scan report');
         if (!CxSettings.isQuiet()) {
             vscode.window.showInformationMessage('Waiting for server to generate scan report');
         }
@@ -172,7 +172,8 @@ Scan results location:  ${this.scanResult.sastScanResultsLink}
     }
 
     public async attachJsonReport() {
-        const jsonReportPath: string = await Utility.showInputBox("Enter JSON report full path", false);
+        const reportPath: string = CxSettings.getReportPath();
+        const jsonReportPath: string = await Utility.showInputBox("Enter JSON report full path", false, reportPath);
         if (!path.isAbsolute(jsonReportPath)) {
             vscode.window.showErrorMessage(`Path [${jsonReportPath}] is not absolute`);
             return;
@@ -201,6 +202,10 @@ Scan results location:  ${this.scanResult.sastScanResultsLink}
         this.log.info('Generated Checkmarx summary results.');
         if (!CxSettings.isQuiet()) {
             vscode.window.showInformationMessage('Generated Checkmarx summary results.');
+        }
+
+        if (reportPath !== jsonReportPath) {
+            await CxSettings.updateReportPath(jsonReportPath);
         }
     }
 }

@@ -1,10 +1,8 @@
 import * as vscode from 'vscode';
 import { CxTreeDataProvider } from "./model/CxTreeDataProvider";
 import { ServerNode } from './model/ServerNode';
-import { ProjectNode } from './model/ProjectNode';
 import { ScanNode } from './model/ScanNode';
 import { CxSettings } from "./services/CxSettings";
-import { CxServerSettings } from "./services/CxSettings";
 
 export function activate(context: vscode.ExtensionContext) {
 	if (context && context.subscriptions && context.subscriptions.length > 0) {
@@ -18,7 +16,6 @@ export function activate(context: vscode.ExtensionContext) {
 	const checkmarxOutput: vscode.OutputChannel = vscode.window.createOutputChannel('Checkmarx');
 	context.subscriptions.push(checkmarxOutput);
 
-	//let currProjectToScan: ProjectNode | any;
 	const cxTreeDataProvider = new CxTreeDataProvider(checkmarxOutput);
 
 	// Register Window (Explorer CxPortal)
@@ -83,7 +80,7 @@ export function activate(context: vscode.ExtensionContext) {
 		cxTreeDataProvider.refresh(serverNode);
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.unbindProject", async (serverNode: ServerNode) => {
-		serverNode.unbindProject();
+		await serverNode.unbindProject();
 		cxTreeDataProvider.refresh(serverNode);
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.retrieveScanResults", async (scanNode: ScanNode) => {
@@ -104,8 +101,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// record the number of registered commands
 	numOfContextSubsForCxPortalWin = context.subscriptions.length;
-	if (!CxSettings.isQuiet()) { 
-		vscode.window.showInformationMessage('Checkmarx Extension Enabled!'); 
+	if (!CxSettings.isQuiet()) {
+		vscode.window.showInformationMessage('Checkmarx Extension Enabled!');
 	}
 }
 

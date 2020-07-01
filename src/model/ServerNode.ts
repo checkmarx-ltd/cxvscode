@@ -6,6 +6,7 @@ import { Logger } from "@checkmarx/cx-common-js-client";
 import { ScanResults } from "@checkmarx/cx-common-js-client";
 import { CxClient } from "@checkmarx/cx-common-js-client";
 import { ScanConfig } from "@checkmarx/cx-common-js-client";
+import { SastConfig } from "@checkmarx/cx-common-js-client";
 import { TeamApiClient } from "@checkmarx/cx-common-js-client";
 import { HttpClient } from "@checkmarx/cx-common-js-client";
 import { ProjectNode } from "./ProjectNode";
@@ -14,7 +15,6 @@ import { Utility } from "../utils/util";
 import { SastClient } from '../services/sastClient';
 import { CxSettings } from "../services/CxSettings";
 import { CxServerSettings } from "../services/CxSettings";
-import { CipherNameAndProtocol } from "tls";
 
 export class ServerNode implements INode {
 
@@ -39,36 +39,36 @@ export class ServerNode implements INode {
 
         // read folder exclusions, or initialize to default
         this.folderExclusion = CxSettings.getFolderExclusions();
- 
+
         // read file exclusions, or initialize to default
         this.fileExtension = CxSettings.getFileExtensions();
 
         const baseUrl = url.resolve(this.sastUrl, 'CxRestAPI/');
-       
+
         this.httpClient = new HttpClient(baseUrl, "Visual Studio Code", this.log);
-        
+
         this.projectName = '';
-        this.teamPath = '';   
-        
+        this.teamPath = '';
+
         // read bound project, if available
         const cxServerSettings: CxServerSettings = CxSettings.getServer();
         try {
-            if(cxServerSettings) {
+            if (cxServerSettings) {
                 this.username = cxServerSettings.username;
                 this.password = cxServerSettings.password;
-                if(cxServerSettings.project_id > 0) {
+                if (cxServerSettings.project_id > 0) {
                     this.currBoundProject = new ProjectNode(cxServerSettings.project_id, cxServerSettings.team_id, cxServerSettings.project_name);
                 }
             }
         }
-        catch(err) {
+        catch (err) {
             log.error("Error reading server settings from settings.json: " + err);
         }
-        
+
         this.scanedSources = new Set<ScanNode>();
     }
 
-     private async updateFileSystemPatterns(pattern: string, prompt: string): Promise<string> {
+    private async updateFileSystemPatterns(pattern: string, prompt: string): Promise<string> {
         const options: vscode.InputBoxOptions = {
             prompt: prompt,
             value: pattern,
@@ -115,36 +115,36 @@ CxCxCxCxCxCxCxCxCxCxCxCxCx
 Starting Checkmarx scan`);
     }
 
-    private format(config: ScanConfig): void {
+    private format(config: ScanConfig, sastConfig: SastConfig): void {
         const formatOptionalString = (input: string) => input || 'none';
 
         const idOrName = config.projectId ? 'id' : 'name';
         const project = config.projectId ? config.projectId : config.projectName;
-        const team = config.teamId ? config.teamId : config.teamName;
-        const preset = config.presetId ? config.presetId : config.presetName;
+        const team = sastConfig.teamId ? sastConfig.teamId : sastConfig.teamName;
+        const preset = sastConfig.presetId ? sastConfig.presetId : sastConfig.presetName;
 
         this.log.debug(`
 -------------------------------Configurations---------------------------------
-SAST URL: ${config.serverUrl}
+SAST URL: ${sastConfig.serverUrl}
 Project ${idOrName}: ${project}
 Team ${idOrName}: ${team}
 Preset ${idOrName}: ${preset}
 Source location: ${config.sourceLocation}
-Is incremental scan: ${config.isIncremental}
-Is public scan: ${config.isPublic}
-Folder exclusions: ${formatOptionalString(config.folderExclusion)}
-File extensions: ${formatOptionalString(config.fileExtension)}
+Is incremental scan: ${sastConfig.isIncremental}
+Is public scan: ${sastConfig.isPublic}
+Folder exclusions: ${formatOptionalString(sastConfig.folderExclusion)}
+File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 ------------------------------------------------------------------------------
 `       );
     }
 
     /**
      * Checks if the user is currently logged in to the server
-     * @returns true is access token is available; false otherwise 
+     * @returns true if access token is available; false otherwise 
      */
-    public isLoggedIn() :boolean {
+    public isLoggedIn(): boolean {
         return this.httpClient.accessToken;
-     }
+    }
 
     public async login() {
         try {
@@ -153,7 +153,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
                 return;
             }
 
-            const cxServer:CxServerSettings = CxSettings.getServer();
+            const cxServer: CxServerSettings = CxSettings.getServer();
             if (cxServer.username.length > 0 && cxServer.password.length > 0) {
                 this.username = cxServer.username;
                 this.password = cxServer.password;
@@ -165,7 +165,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
 
             cxServer.username = this.username;
             cxServer.password = this.password;
-            CxSettings.updateServer(cxServer);
+            await CxSettings.updateServer(cxServer);
 
             this.log.info('Login successful');
             vscode.window.showInformationMessage('Login successful');
@@ -183,19 +183,19 @@ File extensions: ${formatOptionalString(config.fileExtension)}
         }
         this.httpClient.logout();
         this.log.info('Logout successful');
-        if(!CxSettings.isQuiet()) { 
-            vscode.window.showInformationMessage('Logout successful'); 
+        if (!CxSettings.isQuiet()) {
+            vscode.window.showInformationMessage('Logout successful');
         }
-        const cxServer:CxServerSettings = CxSettings.getServer();
+        const cxServer: CxServerSettings = CxSettings.getServer();
         cxServer.username = '';
         cxServer.password = '';
-        CxSettings.updateServer(cxServer);
+        await CxSettings.updateServer(cxServer);
     }
 
     public getTreeItem(): vscode.TreeItem {
         return {
-            label: (this.isBoundToProject()) ? this.alias + ' (' + this.currBoundProject.name + ')': this.alias,
-            tooltip: (this.isBoundToProject()) ? 'Bound to ' + this.currBoundProject.name : 'Not bbound to a project',
+            label: (this.isBoundToProject()) ? this.alias + ' (' + this.currBoundProject.name + ')' : this.alias,
+            tooltip: (this.isBoundToProject()) ? 'Bound to ' + this.currBoundProject.name : 'Not bound to a project',
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             contextValue: "server_node",
             iconPath: {
@@ -334,7 +334,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
                     const boundProject: any = projectList.find(project => project['name'] === chosenProject?.label && project['teamId'] === teamsByName.get(chosenProject?.detail || ''));
                     if (boundProject) {
                         this.currBoundProject = new ProjectNode(boundProject['id'], boundProject['teamId'], boundProject['name']);
-			            CxSettings.updateBoundProject(this.currBoundProject['id'], this.currBoundProject['teamId'], this.currBoundProject['name']);
+                        await CxSettings.updateBoundProject(this.currBoundProject['id'], this.currBoundProject['teamId'], this.currBoundProject['name']);
                     }
                 }
             } else {
@@ -351,12 +351,20 @@ File extensions: ${formatOptionalString(config.fileExtension)}
         }
     }
 
-    public unbindProject() {
-        this.currBoundProject = undefined;
-        CxSettings.clearBoundProject();
-        this.log.info('Project got unbound');
-        if(!CxSettings.isQuiet()) {
-            vscode.window.showInformationMessage(`Project got unbound`);
+    public async unbindProject() {
+        if (this.isBoundToProject()) {
+            this.currBoundProject = undefined;
+            await CxSettings.clearBoundProject();
+            this.log.info('Project got unbound');
+            if (!CxSettings.isQuiet()) {
+                vscode.window.showInformationMessage('Project got unbound');
+            }
+        }
+        else {
+            this.log.error('No project got bound');
+            if (!CxSettings.isQuiet()) {
+                vscode.window.showErrorMessage('No project got bound');
+            }
         }
     }
 
@@ -419,7 +427,7 @@ File extensions: ${formatOptionalString(config.fileExtension)}
      */
     public async scan(isFolder: boolean, scanPath: string) {
         try {
-            if (!this.httpClient.accessToken) {
+            if (!this.isLoggedIn()) {
                 throw Error('Access token expired. Please login.');
             }
 
@@ -477,42 +485,43 @@ File extensions: ${formatOptionalString(config.fileExtension)}
                 }
             }
 
-            const config: ScanConfig = {
+            const sastConfig: SastConfig = {
                 serverUrl: this.sastUrl,
                 username: this.username,
                 password: this.password,
-                sourceLocation: sourceLocation,
-                projectId: this.currBoundProject && this.currBoundProject.id,
-                projectName: this.projectName,
                 teamId: this.currBoundProject && this.currBoundProject.teamId,
                 teamName: TeamApiClient.normalizeTeamName(this.teamPath),
                 denyProject: false,
                 folderExclusion: this.folderExclusion,
                 fileExtension: this.fileExtension,
                 isIncremental: isIncremental,
-                isSyncMode: false,
                 presetId,
                 presetName,
                 scanTimeoutInMinutes: undefined,
                 comment: '',
                 enablePolicyViolations: false,
                 vulnerabilityThreshold: false,
-                highThreshold: undefined,
-                mediumThreshold: undefined,
-                lowThreshold: undefined,
                 forceScan: false,
-                isPublic: !isPrivate,
-                cxOrigin: 'Visual Studio Code',
-                enableDependencyScan: false,
-                enableSastScan: true
+                isPublic: !isPrivate
             };
 
-            this.format(config);
+            const config: ScanConfig = {
+                sourceLocation: sourceLocation,
+                projectId: this.currBoundProject && this.currBoundProject.id,
+                projectName: this.projectName,
+                isSyncMode: false,
+                cxOrigin: 'Visual Studio Code',
+                enableDependencyScan: false,
+                enableSastScan: true,
+                sastConfig: sastConfig
+            };
+
+            this.format(config, sastConfig);
             this.config = config;
 
             const cxClient = new CxClient(this.log);
             const scanResults: ScanResults = await cxClient.scan(config);
-            const sastClient = new SastClient(scanResults.scanId, this.httpClient, this.log, config.scanTimeoutInMinutes);
+            const sastClient = new SastClient(scanResults.scanId, this.httpClient, this.log, sastConfig.scanTimeoutInMinutes);
             await sastClient.waitForScanToFinish();
 
             const projectId: number = await this.getProjectId(this.currBoundProject);

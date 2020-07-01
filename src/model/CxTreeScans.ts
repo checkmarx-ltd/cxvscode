@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
 import { INode } from "../interface/INode";
 import { Logger } from "@checkmarx/cx-common-js-client";
-import { WebViews } from "../services/WebViews"
-import { ScanNode } from './ScanNode'
+import { WebViews } from "../services/WebViews";
+import { ScanNode } from './ScanNode';
 
 export class CxTreeScans implements vscode.TreeDataProvider<INode> {
     public _onDidChangeTreeData: vscode.EventEmitter<INode> = new vscode.EventEmitter<INode>();
