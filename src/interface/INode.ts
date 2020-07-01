@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 export interface INode {
-    id?:number;
+    id?: number;
 
     getTreeItem(): Promise<vscode.TreeItem> | vscode.TreeItem;
 
