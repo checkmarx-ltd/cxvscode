@@ -15,6 +15,7 @@ const CXTEAMID: string = 'team_id';
 const CXPROJECTNAME: string = 'project_name';
 
 const CXQUIET: string = 'cx.quiet';
+const CXDISABLESCANBUTTONS: string = 'cx.disableScanButtons'
 
 const CX_FOLDER_EXCLUSIONS: string = 'cx.folderExclusions';
 const CX_FILE_EXTENSIONS: string = 'cx.fileExtensions';
@@ -138,6 +139,15 @@ export class CxSettings {
     }
 
     /**
+     * Returns value of the cx.disableScanButtons setting. The setting controls the scan any file/folder buttons.
+     * Add "cx.disableScanButtons": "true" to the settings.json
+     * @returns Value of cx.disableScanButtons setting
+     */
+    public static isScanButtonsDisabled(): boolean {
+        return vscode.workspace.getConfiguration().get(CXDISABLESCANBUTTONS) as boolean;
+    }
+
+        /**
      * Returns value of the cx.quiet setting. The setting controls the amount of popup messages displayed to the user.
      * Add "cx.quiet": "true" to the settings.json
      * @returns Value of cx.quiet setting

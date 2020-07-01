@@ -73,6 +73,10 @@
 				"cx.quiet": {
 					"type": "boolean",
 					"description": "Controls statis popups"
+				},
+				"cx.disablScanButtons": {
+					"type":"boolean",
+					"description": "Controls scan any folder\\file buttons"
 				}
 			}
 		},
