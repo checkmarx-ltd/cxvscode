@@ -131,7 +131,7 @@ export class CxSettings {
      */
     public static getServer(): CxServerSettings {
         const serverSettings: CxServerSettings = vscode.workspace.getConfiguration().get(CXSERVER) as CxServerSettings;
-        if(serverSettings.password.length > 0) {
+        if(serverSettings && serverSettings.password && serverSettings.password.length > 0) {
             serverSettings.password = Utility.decryptPassword(serverSettings.username, serverSettings.password);
         }
         return serverSettings;
