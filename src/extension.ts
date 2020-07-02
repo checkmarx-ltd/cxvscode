@@ -42,15 +42,18 @@ export function activate(context: vscode.ExtensionContext) {
 		cxTreeDataProvider.refresh(serverNode);
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.scanFile", async (serverNode: ServerNode) => {
-		await serverNode.scan(false, '');
-		cxTreeDataProvider.refresh(serverNode);
-		serverNode.displayCurrentScanedSource();
-	}));
+		if(!CxSettings.isScanButtonsDisabled()){
+			await serverNode.scan(false, '');
+			cxTreeDataProvider.refresh(serverNode);
+			serverNode.displayCurrentScanedSource();
+		}}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.scanFolder", async (serverNode: ServerNode) => {
-		await serverNode.scan(true, '');
-		cxTreeDataProvider.refresh(serverNode);
-		serverNode.displayCurrentScanedSource();
-	}));
+		if(!CxSettings.isScanButtonsDisabled()){
+			await serverNode.scan(true, '');
+			cxTreeDataProvider.refresh(serverNode);
+			serverNode.displayCurrentScanedSource();
+		
+		}}));
 	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanFile", async (uri: vscode.Uri) => {
 		const cxServerNode = cxTreeDataProvider.getCurrentServerNode();
 		if (cxServerNode) {
@@ -67,6 +70,7 @@ export function activate(context: vscode.ExtensionContext) {
 			cxServerNode.displayCurrentScanedSource();
 		}
 	}));
+
 	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanWorkspace", async () => {
 		const cxServerNode = cxTreeDataProvider.getCurrentServerNode();
 		if (cxServerNode && cxServerNode.workspaceFolder) {
