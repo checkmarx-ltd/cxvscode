@@ -77,6 +77,10 @@
 				"cx.reportPath": {
 					"type": "string",
 					"description": "CxSAST report path"
+				},
+				"cx.disableScanButtons": {
+					"type":"boolean",
+					"description": "Controls scan any folder\\file buttons"
 				}
 			}
 		},
