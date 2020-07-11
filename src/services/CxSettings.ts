@@ -7,6 +7,8 @@ const DEFAULT_FILE_EXTENSIONS: string = "!*.DS_Store, !*.ipr, !*.iws, !*.bak, !*
 const DEFAULT_FOLDER_EXCLUSIONS: string = "cvs, .svn, .hg, .git, .bzr, bin, obj, backup, .idea, .vscode, node_modules";
 const CXSERVER: string = 'cx.server';
 const CXQUIET: string = 'cx.quiet';
+const CXDISABLESCANBUTTONS: string = 'cx.disableScanButtons'
+
 const CX_FOLDER_EXCLUSIONS: string = 'cx.folderExclusions';
 const CX_FILE_EXTENSIONS: string = 'cx.fileExtensions';
 const CX_REPORT_PATH: string = 'cx.reportPath';
@@ -87,7 +89,7 @@ export class CxSettings {
 
     /**
      * Returns CxServer saved in settings.json
-     * 
+     *
      * @returns cxserver settings as CxServerSettings struct
      */
     public static getServer(): CxServerSettings {
@@ -99,9 +101,18 @@ export class CxSettings {
     }
 
     /**
+     * Returns value of the cx.disableScanButtons setting. The setting controls the scan any file/folder buttons.
+     * Add "cx.disableScanButtons": "true" to the settings.json
+     * @returns Value of cx.disableScanButtons setting
+     */
+    public static isScanButtonsDisabled(): boolean {
+        return vscode.workspace.getConfiguration().get(CXDISABLESCANBUTTONS) as boolean;
+    }
+
+        /**
      * Returns value of the cx.quiet setting. The setting controls the amount of popup messages displayed to the user.
      * Add "cx.quiet": true to the settings.json
-     * 
+     *
      * @returns Value of cx.quiet setting
      */
     public static isQuiet(): boolean {
@@ -110,7 +121,7 @@ export class CxSettings {
 
     /**
      * Stores folder exclusions in the settings.json
-     * 
+     *
      * @param folderExclusions string representing folder exclusions
      */
     public static async updateFolderExclusions(folderExclusions: string) {
@@ -119,7 +130,7 @@ export class CxSettings {
 
     /**
      * Returns the current value of cx.folderExclusions setting
-     * 
+     *
      * @returns Folder exclusions as string
      */
     public static getFolderExclusions(): string {
@@ -134,7 +145,7 @@ export class CxSettings {
 
     /**
     * Stores folder exclusions in the settings.json
-    * 
+    *
     * @param fileExtensions string representing folder exclusions
     */
     public static async updateFileExtensions(fileExtensions: string) {
@@ -143,7 +154,7 @@ export class CxSettings {
 
     /**
      * Returns the current value of cx.fileExtensions setting, or defaults if not currently set
-     * 
+     *
      * @returns file extensions as string
      */
     public static getFileExtensions(): string {
