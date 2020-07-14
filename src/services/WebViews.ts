@@ -68,10 +68,7 @@ export class WebViews {
 		);
 
 		try {
-			const onDiskPath = vscode.Uri.file(path.join(context.extensionPath, 'attackVectorWebView.html'));
-			let attackVectorViewPath = decodeURIComponent(onDiskPath.toString());
-			attackVectorViewPath = attackVectorViewPath.substring(attackVectorViewPath.indexOf("c:/"));
-
+			const attackVectorViewPath:string = path.join(context.extensionPath, 'attackVectorWebView.html');
 			fs.readFile(attackVectorViewPath, "utf8",
 				(err: any, data: any) => {
 					if (this.attackVectorPanel) {
@@ -110,10 +107,7 @@ export class WebViews {
 		);
 
 		try {
-			const onDiskPath = vscode.Uri.file(path.join(context.extensionPath, 'resultTableWebView.html'));
-			let resultTableViewPath = decodeURIComponent(onDiskPath.toString());
-			resultTableViewPath = resultTableViewPath.substring(resultTableViewPath.indexOf("c:/"));
-
+			const resultTableViewPath:string = path.join(context.extensionPath, 'resultTableWebView.html');
 			fs.readFile(resultTableViewPath, "utf8",
 				(err: any, data: any) => {
 					if (this.resultTablePanel) {
@@ -180,8 +174,10 @@ export class WebViews {
 
 	private revealRangeAndSelection(element: vscode.TextEditor, node: any) {
 		vscode.window.showTextDocument(element.document, vscode.ViewColumn.One, false).then(() => {
-			const start = new vscode.Position(parseInt(node.Line[0]) - 1, parseInt(node.Column[0]) - 1);
-			const end = new vscode.Position(parseInt(node.Line[0]) - 1, parseInt(node.Column[0]) - 1 + parseInt(node.Length[0]));
+			const line = Math.max(0, parseInt(node.Line[0]) - 1);
+			const col = Math.max(0, parseInt(node.Column[0]) - 1);
+			const start = new vscode.Position(line, col);
+			const end = new vscode.Position(line, col + parseInt(node.Length[0]));
 			const range = new vscode.Range(start, end);
 			element.revealRange(range);
 			element.selection = new vscode.Selection(start, end);
