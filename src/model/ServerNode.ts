@@ -15,6 +15,7 @@ import { Utility } from "../utils/util";
 import { SastClient } from '../services/sastClient';
 import { CxSettings } from "../services/CxSettings";
 import { CxServerSettings } from "../services/CxSettings";
+import { finished } from "stream";
 
 export class ServerNode implements INode {
 
@@ -335,6 +336,9 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                     if (boundProject) {
                         this.currBoundProject = new ProjectNode(boundProject['id'], boundProject['teamId'], boundProject['name']);
                         await CxSettings.updateBoundProject(this.currBoundProject['id'], this.currBoundProject['teamId'], this.currBoundProject['name']);
+                        const latestScan: any[] = await this.retrieveLatestResults(this.currBoundProject['id']);
+                        this.currentScanedSource = new ScanNode(latestScan[0].id, this.currBoundProject['id'], this.workspaceFolder?.fsPath || '', true, this.httpClient, this.log, this);
+                        this.displayCurrentScanedSource();
                     }
                 }
             } else {
@@ -349,6 +353,10 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 vscode.window.showErrorMessage(err.message);
             }
         }
+    }
+
+    public async retrieveLatestResults(projectId:string):Promise<any>{
+        return await this.httpClient.getRequest('sast/scans?last=1&projectId='+projectId+'&scanStatus=Finished')
     }
 
     public async unbindProject() {

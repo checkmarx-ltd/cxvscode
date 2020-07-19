@@ -18,11 +18,13 @@ export class ScanNode implements INode {
     public queries: any[] | undefined;
 
     constructor(public scanId: number, public projectId: number,
-        public readonly sourceLocation: string, public readonly isFolder: boolean,
+        public readonly sourceLocation: string, public isFolder: boolean,
         public readonly httpClient: HttpClient, private readonly log: Logger,
         public parentNode: ServerNode) {
         this.scanResult = new ScanResults();
-        this.scanResult.updateSastDefaultResults(parentNode.config.sastConfig);
+        if(parentNode.config){
+            this.scanResult.updateSastDefaultResults(parentNode.config.sastConfig);
+        }
     }
 
     private chooseLabelName(): string {
@@ -109,7 +111,7 @@ export class ScanNode implements INode {
         }
     }
 
-    private async addStatisticsToScanResults() {
+    public async addStatisticsToScanResults() {
         const cxServer: CxServerSettings = CxSettings.getServer();
         const statistics: any = await this.httpClient.getRequest(`sast/scans/${this.scanId}/resultsStatistics`);
 
@@ -140,7 +142,7 @@ Scan results location:  ${this.scanResult.sastScanResultsLink}
 `);
     }
 
-    private async addDetailedReportToScanResults() {
+    public async addDetailedReportToScanResults() {
         const client = new ReportingClient(this.httpClient, this.log);
         if (!CxSettings.isQuiet()) {
             vscode.window.showInformationMessage('Waiting for server to generate scan report');
@@ -151,6 +153,9 @@ Scan results location:  ${this.scanResult.sastScanResultsLink}
         this.scanResult.scanTime = doc.$.ScanTime;
         this.scanResult.locScanned = doc.$.LinesOfCodeScanned;
         this.scanResult.filesScanned = doc.$.FilesScanned;
+        if(this.scanResult.filesScanned == 1){
+            this.isFolder = false;
+        }
         this.queries = doc.Query;
         this.scanResult.queryList = ScanNode.toJsonQueries(doc.Query);
         if (!CxSettings.isQuiet()) {
@@ -208,4 +213,5 @@ Scan results location:  ${this.scanResult.sastScanResultsLink}
             await CxSettings.updateReportPath(jsonReportPath);
         }
     }
+
 }
