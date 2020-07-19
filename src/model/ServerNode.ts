@@ -342,7 +342,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                     }
                 }
             } else {
-                vscode.window.showErrorMessage('There are no projects to bind to.');``
+                vscode.window.showErrorMessage('There are no projects to bind to.');
             }
         } catch (err) {
             this.log.error(err);
