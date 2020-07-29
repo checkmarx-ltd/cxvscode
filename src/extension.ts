@@ -42,22 +42,23 @@ export function activate(context: vscode.ExtensionContext) {
 		cxTreeDataProvider.refresh(serverNode);
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.scanFile", async (serverNode: ServerNode) => {
-		if(!CxSettings.isScanButtonsDisabled()){
+		if (CxSettings.isScanButtonsEnabled()) {
 			await serverNode.scan(false, '');
 			cxTreeDataProvider.refresh(serverNode);
 			serverNode.displayCurrentScanedSource();
-		}else{
-			vscode.window.showWarningMessage('This button is disabled in the config file.');
-		}}));
+		} else {
+			vscode.window.showWarningMessage('\'Scan Any File\' button is disabled');
+		}
+	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.scanFolder", async (serverNode: ServerNode) => {
-		if(!CxSettings.isScanButtonsDisabled()){
+		if (CxSettings.isScanButtonsEnabled()) {
 			await serverNode.scan(true, '');
 			cxTreeDataProvider.refresh(serverNode);
 			serverNode.displayCurrentScanedSource();
-		
-		}else{
-			vscode.window.showWarningMessage('This button is disabled in the config file.');
-		}}));
+		} else {
+			vscode.window.showWarningMessage('\'Scan Any Folder\' button is disabled');
+		}
+	}));
 	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanFile", async (uri: vscode.Uri) => {
 		const cxServerNode = cxTreeDataProvider.getCurrentServerNode();
 		if (cxServerNode) {
@@ -92,7 +93,7 @@ export function activate(context: vscode.ExtensionContext) {
 		cxTreeDataProvider.refresh(serverNode);
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.retrieveScanResults", async (scanNode: ScanNode) => {
-		if (scanNode.canRetrieveResults()) {
+		if (scanNode.parentNode.isLoggedIn()) {
 			// remove any entries that contain (potentially stale) results
 			if (context.subscriptions.length > numOfContextSubsForCxPortalWin) {
 				for (let idx = numOfContextSubsForCxPortalWin; idx < context.subscriptions.length; idx++) {

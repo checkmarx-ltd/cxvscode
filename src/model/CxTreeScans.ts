@@ -14,7 +14,7 @@ export class CxTreeScans implements vscode.TreeDataProvider<INode> {
             WebViews.webViews.destroyWebViews();
         }
         if (scanNode.queries) {
-            WebViews.webViews = new WebViews(context, [scanNode.isFolder, scanNode.sourceLocation], this.log, scanNode.httpClient);
+            WebViews.webViews = new WebViews(context, scanNode, this.log, scanNode.httpClient);
         }
     }
 

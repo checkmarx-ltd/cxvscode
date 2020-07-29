@@ -3,12 +3,11 @@ import { Utility } from "../utils/util";
 import { URL } from 'url';
 
 // constants defining settings
-const DEFAULT_FILE_EXTENSIONS: string = "!*.DS_Store, !*.ipr, !*.iws, !*.bak, !*.tmp, !*.aac, !*.aif, !*.iff, !*.m3u, !*.mid, !*.mp3, !*.mpa, !*.ra, !*.wav, !*.wma, !*.3g2, !*.3gp, !*.asf, !*.asx, !*.avi, !*.flv, !*.mov, !*.mp4, !*.mpg, !*.rm, !*.swf, !*.vob, !*.wmv, !*.bmp, !*.gif, !*.jpg, !*.png, !*.psd, !*.tif, !*.swf, !*.jar, !*.zip, !*.rar, !*.exe, !*.dll, !*.pdb, !*.7z, !*.gz, !*.tar.gz, !*.tar, !*.gz, !*.ahtm, !*.ahtml, !*.fhtml, !*.hdm, !*.hdml, !*.hsql, !*.ht, !*.hta, !*.htc, !*.htd, !*.war, !*.ear, !*.htmls, !*.ihtml, !*.mht, !*.mhtm, !*.mhtml, !*.ssi, !*.stm, !*.stml, !*.ttml, !*.txn, !*.xhtm, !*.xhtml, !*.class, !*.iml";
+const DEFAULT_FILE_EXTENSIONS: string = "!**/*.DS_Store, !**/*.ipr, !**/*.iws, !**/*.bak, !**/*.tmp, !**/*.aac, !**/*.aif, !**/*.iff, !**/*.m3u, !**/*.mid, !**/*.mp3, !**/*.mpa, !**/*.ra, !**/*.wav, !**/*.wma, !**/*.3g2, !**/*.3gp, !**/*.asf, !**/*.asx, !**/*.avi, !**/*.flv, !**/*.mov, !**/*.mp4, !**/*.mpg, !**/*.rm, !**/*.swf, !**/*.vob, !**/*.wmv, !**/*.bmp, !**/*.gif, !**/*.jpg, !**/*.png, !**/*.psd, !**/*.tif, !**/*.swf, !**/*.jar, !**/*.zip, !**/*.rar, !**/*.exe, !**/*.dll, !**/*.pdb, !**/*.7z, !**/*.gz, !**/*.tar.gz, !**/*.tar, !**/*.gz, !**/*.ahtm, !**/*.ahtml, !**/*.fhtml, !**/*.hdm, !**/*.hdml, !**/*.hsql, !**/*.ht, !**/*.hta, !**/*.htc, !**/*.htd, !**/*.war, !**/*.ear, !**/*.htmls, !**/*.ihtml, !**/*.mht, !**/*.mhtm, !**/*.mhtml, !**/*.ssi, !**/*.stm, !**/*.stml, !**/*.ttml, !**/*.txn, !**/*.xhtm, !**/*.xhtml, !**/*.class, !**/*.iml";
 const DEFAULT_FOLDER_EXCLUSIONS: string = "cvs, .svn, .hg, .git, .bzr, bin, obj, backup, .idea, .vscode, node_modules";
 const CXSERVER: string = 'cx.server';
 const CXQUIET: string = 'cx.quiet';
-const CXDISABLESCANBUTTONS: string = 'cx.disableScanButtons'
-
+const CX_ENABLE_SCAN_BUTTONS: string = 'cx.enableScanButtons'
 const CX_FOLDER_EXCLUSIONS: string = 'cx.folderExclusions';
 const CX_FILE_EXTENSIONS: string = 'cx.fileExtensions';
 const CX_REPORT_PATH: string = 'cx.reportPath';
@@ -101,15 +100,15 @@ export class CxSettings {
     }
 
     /**
-     * Returns value of the cx.disableScanButtons setting. The setting controls the scan any file/folder buttons.
-     * Add "cx.disableScanButtons": "true" to the settings.json
-     * @returns Value of cx.disableScanButtons setting
+     * Returns value of the cx.enableScanButtons setting. The setting controls the scan any file/folder buttons.
+     * Add "cx.enableScanButtons": true to the settings.json
+     * @returns Value of cx.enableScanButtons setting
      */
-    public static isScanButtonsDisabled(): boolean {
-        return vscode.workspace.getConfiguration().get(CXDISABLESCANBUTTONS) as boolean;
+    public static isScanButtonsEnabled(): boolean {
+        return vscode.workspace.getConfiguration().get(CX_ENABLE_SCAN_BUTTONS) as boolean;
     }
 
-        /**
+    /**
      * Returns value of the cx.quiet setting. The setting controls the amount of popup messages displayed to the user.
      * Add "cx.quiet": true to the settings.json
      *
@@ -173,5 +172,12 @@ export class CxSettings {
 
     public static getReportPath(): string {
         return vscode.workspace.getConfiguration().get(CX_REPORT_PATH) as string;
+    }
+
+    public static updateFSConfigAsCode(fsCode: string, fsConfig: string): string {
+        if (fsCode !== fsConfig) {
+            fsCode = fsConfig;
+        }
+        return fsCode;
     }
 }

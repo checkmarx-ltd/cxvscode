@@ -15,7 +15,7 @@ import { Utility } from "../utils/util";
 import { SastClient } from '../services/sastClient';
 import { CxSettings } from "../services/CxSettings";
 import { CxServerSettings } from "../services/CxSettings";
-import { finished } from "stream";
+import { LoginMethods } from './LoginMethods';
 
 export class ServerNode implements INode {
 
@@ -41,12 +41,12 @@ export class ServerNode implements INode {
         // read folder exclusions, or initialize to default
         this.folderExclusion = CxSettings.getFolderExclusions();
 
-        // read file exclusions, or initialize to default
+        // read file extensions, or initialize to default
         this.fileExtension = CxSettings.getFileExtensions();
 
         const baseUrl = url.resolve(this.sastUrl, 'CxRestAPI/');
 
-        this.httpClient = new HttpClient(baseUrl, "Visual Studio Code", this.log);
+        this.httpClient = new HttpClient(baseUrl, "Visual-Studio-Code", this.log);
 
         this.projectName = '';
         this.teamPath = '';
@@ -84,11 +84,13 @@ export class ServerNode implements INode {
     }
 
     public async updateFolderExclusion() {
+        this.folderExclusion = CxSettings.updateFSConfigAsCode(this.folderExclusion, CxSettings.getFolderExclusions());
         this.folderExclusion = await this.updateFileSystemPatterns(this.folderExclusion, "Add/Modify folder exclusion");
         CxSettings.updateFolderExclusions(this.folderExclusion);
     }
 
     public async updateFileExtension() {
+        this.fileExtension = CxSettings.updateFSConfigAsCode(this.fileExtension, CxSettings.getFileExtensions());
         this.fileExtension = await this.updateFileSystemPatterns(this.fileExtension, "Add/Modify file extension: included/excluded file starts without/with !");
         CxSettings.updateFileExtensions(this.fileExtension);
     }
@@ -141,10 +143,10 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 
     /**
      * Checks if the user is currently logged in to the server
-     * @returns true if access token is available; false otherwise 
+     * @returns true if access token or cookies are available; false otherwise 
      */
     public isLoggedIn(): boolean {
-        return this.httpClient.accessToken;
+        return this.httpClient.accessToken || (this.httpClient.cookies && this.httpClient.cookies.size > 0);
     }
 
     public async login() {
@@ -154,27 +156,47 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 return;
             }
 
-            const cxServer: CxServerSettings = CxSettings.getServer();
-            if (cxServer.username.length > 0 && cxServer.password.length > 0) {
-                this.username = cxServer.username;
-                this.password = cxServer.password;
-            } else {
-                this.username = await Utility.showInputBox("Enter CxSAST Username", false, cxServer.username);
-                this.password = await Utility.showInputBox("Enter CxSAST Password", true);
+            const loginMethod: string = await Utility.showPickString("Select login method", [LoginMethods.CREDENTIALS, LoginMethods.SSO]);
+            if (loginMethod) {
+                if (loginMethod === LoginMethods.CREDENTIALS) {
+                    await this.loginWithCredentials();
+                }
+                else {
+                    await this.ssoLogin();
+                }
+
+                this.log.info('Login successful');
+                vscode.window.showInformationMessage('Login successful');
+
+                if (this.isBoundToProject()) {
+                    await this.retrieveLatestResults();
+                }
             }
-            await this.httpClient.login(this.username, this.password);
-
-            cxServer.username = this.username;
-            cxServer.password = this.password;
-            await CxSettings.updateServer(cxServer);
-
-            this.log.info('Login successful');
-            vscode.window.showInformationMessage('Login successful');
         }
         catch (err) {
             this.log.error(err);
-            vscode.window.showErrorMessage(err.message);
+            vscode.window.showErrorMessage('Login failed');
         }
+    }
+
+    private async loginWithCredentials() {
+        const cxServer: CxServerSettings = CxSettings.getServer();
+        if (cxServer.username.length > 0 && cxServer.password.length > 0) {
+            this.username = cxServer.username;
+            this.password = cxServer.password;
+        } else {
+            this.username = await Utility.showInputBox("Enter CxSAST Username", false, cxServer.username);
+            this.password = await Utility.showInputBox("Enter CxSAST Password", true);
+        }
+        await this.httpClient.login(this.username, this.password);
+
+        cxServer.username = this.username;
+        cxServer.password = this.password;
+        await CxSettings.updateServer(cxServer);
+    }
+
+    private async ssoLogin() {
+        await this.httpClient.ssoLogin();
     }
 
     public async logout() {
@@ -336,9 +358,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                     if (boundProject) {
                         this.currBoundProject = new ProjectNode(boundProject['id'], boundProject['teamId'], boundProject['name']);
                         await CxSettings.updateBoundProject(this.currBoundProject['id'], this.currBoundProject['teamId'], this.currBoundProject['name']);
-                        const latestScan: any[] = await this.retrieveLatestResults(this.currBoundProject['id']);
-                        this.currentScanedSource = new ScanNode(latestScan[0].id, this.currBoundProject['id'], this.workspaceFolder?.fsPath || '', true, this.httpClient, this.log, this);
-                        this.displayCurrentScanedSource();
+                        await this.retrieveLatestResults();
                     }
                 }
             } else {
@@ -355,8 +375,12 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         }
     }
 
-    public async retrieveLatestResults(projectId:string):Promise<any>{
-        return await this.httpClient.getRequest('sast/scans?last=1&projectId='+projectId+'&scanStatus=Finished')
+    private async retrieveLatestResults() {
+        const latestScan: any[] = await this.httpClient.getRequest(`sast/scans?last=1&projectId=${this.currBoundProject['id']}&scanStatus=Finished`);
+        if (latestScan && latestScan.length === 1) {
+            this.currentScanedSource = new ScanNode(latestScan[0].id, this.currBoundProject['id'], this.currBoundProject['name'], false, this.httpClient, this.log, this, false);
+            this.displayCurrentScanedSource();
+        }
     }
 
     public async unbindProject() {
@@ -376,7 +400,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         }
     }
 
-    public isBoundToProject(): boolean {
+    private isBoundToProject(): boolean {
         return this.currBoundProject;
     }
 
@@ -390,7 +414,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
 
     private addSource(sourceLocation: string, scanId: number, projectId: number, isFolder: boolean) {
-        const newSource: ScanNode = new ScanNode(scanId, projectId, sourceLocation, isFolder, this.httpClient, this.log, this);
+        const newSource: ScanNode = new ScanNode(scanId, projectId, sourceLocation, isFolder, this.httpClient, this.log, this, true);
         let found: boolean = false;
         for (const source of this.scanedSources) {
             if (this.isEquivalent(newSource, source)) {
@@ -493,6 +517,9 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 }
             }
 
+            this.folderExclusion = CxSettings.updateFSConfigAsCode(this.folderExclusion, CxSettings.getFolderExclusions());
+            this.fileExtension = CxSettings.updateFSConfigAsCode(this.fileExtension, CxSettings.getFileExtensions());
+
             const sastConfig: SastConfig = {
                 serverUrl: this.sastUrl,
                 username: this.username,
@@ -518,7 +545,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 projectId: this.currBoundProject && this.currBoundProject.id,
                 projectName: this.projectName,
                 isSyncMode: false,
-                cxOrigin: 'Visual Studio Code',
+                cxOrigin: '',
                 enableDependencyScan: false,
                 enableSastScan: true,
                 sastConfig: sastConfig
@@ -528,7 +555,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             this.config = config;
 
             const cxClient = new CxClient(this.log);
-            const scanResults: ScanResults = await cxClient.scan(config);
+            const scanResults: ScanResults = await cxClient.scan(config, this.httpClient);
             const sastClient = new SastClient(scanResults.scanId, this.httpClient, this.log, sastConfig.scanTimeoutInMinutes);
             await sastClient.waitForScanToFinish();
 
