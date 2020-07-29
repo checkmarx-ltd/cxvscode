@@ -3,6 +3,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { Logger } from "@checkmarx/cx-common-js-client";
 import { HttpClient } from "@checkmarx/cx-common-js-client";
+import { ScanNode } from '../model/ScanNode';
 
 export class WebViews {
 
@@ -11,13 +12,13 @@ export class WebViews {
 	private resultTablePanel?: vscode.WebviewPanel = undefined;
 	private queryDescriptionPanel?: vscode.WebviewPanel = undefined;
 
-	constructor(context: vscode.ExtensionContext, private sourceDetails: any,
+	constructor(context: vscode.ExtensionContext, private scanNode: ScanNode,
 		private readonly log: Logger, private readonly httpClient: HttpClient) {
 		this.createWebViews(context);
 	}
 
 	async createQueryDescriptionWebView(queryId: number) {
-		if (!this.httpClient.accessToken) {
+		if (!this.httpClient.accessToken && !(this.httpClient.cookies && this.httpClient.cookies.size > 0)) {
 			vscode.window.showErrorMessage('Access token expired. Please login.');
 			return;
 		}
@@ -68,7 +69,7 @@ export class WebViews {
 		);
 
 		try {
-			const attackVectorViewPath:string = path.join(context.extensionPath, 'attackVectorWebView.html');
+			const attackVectorViewPath: string = path.join(context.extensionPath, 'attackVectorWebView.html');
 			fs.readFile(attackVectorViewPath, "utf8",
 				(err: any, data: any) => {
 					if (this.attackVectorPanel) {
@@ -107,7 +108,7 @@ export class WebViews {
 		);
 
 		try {
-			const resultTableViewPath:string = path.join(context.extensionPath, 'resultTableWebView.html');
+			const resultTableViewPath: string = path.join(context.extensionPath, 'resultTableWebView.html');
 			fs.readFile(resultTableViewPath, "utf8",
 				(err: any, data: any) => {
 					if (this.resultTablePanel) {
@@ -185,8 +186,12 @@ export class WebViews {
 	}
 
 	private attackVectorNodeClicked(node: any) {
-		const [isFolder, sourceLocation] = this.sourceDetails;
-		const fullSourcePath = isFolder ? sourceLocation + path.sep + (path.sep === "/" ? node.FileName[0] : node.FileName[0].replace(/[/]/g, '\\')) : sourceLocation;
+		let fullSourcePath: string = '';
+		if (this.scanNode.isScannedByVSC) {
+			fullSourcePath = this.scanNode.isFolder ? this.scanNode.sourceLocation + path.sep + (path.sep === "/" ? node.FileName[0] : node.FileName[0].replace(/[/]/g, '\\')) : this.scanNode.sourceLocation;
+		} else {
+			fullSourcePath = this.getFullSourcePathIfExistsForBoundProject(node.FileName[0]);
+		}
 		const uri = vscode.Uri.file(fullSourcePath);
 		let found: boolean = this.isTextEditorVisible(node, fullSourcePath);
 		if (!found) {
@@ -194,5 +199,25 @@ export class WebViews {
 				found = this.isTextEditorVisible(node, fullSourcePath);
 			});
 		}
+	}
+
+	private getFullSourcePathIfExistsForBoundProject(sastFileName: string): string {
+		const glob = require("glob");
+		let fullSourcePath: string = '';
+		const workspace: string | any = this.scanNode.parentNode.workspaceFolder?.fsPath;
+		const workspaceFiles: string[] = glob.sync(workspace + '/**/*');
+		for (const file of workspaceFiles) {
+			if (file.toLowerCase().endsWith(sastFileName.toLowerCase())) {
+				fullSourcePath = file;
+				break;
+			}
+		}
+		if (fullSourcePath && fullSourcePath.length) {
+			fullSourcePath = path.sep === "/" ? fullSourcePath : fullSourcePath.replace(/[/]/g, '\\');
+		}
+		else {
+			fullSourcePath = sastFileName;
+		}
+		return fullSourcePath;
 	}
 }
