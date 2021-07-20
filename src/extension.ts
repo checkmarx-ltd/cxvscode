@@ -59,21 +59,35 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showWarningMessage('\'Scan Any Folder\' button is disabled');
 		}
 	}));
+if(CxSettings.isWorkspaceOnlyScanEnabled()) {
+	vscode.commands.executeCommand('setContext', 'cxSettings.showWorkspaceOnly', true);
+} else {
+	vscode.commands.executeCommand('setContext', 'cxSettings.showWorkspaceOnly', false);
+}
+
 	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanFile", async (uri: vscode.Uri) => {
 		const cxServerNode = cxTreeDataProvider.getCurrentServerNode();
+		if(!CxSettings.isWorkspaceOnlyScanEnabled()) {
 		if (cxServerNode) {
 			await cxServerNode.scan(false, uri.fsPath);
 			cxTreeDataProvider.refresh(cxServerNode);
 			cxServerNode.displayCurrentScanedSource();
 		}
+	} else {
+		vscode.window.showWarningMessage('\'Checkmarx: Scan Current Folder\' option is disabled \n. Deselect "Enable Workspace Only Scan" in extension settings and relaunch VSCode"');
+	}
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanFolder", async (uri: vscode.Uri) => {
 		const cxServerNode = cxTreeDataProvider.getCurrentServerNode();
+		if(!CxSettings.isWorkspaceOnlyScanEnabled()) {
 		if (cxServerNode) {
 			await cxServerNode.scan(true, uri.fsPath);
 			cxTreeDataProvider.refresh(cxServerNode);
 			cxServerNode.displayCurrentScanedSource();
 		}
+	} else {
+		vscode.window.showWarningMessage('\'Checkmarx: Scan Current File\' option is disabled \n. Deselect "Enable Workspace Only Scan" in extension settings"',  { modal: true });
+	}
 	}));
 
 	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanWorkspace", async () => {

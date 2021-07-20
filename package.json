@@ -2,7 +2,7 @@
 	"name": "cxvscode",
 	"displayName": "CxVSCode",
 	"description": "CxVSCode is a Checkmarx IDE extension that enables scanning/retrieving results on/from Checkmarx CxSAST",
-	"version": "2020.3.1",
+	"version": "2021.3.1",
 	"publisher": "Checkmarx",
 	"icon": "resources/icons/Checkmarx.png",
 	"license": "SEE LICENSE IN checkmarx-license-terms.md",
@@ -88,6 +88,10 @@
 				"cx.enableScanButtons": {
 					"type": "boolean",
 					"description": "Controls scan any folder/file buttons"
+				},
+				"cx.enableWorkspaceOnlyScan": {
+					"type": "boolean",
+					"description": "Controls Scan menu of only workspace"
 				}
 			}
 		},
@@ -170,15 +174,15 @@
 			},
 			{
 				"command": "Explorer.scanFile",
-				"title": "Scan Current File"
+				"title": "Checkmarx: Scan Current File"
 			},
 			{
 				"command": "Explorer.scanFolder",
-				"title": "Scan Current Folder"
+				"title": "Checkmarx: Scan Current Folder"
 			},
 			{
 				"command": "Explorer.scanWorkspace",
-				"title": "Scan Workspace"
+				"title": "Checkmarx: Scan Workspace"
 			},
 			{
 				"command": "cxportalwin.bindProject",
@@ -307,12 +311,12 @@
 			"explorer/context": [
 				{
 					"command": "Explorer.scanFolder",
-					"when": "explorerResourceIsFolder",
+					"when": "cxSettings.showWorkspaceOnly == false && explorerResourceIsFolder",
 					"group": "Cx"
 				},
 				{
 					"command": "Explorer.scanFile",
-					"when": "!explorerResourceIsFolder",
+					"when": "cxSettings.showWorkspaceOnly == false && !explorerResourceIsFolder",
 					"group": "Cx"
 				},
 				{
