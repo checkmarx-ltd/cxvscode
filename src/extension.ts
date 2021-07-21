@@ -74,7 +74,7 @@ if(CxSettings.isWorkspaceOnlyScanEnabled()) {
 			cxServerNode.displayCurrentScanedSource();
 		}
 	} else {
-		vscode.window.showWarningMessage('\'Checkmarx: Scan Current Folder\' option is disabled \n. Deselect "Enable Workspace Only Scan" in extension settings and relaunch VSCode"');
+		vscode.window.showWarningMessage('\'Checkmarx: Scan Current File\' option is disabled \n. Scan can be performed at workspace level only.');
 	}
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanFolder", async (uri: vscode.Uri) => {
@@ -86,7 +86,7 @@ if(CxSettings.isWorkspaceOnlyScanEnabled()) {
 			cxServerNode.displayCurrentScanedSource();
 		}
 	} else {
-		vscode.window.showWarningMessage('\'Checkmarx: Scan Current File\' option is disabled \n. Deselect "Enable Workspace Only Scan" in extension settings"',  { modal: true });
+		vscode.window.showWarningMessage('\'Checkmarx: Scan Current Folder\' option is disabled \n. Scan can be performed at workspace level only.');
 	}
 	}));
 

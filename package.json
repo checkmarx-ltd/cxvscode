@@ -91,7 +91,7 @@
 				},
 				"cx.enableWorkspaceOnlyScan": {
 					"type": "boolean",
-					"description": "Controls Scan menu of only workspace"
+					"description": "Forces user to always scan at workspace only (Restart required)"
 				}
 			}
 		},
