@@ -46,7 +46,7 @@ export class ServerNode implements INode {
 
         const baseUrl = url.resolve(this.sastUrl, 'CxRestAPI/');
 
-        this.httpClient = new HttpClient(baseUrl, "Visual-Studio-Code", this.log);
+        this.httpClient = new HttpClient(baseUrl, "Visual-Studio-Code","", this.log);
 
         this.projectName = '';
         this.teamPath = '';
@@ -469,6 +469,8 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 
             let presetId: number | undefined;
             let presetName: string = '';
+            
+            let isProjPrivate:boolean = true;
 
             this.printHeader();
             this.log.debug('Entering CxScanner...\nReading configuration.');
@@ -476,6 +478,9 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             if (this.currBoundProject) {
                 const settingsResponse = await this.httpClient.getRequest(`sast/scanSettings/${this.currBoundProject.id}`);
                 presetId = settingsResponse && settingsResponse.preset && settingsResponse.preset.id;
+
+                const settingsResponseProject = await this.httpClient.getRequest(`projects/${this.currBoundProject.id}`);
+                isProjPrivate = !settingsResponseProject.isPublic;
             }
             else {
                 this.projectName = await Utility.showInputBox("Enter project name", false);
@@ -485,6 +490,16 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 this.teamPath = await this.chooseTeam();
                 await this.isProjectExists();
                 presetName = await this.choosePreset();
+
+                const isProjectPrivate: string = await Utility.showPickString("Is project private?", ['Yes', 'No']);
+                 isProjPrivate = Utility.modeIsEnabled(isProjectPrivate);
+            if (!CxSettings.isQuiet()) {
+                if (isProjPrivate) {
+                    vscode.window.showInformationMessage('Project is private');
+                } else {
+                    vscode.window.showInformationMessage('Project is public');
+                }
+            }
             }
 
             // get the source location; if scanPath is empty, prompt user to select
@@ -507,8 +522,13 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 }
             }
 
+            
+            var isPrivate : boolean;
+            if(!isProjPrivate) // Checking if project is private all its scans are by default private. 
+           //Hence no need of asking user another prompt to choose whether scan has to be private/public
+            {
             const isScanPrivate = await Utility.showPickString("Is scan private?", ['Yes', 'No']);
-            const isPrivate: boolean = Utility.modeIsEnabled(isScanPrivate);
+             isPrivate = Utility.modeIsEnabled(isScanPrivate);
             if (!CxSettings.isQuiet()) {
                 if (isPrivate) {
                     vscode.window.showInformationMessage('Scan is private');
@@ -516,6 +536,10 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                     vscode.window.showInformationMessage('Scan is public');
                 }
             }
+          } else 
+          {
+            isPrivate = true;
+          }
 
             this.folderExclusion = CxSettings.updateFSConfigAsCode(this.folderExclusion, CxSettings.getFolderExclusions());
             this.fileExtension = CxSettings.updateFSConfigAsCode(this.fileExtension, CxSettings.getFileExtensions());
@@ -545,7 +569,9 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 projectId: this.currBoundProject && this.currBoundProject.id,
                 projectName: this.projectName,
                 isSyncMode: false,
+                enableProxy: false,
                 cxOrigin: '',
+                cxOriginUrl: '',
                 enableDependencyScan: false,
                 enableSastScan: true,
                 sastConfig: sastConfig
