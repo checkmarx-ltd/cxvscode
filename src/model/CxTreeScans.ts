@@ -21,6 +21,7 @@ export class CxTreeScans implements vscode.TreeDataProvider<INode> {
     // Refresh Tree
     public refresh(element?: INode): void {
         try {
+            if(element)
             this._onDidChangeTreeData.fire(element);
         } catch (err) {
             this.log.error(err);
