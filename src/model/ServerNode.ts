@@ -9,6 +9,7 @@ import { ScanConfig } from "@checkmarx/cx-common-js-client";
 import { SastConfig } from "@checkmarx/cx-common-js-client";
 import { TeamApiClient } from "@checkmarx/cx-common-js-client";
 import { HttpClient } from "@checkmarx/cx-common-js-client";
+import { AuthSSODetails } from "@checkmarx/cx-common-js-client";
 import { ProjectNode } from "./ProjectNode";
 import { ScanNode } from "./ScanNode";
 import { Utility } from "../utils/util";
@@ -16,6 +17,8 @@ import { SastClient } from '../services/sastClient';
 import { CxSettings } from "../services/CxSettings";
 import { CxServerSettings } from "../services/CxSettings";
 import { LoginMethods } from './LoginMethods';
+import { SSOConstants } from './ssoConstant';
+import { SessionStorageService } from '../services/sessionStorageService';
 
 export class ServerNode implements INode {
 
@@ -31,13 +34,15 @@ export class ServerNode implements INode {
     private teamPath: string;
     private currentScanedSource: ScanNode | undefined;
     private currBoundProject: ProjectNode | any;
+    private authSSODetails: AuthSSODetails | any;
+   private storageManager :  SessionStorageService;
 
-    constructor(public readonly sastUrl: string, private readonly alias: string, private readonly log: Logger) {
+    constructor(public readonly sastUrl: string, private readonly alias: string, private readonly log: Logger,private readonly context: vscode.ExtensionContext) {
         this.username = '';
         this.password = '';
         const workspaceFolders = vscode.workspace.workspaceFolders;
         this.workspaceFolder = workspaceFolders ? workspaceFolders[0].uri : undefined;
-
+       
         // read folder exclusions, or initialize to default
         this.folderExclusion = CxSettings.getFolderExclusions();
 
@@ -48,6 +53,8 @@ export class ServerNode implements INode {
 
         this.httpClient = new HttpClient(baseUrl, "Visual-Studio-Code","", this.log);
 
+        this.storageManager = new SessionStorageService(context.workspaceState);
+        
         this.projectName = '';
         this.teamPath = '';
 
@@ -146,7 +153,22 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
      * @returns true if access token or cookies are available; false otherwise 
      */
     public isLoggedIn(): boolean {
-        return this.httpClient.accessToken || (this.httpClient.cookies && this.httpClient.cookies.size > 0);
+                   
+        let access_token = this.storageManager.getValue<string>(SSOConstants.ACCESS_TOKEN, '');
+        if( access_token === '' )
+        {
+            return false;
+
+        }else{
+            let tokenExp = this.httpClient.isTokenExpired();
+            if(this.httpClient.isSSOLogin  && tokenExp)
+            {
+                vscode.window.showInformationMessage('Access token expired. Please Login.');
+                return false;
+            }else{
+                return true;
+            }
+        }
     }
 
     public async login() {
@@ -160,17 +182,18 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             if (loginMethod) {
                 if (loginMethod === LoginMethods.CREDENTIALS) {
                     await this.loginWithCredentials();
+                    this.log.info('Login successful');
+                    vscode.window.showInformationMessage('Login successful');
+                    this.storageManager.setValue<string>(SSOConstants.ACCESS_TOKEN, this.httpClient.accessToken);
+
+                    if (this.isBoundToProject()) {
+                        await this.retrieveLatestResults();
+                    }
                 }
                 else {
                     await this.ssoLogin();
                 }
-
-                this.log.info('Login successful');
-                vscode.window.showInformationMessage('Login successful');
-
-                if (this.isBoundToProject()) {
-                    await this.retrieveLatestResults();
-                }
+                
             }
         }
         catch (err) {
@@ -193,18 +216,72 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         cxServer.username = this.username;
         cxServer.password = this.password;
         await CxSettings.updateServer(cxServer);
+
+     
     }
 
+    /**
+     * This method invokes browser URL for single sign on login.
+     * User needs to enter credentials in webconsole in order to generate authrorization code
+     */
     private async ssoLogin() {
-        await this.httpClient.ssoLogin();
+        try {
+                this.authSSODetails =  new AuthSSODetails();
+                this.authSSODetails.clientId = SSOConstants.vscode_client_id;
+                this.authSSODetails.scope = SSOConstants.vscode_client_scope;
+                this.authSSODetails.redirectURI = SSOConstants.vscode_redirect_uri ;
+
+                this.log.info('Logging into Checkmarx with authorization code.');
+                let authURL: string = await this.httpClient.getAuthorizationCodeURL(this.authSSODetails);
+                
+                // Open browser windows for SAST server login for SSO
+                vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(authURL));
+               
+        }catch (err) {
+            this.log.error(err);
+            vscode.window.showErrorMessage('Login failed');
+        }
+
     }
 
+    /**
+     * This method gets invoked by URI handler when SSO login in started and
+     * After we receive authorization code. We pass AuthSSODetails object to http client
+     * getAccessTokenFromAuthorizationCode method to get access token
+     */
+    public async loginWithAuthCode(authSSODetails:AuthSSODetails){
+        
+        try{
+
+            vscode.window.showInformationMessage('Logging into Checkmarx with authorization code.');
+            await this.httpClient.getAccessTokenFromAuthorizationCode(authSSODetails);
+
+            vscode.window.showInformationMessage('SSO Login successful with authorization code.');
+            let access_token = <string> this.httpClient.accessToken;
+
+            /* Setting access token in context */ 
+            this.storageManager.setValue<string>(SSOConstants.ACCESS_TOKEN, access_token);
+
+            if (this.isBoundToProject()) {
+                await this.retrieveLatestResults();
+            }
+        }catch (err) {
+            this.log.error(err);
+            vscode.window.showErrorMessage('Login failed');
+        }
+		
+
+    }
     public async logout() {
+        
+
         if (!this.isLoggedIn()) {
             vscode.window.showErrorMessage('You are not logged in.');
             return;
         }
         this.httpClient.logout();
+        //removing access token from context
+        this.storageManager.setValue<string>(SSOConstants.ACCESS_TOKEN,'');
         this.log.info('Logout successful');
         if (!CxSettings.isQuiet()) {
             vscode.window.showInformationMessage('Logout successful');
@@ -212,6 +289,8 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         const cxServer: CxServerSettings = CxSettings.getServer();
         cxServer.username = '';
         cxServer.password = '';
+        this.authSSODetails = null;
+
         await CxSettings.updateServer(cxServer);
     }
 

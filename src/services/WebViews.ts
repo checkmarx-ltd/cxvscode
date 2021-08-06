@@ -4,6 +4,8 @@ import * as fs from "fs";
 import { Logger } from "@checkmarx/cx-common-js-client";
 import { HttpClient } from "@checkmarx/cx-common-js-client";
 import { ScanNode } from '../model/ScanNode';
+import { SessionStorageService } from './sessionStorageService';
+import { SSOConstants } from '../model/ssoConstant';
 
 export class WebViews {
 
@@ -12,17 +14,35 @@ export class WebViews {
 	private resultTablePanel?: vscode.WebviewPanel = undefined;
 	private queryDescriptionPanel?: vscode.WebviewPanel = undefined;
 
+	private accessToken: string = '';
+
+
 	constructor(context: vscode.ExtensionContext, private scanNode: ScanNode,
 		private readonly log: Logger, private readonly httpClient: HttpClient) {
 		this.createWebViews(context);
+
+		let storageManager = new SessionStorageService(context.workspaceState);
+		this.accessToken = storageManager.getValue<string>(SSOConstants.ACCESS_TOKEN,'');
+
 	}
 
 	async createQueryDescriptionWebView(queryId: number) {
-		if (!this.httpClient.accessToken && !(this.httpClient.cookies && this.httpClient.cookies.size > 0)) {
+
+		if(this.accessToken === '')
+		{
 			vscode.window.showErrorMessage('Access token expired. Please login.');
 			return;
 		}
-
+		else
+		{
+			let tokenExp = this.httpClient.isTokenExpired();
+			if(this.httpClient.isSSOLogin  && tokenExp)
+            {
+				vscode.window.showErrorMessage('Access token expired. Please login.');
+				return;
+			}
+		}
+		
 		if (this.queryDescriptionPanel) {
 			this.queryDescriptionPanel.dispose();
 		}
