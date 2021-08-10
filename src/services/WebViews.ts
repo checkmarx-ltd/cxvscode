@@ -3,9 +3,11 @@ import * as path from "path";
 import * as fs from "fs";
 import { Logger } from "@checkmarx/cx-common-js-client";
 import { HttpClient } from "@checkmarx/cx-common-js-client";
+import { AuthSSODetails } from "@checkmarx/cx-common-js-client";
 import { ScanNode } from '../model/ScanNode';
 import { SessionStorageService } from './sessionStorageService';
 import { SSOConstants } from '../model/ssoConstant';
+import { LoginChecks } from './loginChecks';
 
 export class WebViews {
 
@@ -13,35 +15,28 @@ export class WebViews {
 	private attackVectorPanel?: vscode.WebviewPanel = undefined;
 	private resultTablePanel?: vscode.WebviewPanel = undefined;
 	private queryDescriptionPanel?: vscode.WebviewPanel = undefined;
-
+	private storageManager :  SessionStorageService;
 	private accessToken: string = '';
-
+	private authSSODetails: AuthSSODetails | any;
+	private loginChecks: LoginChecks | any;
 
 	constructor(context: vscode.ExtensionContext, private scanNode: ScanNode,
 		private readonly log: Logger, private readonly httpClient: HttpClient) {
 		this.createWebViews(context);
 
-		let storageManager = new SessionStorageService(context.workspaceState);
-		this.accessToken = storageManager.getValue<string>(SSOConstants.ACCESS_TOKEN,'');
-
+		this.storageManager = new SessionStorageService(context.workspaceState);
+		this.accessToken = this.storageManager.getValue<string>(SSOConstants.ACCESS_TOKEN,'');
+		this.loginChecks =  new LoginChecks(log,context,this.httpClient);
 	}
 
 	async createQueryDescriptionWebView(queryId: number) {
 
-		if(this.accessToken === '')
+		if(!this.loginChecks.isLoggedIn())
 		{
 			vscode.window.showErrorMessage('Access token expired. Please login.');
 			return;
 		}
-		else
-		{
-			let tokenExp = this.httpClient.isTokenExpired();
-			if(this.httpClient.isSSOLogin  && tokenExp)
-            {
-				vscode.window.showErrorMessage('Access token expired. Please login.');
-				return;
-			}
-		}
+		
 		
 		if (this.queryDescriptionPanel) {
 			this.queryDescriptionPanel.dispose();
