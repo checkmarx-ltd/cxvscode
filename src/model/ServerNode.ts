@@ -16,6 +16,7 @@ import { Utility } from "../utils/util";
 import { SastClient } from '../services/sastClient';
 import { CxSettings } from "../services/CxSettings";
 import { CxServerSettings } from "../services/CxSettings";
+import { LoginChecks } from "../services/loginChecks";
 import { LoginMethods } from './LoginMethods';
 import { SSOConstants } from './ssoConstant';
 import { SessionStorageService } from '../services/sessionStorageService';
@@ -35,7 +36,8 @@ export class ServerNode implements INode {
     private currentScanedSource: ScanNode | undefined;
     private currBoundProject: ProjectNode | any;
     private authSSODetails: AuthSSODetails | any;
-   private storageManager :  SessionStorageService;
+    private storageManager :  SessionStorageService;
+    private loginChecks: LoginChecks | any;
 
     constructor(public readonly sastUrl: string, private readonly alias: string, private readonly log: Logger,private readonly context: vscode.ExtensionContext) {
         this.username = '';
@@ -54,10 +56,13 @@ export class ServerNode implements INode {
         this.httpClient = new HttpClient(baseUrl, "Visual-Studio-Code","", this.log);
 
         this.storageManager = new SessionStorageService(context.workspaceState);
+
+        this.loginChecks =  new LoginChecks(log,context,this.httpClient);
         
         this.projectName = '';
         this.teamPath = '';
 
+       
         // read bound project, if available
         const cxServerSettings: CxServerSettings = CxSettings.getServer();
         try {
@@ -96,6 +101,9 @@ export class ServerNode implements INode {
         CxSettings.updateFolderExclusions(this.folderExclusion);
     }
 
+    public isLoggedIn(): boolean {
+        return this.loginChecks.isLoggedIn();
+    }
     public async updateFileExtension() {
         this.fileExtension = CxSettings.updateFSConfigAsCode(this.fileExtension, CxSettings.getFileExtensions());
         this.fileExtension = await this.updateFileSystemPatterns(this.fileExtension, "Add/Modify file extension: included/excluded file starts without/with !");
@@ -148,32 +156,10 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 `       );
     }
 
-    /**
-     * Checks if the user is currently logged in to the server
-     * @returns true if access token or cookies are available; false otherwise 
-     */
-    public isLoggedIn(): boolean {
-                   
-        let access_token = this.storageManager.getValue<string>(SSOConstants.ACCESS_TOKEN, '');
-        if( access_token === '' )
-        {
-            return false;
-
-        }else{
-            let tokenExp = this.httpClient.isTokenExpired();
-            if(this.httpClient.isSSOLogin  && tokenExp)
-            {
-                vscode.window.showInformationMessage('Access token expired. Please Login.');
-                return false;
-            }else{
-                return true;
-            }
-        }
-    }
-
+   
     public async login() {
         try {
-            if (this.isLoggedIn()) {
+            if (this.loginChecks.isLoggedIn()) {
                 vscode.window.showInformationMessage('You are already logged in!');
                 return;
             }
@@ -267,15 +253,16 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             }
         }catch (err) {
             this.log.error(err);
-            vscode.window.showErrorMessage('Login failed');
+            vscode.window.showErrorMessage('Login failed. Not able to get access token using Authorization code.');
         }
 		
 
     }
+
+    
     public async logout() {
         
-
-        if (!this.isLoggedIn()) {
+        if (!this.loginChecks.isLoggedIn()) {
             vscode.window.showErrorMessage('You are not logged in.');
             return;
         }
@@ -311,7 +298,9 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         if (projectNode) {
             return projectNode.id;
         }
-
+        if (!this.loginChecks.isLoggedIn()) {
+            throw Error('Access token expired. Please login.');
+        }
         const projectList: any[] = await this.httpClient.getRequest('projects');
         if (projectList && projectList.length > 0) {
             const teamsByName = await this.getTeamsByName();
@@ -329,6 +318,9 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
 
     private async choosePreset(): Promise<string> {
+        if (!this.loginChecks.isLoggedIn()) {
+            throw Error('Access token expired. Please login.');
+        }
         const allPresets: any[] = await this.httpClient.getRequest('sast/presets');
         const allPresetNames: string[] = allPresets.map(preset => preset.name);
 
@@ -345,6 +337,9 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
 
     private async chooseTeam(): Promise<string> {
+        if (!this.loginChecks.isLoggedIn()) {
+            throw Error('Access token expired. Please login.');
+        }
         const allTeams: any[] = await this.httpClient.getRequest('auth/teams');
         const allTeamNames: string[] = allTeams.map(team => team.fullName);
 
@@ -382,6 +377,9 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
 
     private async getTeamsByName(): Promise<Map<string, number>> {
+        if (!this.loginChecks.isLoggedIn()) {
+            throw Error('Access token expired. Please login.');
+        }
         const allTeams: any[] = await this.httpClient.getRequest('auth/teams');
         const teamsByName: Map<string, number> = new Map<string, number>();
         allTeams.forEach(team => teamsByName.set(team.fullName, team.id));
@@ -389,6 +387,9 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
 
     private async getAllTeams(): Promise<[Map<number, string>, Map<string, number>]> {
+        if (!this.loginChecks.isLoggedIn()) {
+            throw Error('Access token expired. Please login.');
+        }
         const allTeams: any[] = await this.httpClient.getRequest('auth/teams');
         const teamsById: Map<number, string> = new Map<number, string>();
         const teamsByName: Map<string, number> = new Map<string, number>();
@@ -396,6 +397,8 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         allTeams.forEach(team => teamsByName.set(team.fullName, team.id));
         return [teamsById, teamsByName];
     }
+
+    
 
     private async chooseProjectToBind(projectList: any[], teamsById: Map<number, string>): Promise<vscode.QuickPickItem | undefined> {
         let chosenProject: vscode.QuickPickItem | undefined;
@@ -422,6 +425,9 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     public async bindProject() {
         let chosenProject: vscode.QuickPickItem | undefined;
         try {
+            if (!this.loginChecks.isLoggedIn()) {
+                throw Error('Access token expired. Please login.');
+            }
             const projectList: any[] = await this.httpClient.getRequest('projects');
             if (projectList && projectList.length > 0) {
                 const [teamsById, teamsByName] = await this.getAllTeams();
@@ -455,9 +461,13 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
 
     private async retrieveLatestResults() {
+        if (!this.loginChecks.isLoggedIn()) {
+            throw Error('Access token expired. Please login.');
+        }
         const latestScan: any[] = await this.httpClient.getRequest(`sast/scans?last=1&projectId=${this.currBoundProject['id']}&scanStatus=Finished`);
         if (latestScan && latestScan.length === 1) {
-            this.currentScanedSource = new ScanNode(latestScan[0].id, this.currBoundProject['id'], this.currBoundProject['name'], false, this.httpClient, this.log, this, false);
+            this.currentScanedSource = new ScanNode(latestScan[0].id, this.currBoundProject['id'], this.currBoundProject['name'],
+             false, this.httpClient, this.log, this, false,this.loginChecks);
             this.displayCurrentScanedSource();
         }
     }
@@ -493,7 +503,8 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
 
     private addSource(sourceLocation: string, scanId: number, projectId: number, isFolder: boolean) {
-        const newSource: ScanNode = new ScanNode(scanId, projectId, sourceLocation, isFolder, this.httpClient, this.log, this, true);
+        const newSource: ScanNode = new ScanNode(scanId, projectId, sourceLocation, isFolder, 
+            this.httpClient, this.log, this, true,this.loginChecks);
         let found: boolean = false;
         for (const source of this.scanedSources) {
             if (this.isEquivalent(newSource, source)) {
@@ -519,6 +530,9 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         const encodedName = encodeURIComponent(this.projectName);
         const projectRestApi = `projects?projectname=${encodedName}&teamid=${teamsByName.get(this.teamPath)}`;
         try {
+            if (!this.loginChecks.isLoggedIn()) {
+                throw Error('Access token expired. Please login.');
+            }
             const projects = await this.httpClient.getRequest(projectRestApi, { suppressWarnings: true });
             if (projects && projects.length) {
                 throw Error(`Project [${this.projectName}] already exists`);
@@ -538,7 +552,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
      */
     public async scan(isFolder: boolean, scanPath: string) {
         try {
-            if (!this.isLoggedIn()) {
+            if (!this.loginChecks.isLoggedIn()) {
                 throw Error('Access token expired. Please login.');
             }
 
@@ -555,6 +569,9 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             this.log.debug('Entering CxScanner...\nReading configuration.');
 
             if (this.currBoundProject) {
+                if (!this.loginChecks.isLoggedIn()) {
+                    throw Error('Access token expired. Please login.');
+                }
                 const settingsResponse = await this.httpClient.getRequest(`sast/scanSettings/${this.currBoundProject.id}`);
                 presetId = settingsResponse && settingsResponse.preset && settingsResponse.preset.id;
 
@@ -661,7 +678,8 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 
             const cxClient = new CxClient(this.log);
             const scanResults: ScanResults = await cxClient.scan(config, this.httpClient);
-            const sastClient = new SastClient(scanResults.scanId, this.httpClient, this.log, sastConfig.scanTimeoutInMinutes);
+            const sastClient = new SastClient(scanResults.scanId, this.httpClient, this.log,
+                this.loginChecks, sastConfig.scanTimeoutInMinutes);
             await sastClient.waitForScanToFinish();
 
             const projectId: number = await this.getProjectId(this.currBoundProject);
