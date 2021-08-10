@@ -8,14 +8,5 @@
     },
     // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
     "typescript.tsc.autoDetect": "off",
-    "markdown.trace": "verbose",
-    "cx.server": {
-        "url": "http://10.32.4.37/",
-        "alias": "cxserver",
-        "username": "",
-        "password": "",
-        "project_id": 6,
-        "team_id": 1,
-        "project_name": "CxViewer-IntelliJ"
-    }
+    "markdown.trace": "verbose"
 }
