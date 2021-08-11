@@ -24,7 +24,7 @@
         window.addEventListener('message', event => {
             const message = event.data; // The JSON data our extension sent
 
-            $("#nodes_table").html("<style>.selec {background:#444} </style>");
+            $("#nodes_table").html("<style>.selec {background:#444; color: #fff;} </style>");
 
             vscode.postMessage({ msg: message[0].PathNode[0] });
 
