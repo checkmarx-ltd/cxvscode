@@ -15,10 +15,12 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
 
     private readonly log: Logger;
     private serverNodes: ServerNodeTreeItem[];
+    private vsCodeContext:  vscode.ExtensionContext | any;
 
-    constructor(checkmarxOutput: vscode.OutputChannel) {
+    constructor(checkmarxOutput: vscode.OutputChannel,context: vscode.ExtensionContext) {
         this.log = new ConsoleLogger(checkmarxOutput);
         this.serverNodes = [];
+        this.vsCodeContext = context;
     }
 
     /**
@@ -112,7 +114,7 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     private convertToNode(server: CxServerSettings) {
         this.serverNodes = [];
         if (Object.entries(server).length > 0) {
-            this.serverNodes.push(new ServerNodeTreeItem(server.url, server.alias, this.log));
+            this.serverNodes.push(new ServerNodeTreeItem(server.url, server.alias, this.log,this.vsCodeContext));
         }
     }
 
