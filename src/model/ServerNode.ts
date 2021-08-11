@@ -8,8 +8,7 @@ import { CxClient } from "@checkmarx/cx-common-js-client";
 import { ScanConfig } from "@checkmarx/cx-common-js-client";
 import { SastConfig } from "@checkmarx/cx-common-js-client";
 import { TeamApiClient } from "@checkmarx/cx-common-js-client";
-import { HttpClient } from "@checkmarx/cx-common-js-client";
-import { AuthSSODetails } from "@checkmarx/cx-common-js-client";
+import { HttpClient, AuthSSODetails } from "@checkmarx/cx-common-js-client";
 import { ProjectNode } from "./ProjectNode";
 import { ScanNode } from "./ScanNode";
 import { Utility } from "../utils/util";
@@ -569,9 +568,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             this.log.debug('Entering CxScanner...\nReading configuration.');
 
             if (this.currBoundProject) {
-                if (!this.loginChecks.isLoggedIn()) {
-                    throw Error('Access token expired. Please login.');
-                }
+               
                 const settingsResponse = await this.httpClient.getRequest(`sast/scanSettings/${this.currBoundProject.id}`);
                 presetId = settingsResponse && settingsResponse.preset && settingsResponse.preset.id;
 
