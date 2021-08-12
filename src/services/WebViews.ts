@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from "path";
 import * as fs from "fs";
-import { Logger } from "@checkmarx/cx-common-js-client";
-import { HttpClient, AuthSSODetails} from "@checkmarx/cx-common-js-client";
+import { HttpClient, AuthSSODetails,Logger} from "@checkmarx/cx-common-js-client";
 import { ScanNode } from '../model/ScanNode';
 import { SessionStorageService } from './sessionStorageService';
 import { SSOConstants } from '../model/ssoConstant';
