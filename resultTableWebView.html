@@ -42,10 +42,12 @@
                 '<meta http-equiv="Content-type" content="text/html;charset=UTF-8">' +
                 "<style>table{border-collapse:collapse; }table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444} </style>" +
                 "</head>" +
-                "<body>" +
-                "<table>"
+                "<body>"
             );
-
+            $("#list").append("<h1'>"+message.description.shortDescription+"</h1>");
+            $("#list").append("<table>");
+       
+            
             $("#list").append("<tr>" +
                 "<th>Query Name</th>" +
                 "<th>Status</th>" +
@@ -54,9 +56,9 @@
                 "<th>State</th>" +
                 "<th>Severity</th>" +
                 "</tr>");
-
-            vscode.postMessage({ path: message.Result[0].Path });
-
+            if (message.mesg=="firstClick"){
+            vscode.postMessage({ path: message.Result[0].Path ,mesg: "firstTime",clickedRow:0});
+            }
             var i = 0;
             message.Result.forEach(query => {
                 $("#list").append("<tr style='cursor:pointer;'" + " id='result" + i + "' >" +
@@ -67,20 +69,20 @@
                     "<td class='state'>" + stateDictionary[query.$.state] + "</td>" +
                     "<td class='severity'>" + query.$.Severity + "</td>" +
                     + "</tr>");
-
-                $("#result" + 0).addClass("selec");
-
+                
+                $("#result" + message.clickedRow).addClass("selec");
                 var result = $("#result" + i);
                 result.on('click', function () {
                     $(".selec").removeClass("selec");
                     result.addClass("selec");
-                    vscode.postMessage({ path: query.Path }); // Node was clicked, send it back
+                    vscode.postMessage({ path: query.Path,mesg: "onClick",clickedRow: i}); // Node was clicked, send it back
                 });
-
                 i++;
             });
             $("#list").append("</table></body></html>");
+        
         });
+    
     </script>
 </body>
 
