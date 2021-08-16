@@ -158,19 +158,12 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
    
     public async login() {
         try {
-            if (this.loginChecks.isLoggedIn()) {
-                vscode.window.showInformationMessage('You are already logged in!');
-                return;
-            }
-            let loginMethod: string  = LoginMethods.SSO;
-            if(CxSettings.isEnableUserCredentialsLogin())
-            {
-                 loginMethod  = await Utility.showPickString("Select login method", [LoginMethods.CREDENTIALS, LoginMethods.SSO]);
-            }else{
-                loginMethod  =  LoginMethods.SSO;
+                if (this.loginChecks.isLoggedIn()) {
+                    vscode.window.showInformationMessage('You are already logged in!');
+                    return;
+                }
+                let loginMethod = await this.getLoginMethod();
 
-            }
-            if (loginMethod) {
                 if (loginMethod === LoginMethods.CREDENTIALS) {
                     await this.loginWithCredentials();
                     this.log.info('Login successful');
@@ -186,13 +179,24 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 }
                 
             }
-        }
+        
         catch (err) {
             this.log.error(err);
             vscode.window.showErrorMessage('Login failed');
         }
     }
 
+    private async getLoginMethod(): Promise<string> {
+        let loginMethod: string;
+        if(CxSettings.isEnableUserCredentialsLogin())
+        {
+             loginMethod  = await Utility.showPickString("Select login method", [LoginMethods.CREDENTIALS, LoginMethods.SSO]);
+        }else{
+            loginMethod  =  LoginMethods.SSO;
+
+        }
+        return loginMethod;
+    }
     private async loginWithCredentials() {
         const cxServer: CxServerSettings = CxSettings.getServer();
         if (cxServer.username.length > 0 && cxServer.password.length > 0) {
