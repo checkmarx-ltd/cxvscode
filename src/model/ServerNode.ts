@@ -162,8 +162,14 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 vscode.window.showInformationMessage('You are already logged in!');
                 return;
             }
+            let loginMethod: string  = LoginMethods.SSO;
+            if(CxSettings.isEnableUserCredentialsLogin())
+            {
+                 loginMethod  = await Utility.showPickString("Select login method", [LoginMethods.CREDENTIALS, LoginMethods.SSO]);
+            }else{
+                loginMethod  =  LoginMethods.SSO;
 
-            const loginMethod: string = await Utility.showPickString("Select login method", [LoginMethods.CREDENTIALS, LoginMethods.SSO]);
+            }
             if (loginMethod) {
                 if (loginMethod === LoginMethods.CREDENTIALS) {
                     await this.loginWithCredentials();
