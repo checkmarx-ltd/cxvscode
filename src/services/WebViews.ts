@@ -4,6 +4,8 @@ import * as fs from "fs";
 import { Logger } from "@checkmarx/cx-common-js-client";
 import { HttpClient } from "@checkmarx/cx-common-js-client";
 import { ScanNode } from '../model/ScanNode';
+import { QueryNode } from '../model/QueryNode';
+import { Severity } from '@checkmarx/cx-common-js-client/dist/dto/sca/report/severity';
 
 export class WebViews {
 
@@ -11,6 +13,7 @@ export class WebViews {
 	private attackVectorPanel?: vscode.WebviewPanel = undefined;
 	private resultTablePanel?: vscode.WebviewPanel = undefined;
 	private queryDescriptionPanel?: vscode.WebviewPanel = undefined;
+	public queryNodes: any;
 
 	constructor(context: vscode.ExtensionContext, private scanNode: ScanNode,
 		private readonly log: Logger, private readonly httpClient: HttpClient) {
@@ -51,8 +54,11 @@ export class WebViews {
 		this.queryDescriptionPanel.webview.html = content;
 	}
 
-	queryResultClicked(query: any | undefined) {
+	async queryResultClicked(query: any | undefined) {
 		if (this.resultTablePanel) {
+			const resultStates: String[] = await this.httpClient.getRequest(`sast/result-states`);
+			query.resultStates = resultStates;
+			this.queryNodes = query;
 			this.resultTablePanel.webview.postMessage(query);
 		}
 	}
@@ -106,18 +112,27 @@ export class WebViews {
 				retainContextWhenHidden: true
 			}
 		);
-
 		try {
 			const resultTableViewPath: string = path.join(context.extensionPath, 'resultTableWebView.html');
 			fs.readFile(resultTableViewPath, "utf8",
 				(err: any, data: any) => {
 					if (this.resultTablePanel) {
 						this.resultTablePanel.webview.html = data;
+						
 						// Handle messages from the webview
 						this.resultTablePanel.webview.onDidReceiveMessage(
 							message => {
 								if (this.attackVectorPanel) {
 									this.attackVectorPanel.webview.postMessage(message.path);
+								}
+								if(this.resultTablePanel) {
+									switch (message.command) {
+										case 'resultstateChangeEvent':
+											this.resultStateChanged(message.resultStateTobeChange,  /* this.queryNodes */message.data);
+										    vscode.window.showInformationMessage(message.resultStateTobeChange);
+										 	 return;
+									  }
+
 								}
 							},
 							undefined,
@@ -200,7 +215,33 @@ export class WebViews {
 			});
 		}
 	}
-
+	private async resultStateChanged(selectedResultState: any, rows: any) {
+		let scanId= this.scanNode.scanId
+		let nodes = this.queryNodes.Result;
+		
+		for (var i = 0; i < rows.length; i++) {
+			var pathId = rows[i];
+			for (let i = 0; i < nodes.length; i++) { 
+				if( pathId == nodes[i].Path[0].$.PathId) {
+				let state = selectedResultState;
+				let severity = nodes[i].$.SeverityIndex;
+				let user = nodes[i].$.AssignToUser;
+				const request = {
+					"state" :state,
+					"severity" : severity,
+					"userAssignment" : user,
+					"comment" : "comment"
+				};
+				const response = await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
+				
+				vscode.window.showInformationMessage('Updated the values');
+				}
+			  }
+		}
+		// getUpdatedQueriesSet()
+		if(this.resultTablePanel)
+		this.resultTablePanel.webview.postMessage(this.queryNodes);
+	}
 	private getFullSourcePathIfExistsForBoundProject(sastFileName: string): string {
 		const glob = require("glob");
 		let fullSourcePath: string = '';

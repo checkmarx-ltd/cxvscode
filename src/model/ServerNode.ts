@@ -170,6 +170,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 
                 if (this.isBoundToProject()) {
                     await this.retrieveLatestResults();
+
                 }
             }
         }
@@ -178,6 +179,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             vscode.window.showErrorMessage('Login failed');
         }
     }
+   
 
     private async loginWithCredentials() {
         const cxServer: CxServerSettings = CxSettings.getServer();
