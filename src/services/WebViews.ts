@@ -11,7 +11,7 @@ export class WebViews {
 	private attackVectorPanel?: vscode.WebviewPanel = undefined;
 	private resultTablePanel?: vscode.WebviewPanel = undefined;
 	private queryDescriptionPanel?: vscode.WebviewPanel = undefined;
-
+	public queryForDescription :any ;
 	constructor(context: vscode.ExtensionContext, private scanNode: ScanNode,
 		private readonly log: Logger, private readonly httpClient: HttpClient) {
 		this.createWebViews(context);
@@ -51,10 +51,19 @@ export class WebViews {
 		this.queryDescriptionPanel.webview.html = content;
 	}
 
-	queryResultClicked(query: any | undefined) {
+	async queryResultClicked(query: any | undefined) {
 		if (this.resultTablePanel) {
+			let pathId =query.Result[0].Path[0].$.PathId;
+			var description = await this.httpClient.getRequest(`sast/scans/${this.scanNode.scanId}/results/${pathId}/shortDescription`);
+			query.description=description;
+			//to know webview its firstClick message
+			query.mesg="firstClick";
+			query.clickedRow=0;
+			this.queryForDescription=query;
+
 			this.resultTablePanel.webview.postMessage(query);
 		}
+
 	}
 
 	private createAttackVectorWebView(context: vscode.ExtensionContext) {
@@ -113,9 +122,24 @@ export class WebViews {
 				(err: any, data: any) => {
 					if (this.resultTablePanel) {
 						this.resultTablePanel.webview.html = data;
+						
 						// Handle messages from the webview
 						this.resultTablePanel.webview.onDidReceiveMessage(
-							message => {
+							async message => {
+								if(this.resultTablePanel && message.mesg=="onClick"){
+										let scanId= this.scanNode.scanId
+										let pathId=message.path[0].$.PathId;
+										let description = await this.httpClient.getRequest(`sast/scans/${scanId}/results/${pathId}/shortDescription`);
+										this.queryForDescription.description=description;
+										
+										this.queryForDescription.mesg="vsCode";
+										this.queryForDescription.clickedRow=message.clickedRow;
+										this.resultTablePanel.webview.postMessage(this.queryForDescription);
+										
+									
+									
+								}
+								
 								if (this.attackVectorPanel) {
 									this.attackVectorPanel.webview.postMessage(message.path);
 								}
@@ -192,6 +216,7 @@ export class WebViews {
 		} else {
 			fullSourcePath = this.getFullSourcePathIfExistsForBoundProject(node.FileName[0]);
 		}
+
 		const uri = vscode.Uri.file(fullSourcePath);
 		let found: boolean = this.isTextEditorVisible(node, fullSourcePath);
 		if (!found) {
@@ -199,6 +224,7 @@ export class WebViews {
 				found = this.isTextEditorVisible(node, fullSourcePath);
 			});
 		}
+		
 	}
 
 	private getFullSourcePathIfExistsForBoundProject(sastFileName: string): string {
@@ -221,3 +247,5 @@ export class WebViews {
 		return fullSourcePath;
 	}
 }
+
+
