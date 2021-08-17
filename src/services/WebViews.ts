@@ -126,16 +126,16 @@ export class WebViews {
 						// Handle messages from the webview
 						this.resultTablePanel.webview.onDidReceiveMessage(
 							async message => {
-								if(this.resultTablePanel){
+								if(this.resultTablePanel && message.mesg=="onClick"){
 										let scanId= this.scanNode.scanId
 										let pathId=message.path[0].$.PathId;
 										let description = await this.httpClient.getRequest(`sast/scans/${scanId}/results/${pathId}/shortDescription`);
 										this.queryForDescription.description=description;
-										if(message.mesg=="onClick"){
+										
 										this.queryForDescription.mesg="vsCode";
 										this.queryForDescription.clickedRow=message.clickedRow;
 										this.resultTablePanel.webview.postMessage(this.queryForDescription);
-										}
+										
 									
 									
 								}
