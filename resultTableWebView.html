@@ -23,12 +23,13 @@
     </div>
 
     <script>
-        var i = 0;
+        var end = 0;
         function filterRows(inputValue, column)
         {
-            var filter, td, textValue;
-            var rows = i;
+            var filter, td, textValue, table;
+            var rows = end;
             filter = inputValue.toUpperCase();
+            table = document.getElementsByTagName("table");
             for(row = 0 ; row < rows ; row++)
             {
                 tr = document.getElementById("result" + row);
@@ -46,7 +47,7 @@
                     }
                 }
             }
-            document.getElementById("header").innerText = filter;
+            document.getElementById("header").innerText = table;
             
         }
 
@@ -69,7 +70,8 @@
                 '<meta http-equiv="Content-type" content="text/html;charset=UTF-8">' +
                 "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} </style>" +
                 "</head>" +
-                "<body>" + 
+                "<body>" +
+                "<span id='header'></span>" +
                 "<table id='innertable'>"
             );
 
@@ -113,7 +115,7 @@
             vscode.postMessage({ path: message.Result[0].Path });
 
             //This area is where api data needs to be fetched
-            //var i = 0;
+            var i = 0;
             message.Result.forEach(result => {
                 const pathNodeLength = result.Path[0].PathNode.length;
                 var srcFileName = String(result.Path[0].PathNode[0].FileName);
@@ -147,6 +149,7 @@
 
                 i++;
             });
+            end = i;
 
             $("#id-status").keyup(function() {
                 var input = $('#id-status').val();
