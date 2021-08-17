@@ -1,4 +1,4 @@
 export enum LoginMethods {
-    CREDENTIALS = 'Credentials',
+    CREDENTIALS = 'User Name/Password',
     SSO = 'Single Sign On'
 }
