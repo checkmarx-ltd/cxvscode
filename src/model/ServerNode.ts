@@ -2,13 +2,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as url from "url";
 import { INode } from "../interface/INode";
-import { Logger } from "@checkmarx/cx-common-js-client";
-import { ScanResults } from "@checkmarx/cx-common-js-client";
-import { CxClient } from "@checkmarx/cx-common-js-client";
-import { ScanConfig } from "@checkmarx/cx-common-js-client";
-import { SastConfig } from "@checkmarx/cx-common-js-client";
-import { TeamApiClient } from "@checkmarx/cx-common-js-client";
-import { HttpClient, AuthSSODetails } from "@checkmarx/cx-common-js-client";
+import { Logger,ScanResults,CxClient,ScanConfig ,SastConfig,TeamApiClient,HttpClient, AuthSSODetails} from "@checkmarx/cx-common-js-client";
 import { ProjectNode } from "./ProjectNode";
 import { ScanNode } from "./ScanNode";
 import { Utility } from "../utils/util";
@@ -327,9 +321,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
 
     private async choosePreset(): Promise<string> {
-        if (!this.loginChecks.isLoggedIn()) {
-            throw Error('Access token expired. Please login.');
-        }
+       
         const allPresets: any[] = await this.httpClient.getRequest('sast/presets');
         const allPresetNames: string[] = allPresets.map(preset => preset.name);
 
@@ -346,9 +338,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
 
     private async chooseTeam(): Promise<string> {
-        if (!this.loginChecks.isLoggedIn()) {
-            throw Error('Access token expired. Please login.');
-        }
+       
         const allTeams: any[] = await this.httpClient.getRequest('auth/teams');
         const allTeamNames: string[] = allTeams.map(team => team.fullName);
 
@@ -386,9 +376,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
 
     private async getTeamsByName(): Promise<Map<string, number>> {
-        if (!this.loginChecks.isLoggedIn()) {
-            throw Error('Access token expired. Please login.');
-        }
+       
         const allTeams: any[] = await this.httpClient.getRequest('auth/teams');
         const teamsByName: Map<string, number> = new Map<string, number>();
         allTeams.forEach(team => teamsByName.set(team.fullName, team.id));
@@ -396,9 +384,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
 
     private async getAllTeams(): Promise<[Map<number, string>, Map<string, number>]> {
-        if (!this.loginChecks.isLoggedIn()) {
-            throw Error('Access token expired. Please login.');
-        }
+        
         const allTeams: any[] = await this.httpClient.getRequest('auth/teams');
         const teamsById: Map<number, string> = new Map<number, string>();
         const teamsByName: Map<string, number> = new Map<string, number>();
@@ -443,9 +429,8 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 chosenProject = await this.chooseProjectToBind(projectList, teamsById);
                 if (chosenProject) {
                     this.log.info('Chosen: ' + chosenProject.label + ', ' + chosenProject.detail);
-                    if (!CxSettings.isQuiet()) {
-                        vscode.window.showInformationMessage('Chosen: ' + chosenProject.label + ', ' + chosenProject.detail);
-                    }
+                    this.showMessage('Chosen: ' + chosenProject.label + ', ' + chosenProject.detail);
+                    
                     chosenProject.label = chosenProject.label.replace("project: ", '');
                     chosenProject.detail = chosenProject.detail?.replace("team: ", '');
                     const boundProject: any = projectList.find(project => project['name'] === chosenProject?.label && project['teamId'] === teamsByName.get(chosenProject?.detail || ''));
@@ -460,12 +445,8 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             }
         } catch (err) {
             this.log.error(err);
-            if (err.message === 'Login failed') {
-                vscode.window.showErrorMessage('Access token expired. Please login.');
-            }
-            else {
-                vscode.window.showErrorMessage(err.message);
-            }
+            vscode.window.showErrorMessage(err.message);
+            
         }
     }
 
@@ -539,9 +520,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         const encodedName = encodeURIComponent(this.projectName);
         const projectRestApi = `projects?projectname=${encodedName}&teamid=${teamsByName.get(this.teamPath)}`;
         try {
-            if (!this.loginChecks.isLoggedIn()) {
-                throw Error('Access token expired. Please login.');
-            }
+            
             const projects = await this.httpClient.getRequest(projectRestApi, { suppressWarnings: true });
             if (projects && projects.length) {
                 throw Error(`Project [${this.projectName}] already exists`);
@@ -554,6 +533,25 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         }
     }
 
+    private showMessage(message : string){
+        if (!CxSettings.isQuiet()) {
+            vscode.window.showInformationMessage(message);
+        }
+    }
+
+    async getSourceLocation(isFolder: boolean, scanPath: string): Promise<any> {
+
+        // get the source location; if scanPath is empty, prompt user to select
+        let sourceLocation: string;
+        if (!scanPath || scanPath.length === 0) {
+            const labelType: string = (isFolder) ? 'Scan Folder' : 'Scan File';
+            sourceLocation = await this.selectSourceLocation(isFolder, labelType);
+        }
+        else {
+            sourceLocation = scanPath;
+        }
+        return sourceLocation;
+    }
     /**
      * @param projectNode  CxSAST project, or undefined if this workspace not yet bound to a project
      * @param isFolder True if scanning a folder; false if scanning a single file
@@ -587,44 +585,31 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             }
             else {
                 this.projectName = await Utility.showInputBox("Enter project name", false);
-                if (!CxSettings.isQuiet()) {
-                    vscode.window.showInformationMessage('Chosen Project: ' + this.projectName);
-                }
+                this.showMessage('Chosen Project: ' + this.projectName);
+                
                 this.teamPath = await this.chooseTeam();
                 await this.isProjectExists();
                 presetName = await this.choosePreset();
 
                 const isProjectPrivate: string = await Utility.showPickString("Is project private?", ['Yes', 'No']);
                  isProjPrivate = Utility.modeIsEnabled(isProjectPrivate);
-            if (!CxSettings.isQuiet()) {
                 if (isProjPrivate) {
-                    vscode.window.showInformationMessage('Project is private');
+                    this.showMessage('Project is private');
                 } else {
-                    vscode.window.showInformationMessage('Project is public');
+                    this.showMessage('Project is public');
                 }
             }
-            }
 
-            // get the source location; if scanPath is empty, prompt user to select
             let sourceLocation: string;
-            if (!scanPath || scanPath.length === 0) {
-                const labelType: string = (isFolder) ? 'Scan Folder' : 'Scan File';
-                sourceLocation = await this.selectSourceLocation(isFolder, labelType);
-            }
-            else {
-                sourceLocation = scanPath;
-            }
+            sourceLocation = await this.getSourceLocation(isFolder,scanPath);
 
             const isScanIncremental = await Utility.showPickString("Is scan incremental?", ['Yes', 'No']);
             const isIncremental: boolean = Utility.modeIsEnabled(isScanIncremental);
-            if (!CxSettings.isQuiet()) {
-                if (isIncremental) {
-                    vscode.window.showInformationMessage('Scan is incremental');
-                } else {
-                    vscode.window.showInformationMessage('Scan is full');
-                }
+            if (isIncremental) {
+                this.showMessage('Scan is incremental');
+            } else {
+                this.showMessage('Scan is full');
             }
-
             
             var isPrivate : boolean;
             if(!isProjPrivate) // Checking if project is private all its scans are by default private. 
@@ -632,13 +617,12 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             {
             const isScanPrivate = await Utility.showPickString("Is scan private?", ['Yes', 'No']);
              isPrivate = Utility.modeIsEnabled(isScanPrivate);
-            if (!CxSettings.isQuiet()) {
                 if (isPrivate) {
-                    vscode.window.showInformationMessage('Scan is private');
+                    this.showMessage('Scan is private');
                 } else {
-                    vscode.window.showInformationMessage('Scan is public');
+                    this.showMessage('Scan is public');
                 }
-            }
+            
           } else 
           {
             isPrivate = true;
