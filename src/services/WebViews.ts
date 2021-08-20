@@ -13,7 +13,7 @@ export class WebViews {
 	private attackVectorPanel?: vscode.WebviewPanel = undefined;
 	private resultTablePanel?: vscode.WebviewPanel = undefined;
 	private queryDescriptionPanel?: vscode.WebviewPanel = undefined;
-	public queryNodes: any;
+	public queryNode: any;
 
 	constructor(context: vscode.ExtensionContext, private scanNode: ScanNode,
 		private readonly log: Logger, private readonly httpClient: HttpClient) {
@@ -58,7 +58,7 @@ export class WebViews {
 		if (this.resultTablePanel) {
 			const resultStates: String[] = await this.httpClient.getRequest(`sast/result-states`);
 			query.resultStates = resultStates;
-			this.queryNodes = query;
+			this.queryNode = query;
 			this.resultTablePanel.webview.postMessage(query);
 		}
 	}
@@ -128,8 +128,7 @@ export class WebViews {
 								if(this.resultTablePanel) {
 									switch (message.command) {
 										case 'resultstateChangeEvent':
-											this.resultStateChanged(message.resultStateTobeChange,  /* this.queryNodes */message.data);
-										    vscode.window.showInformationMessage(message.resultStateTobeChange);
+											this.resultStateChanged(message.resultStateTobeChange,  message.data);
 										 	 return;
 									  }
 
@@ -217,8 +216,8 @@ export class WebViews {
 	}
 	private async resultStateChanged(selectedResultState: any, rows: any) {
 		let scanId= this.scanNode.scanId
-		let nodes = this.queryNodes.Result;
-		
+		let nodes = this.queryNode.Result;
+		//The below for loop updates the result state
 		for (var i = 0; i < rows.length; i++) {
 			var pathId = rows[i];
 			for (let i = 0; i < nodes.length; i++) { 
@@ -233,14 +232,23 @@ export class WebViews {
 					"comment" : "comment"
 				};
 				const response = await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
-				
-				vscode.window.showInformationMessage('Updated the values');
+				nodes[i].$.state = state;
 				}
 			  }
 		}
-		// getUpdatedQueriesSet()
-		if(this.resultTablePanel)
-		this.resultTablePanel.webview.postMessage(this.queryNodes);
+		this.scanNode.addStatisticsToScanResults();
+		let queries:  any[] | undefined;
+		queries = this.scanNode.queries;
+		if(queries) {
+		for (let i = 0; i < queries.length; i++) { 
+			if(queries[i].$.id == this.queryNode.$.id && this.resultTablePanel){
+			  this.queryNode = queries[i];
+				this.resultTablePanel.webview.postMessage(this.queryNode);
+				break;
+		}
+		}
+	}
+	
 	}
 	private getFullSourcePathIfExistsForBoundProject(sastFileName: string): string {
 		const glob = require("glob");

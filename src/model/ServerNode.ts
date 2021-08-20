@@ -156,7 +156,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 return;
             }
 
-            const loginMethod: string = await Utility.showPickString("Select login method", [LoginMethods.CREDENTIALS, LoginMethods.SSO]);
+            const loginMethod: string = await Utility.showPickString("Select login method", [LoginMethods.SSO, LoginMethods.CREDENTIALS]);
             if (loginMethod) {
                 if (loginMethod === LoginMethods.CREDENTIALS) {
                     await this.loginWithCredentials();

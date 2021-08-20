@@ -53,8 +53,8 @@
                     "<p>"+message.resultStates.states[0].name+"</p>"+
                 "<table>"
             );
-            $("#list").append("<tr><td>Set Result State:</td>");
-            var selectHTML = "<td>" +"<select id='resultStateDropDownList'>";
+            var selectHTML = "<tr><td>" +"<select id='resultStateDropDownList'>";
+                selectHTML = selectHTML + "<option>Result State</option>";
             for (i = 0; i < message.resultStates.states.length; i = i + 1) {
                 selectHTML += "<option value='" + message.resultStates.states[i].name + "'>" + message.resultStates.states[i].name + "</option>";
             }

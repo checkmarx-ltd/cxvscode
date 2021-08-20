@@ -108,7 +108,7 @@ export class ScanNode implements INode {
         }
     }
 
-    private async addStatisticsToScanResults() {
+    public async addStatisticsToScanResults() {
         const cxServer: CxServerSettings = CxSettings.getServer();
         const statistics: any = await this.httpClient.getRequest(`sast/scans/${this.scanId}/resultsStatistics`);
 
