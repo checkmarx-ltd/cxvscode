@@ -49,10 +49,12 @@
                 '<meta http-equiv="Content-type" content="text/html;charset=UTF-8">' +
                 "<style>table{border-collapse:collapse; }table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444} </style>" +
                 "</head>" +
-                "<body>" +
-                    "<p>"+message.resultStates.states[0].name+"</p>"+
-                "<table>"
+                "<body>"
             );
+            $("#list").append("<div style='padding:10px; margin:auto;'>"+message.description.shortDescription+"</div>");
+            $("#list").append("<table>");
+       
+            
             var selectHTML = "<tr><td>" +"<select id='resultStateDropDownList'>";
                 selectHTML = selectHTML + "<option>Result State</option>";
             for (i = 0; i < message.resultStates.states.length; i = i + 1) {
@@ -70,9 +72,9 @@
                 "<th>State</th>" +
                 "<th>Severity</th>" +
                 "</tr>");
-
-            vscode.postMessage({ path: message.Result[0].Path });
-            
+            if (message.mesg=="firstClick"){
+            vscode.postMessage({ path: message.Result[0].Path ,mesg: "firstTime",clickedRow:0});
+            }
             var i = 0;
             message.Result.forEach(query => {
                 $("#list").append("<tr style='cursor:pointer;'" + " id='result" + i + "' >" +
@@ -84,16 +86,14 @@
                     "<td class='state'>" + stateDictionary[query.$.state] + "</td>" +
                     "<td class='severity'>" + query.$.verity + "</td>" +
                     + "</tr>");
-
-                $("#result" + 0).addClass("selec");
-               
+                
+                $("#result" + message.clickedRow).addClass("selec");
                 var result = $("#result" + i);
                 result.on('click', function () {
                     $(".selec").removeClass("selec");
                     result.addClass("selec");
-                    vscode.postMessage({ path: query.Path}); // Node was clicked, send it back
+                    vscode.postMessage({ path: query.Path,mesg: "onClick",clickedRow: i}); // Node was clicked, send it back
                 });
-
                 i++;
             });
 
@@ -111,7 +111,9 @@
                                     data: selectedQueryNodes});
                 });
             $("#list").append("</table></body></html>");
+        
         });
+    
     </script>
 </body>
 
