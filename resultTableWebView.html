@@ -92,7 +92,7 @@
                 result.on('click', function () {
                     $(".selec").removeClass("selec");
                     result.addClass("selec");
-                    vscode.postMessage({ path: query.Path,mesg: "onClick",clickedRow: i}); // Node was clicked, send it back
+                    vscode.postMessage({ path: query.Path,command: "onClick",clickedRow: i}); // Node was clicked, send it back
                 });
                 i++;
             });

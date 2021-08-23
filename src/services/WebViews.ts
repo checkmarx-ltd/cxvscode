@@ -133,16 +133,6 @@ export class WebViews {
 						this.resultTablePanel.webview.onDidReceiveMessage(
 							async message => {
 								if(this.resultTablePanel && message.mesg=="onClick"){
-										let scanId= this.scanNode.scanId
-										let pathId=message.path[0].$.PathId;
-										let description = await this.httpClient.getRequest(`sast/scans/${scanId}/results/${pathId}/shortDescription`);
-										this.queryForDescription.description=description;
-										
-										this.queryForDescription.mesg="vsCode";
-										this.queryForDescription.clickedRow=message.clickedRow;
-										this.resultTablePanel.webview.postMessage(this.queryForDescription);
-										
-									
 									
 								}
 								
@@ -154,6 +144,9 @@ export class WebViews {
 										case 'resultstateChangeEvent':
 											this.resultStateChanged(message.resultStateTobeChange,  message.data);
 										 	 return;
+										case 'onClick':
+											this.updateShortDescriptionForResult(message);
+											return;
 									  }
 
 								}
@@ -173,6 +166,17 @@ export class WebViews {
 		} catch (err) {
 			this.log.error(err);
 		}
+	}
+	private async updateShortDescriptionForResult(message: any) {
+		// let scanId = this.scanNode.scanId
+		// let pathId = message.path[0].$.PathId;
+		// let description = await this.httpClient.getRequest(`sast/scans/${scanId}/results/${pathId}/shortDescription`);
+		// this.queryForDescription.description = description;
+
+		// this.queryForDescription.mesg = "vsCode";
+		// this.queryForDescription.clickedRow = message.clickedRow;
+		// if(this.resultTablePanel)
+		// this.resultTablePanel.webview.postMessage(this.queryForDescription);
 	}
 
 	private createWebViews(context: vscode.ExtensionContext) {
