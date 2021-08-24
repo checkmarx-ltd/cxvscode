@@ -281,6 +281,7 @@ export class WebViews {
 			for (let queryCtr = 0; queryCtr < queries.length; queryCtr++) { 
 			if(queries[queryCtr].$.id == this.queryNode.$.id && this.resultTablePanel){
 			  this.queryNode = queries[queryCtr];
+			  this.queryNode.mesg='onChange';
 				this.resultTablePanel.webview.postMessage(this.queryNode);
 				break;
 		}
