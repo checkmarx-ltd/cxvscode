@@ -3,8 +3,6 @@ import * as path from "path";
 import * as fs from "fs";
 import { HttpClient, AuthSSODetails,Logger} from "@checkmarx/cx-common-js-client";
 import { ScanNode } from '../model/ScanNode';
-import { QueryNode } from '../model/QueryNode';
-import { Severity } from '@checkmarx/cx-common-js-client/dist/dto/sca/report/severity';
 import { SessionStorageService } from './sessionStorageService';
 import { SSOConstants } from '../model/ssoConstant';
 import { LoginChecks } from './loginChecks';
@@ -78,7 +76,7 @@ export class WebViews {
 			query.clickedRow=0;
 			this.queryForDescription=query;
 
-			const resultStates: String[] = await this.httpClient.getRequest(`sast/result-states`);
+			const resultStates: string[] = await this.httpClient.getRequest(`sast/result-states`);
 			query.resultStates = resultStates;
 			this.queryNode = query;
 			this.resultTablePanel.webview.postMessage(query);
@@ -145,9 +143,6 @@ export class WebViews {
 						// Handle messages from the webview
 						this.resultTablePanel.webview.onDidReceiveMessage(
 							async message => {
-								if(this.resultTablePanel && message.mesg=="onClick"){
-									
-								}
 								
 								if (this.attackVectorPanel) {
 									this.attackVectorPanel.webview.postMessage(message.path);
@@ -189,7 +184,7 @@ export class WebViews {
 		this.queryForDescription.mesg = "vsCode";
 		this.queryForDescription.clickedRow = message.clickedRow;
 		if(this.resultTablePanel)
-		this.resultTablePanel.webview.postMessage(this.queryForDescription);
+			this.resultTablePanel.webview.postMessage(this.queryForDescription);
 	}
 
 	private createWebViews(context: vscode.ExtensionContext) {
@@ -263,19 +258,19 @@ export class WebViews {
 		//The below for loop updates the result state
 		for (var i = 0; i < rows.length; i++) {
 			var pathId = rows[i];
-			for (let i = 0; i < nodes.length; i++) { 
-				if( pathId == nodes[i].Path[0].$.PathId) {
+			for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) { 
+				if( pathId == nodes[nodeCtr].Path[0].$.PathId) {
 				let state = selectedResultState;
-				let severity = nodes[i].$.SeverityIndex;
-				let user = nodes[i].$.AssignToUser;
+				let severity = nodes[nodeCtr].$.SeverityIndex;
+				let user = nodes[nodeCtr].$.AssignToUser;
 				const request = {
 					"state" :state,
 					"severity" : severity,
 					"userAssignment" : user,
 					"comment" : "comment"
 				};
-				const response = await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
-				nodes[i].$.state = state;
+				await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
+				nodes[nodeCtr].$.state = state;
 				}
 			  }
 		}
@@ -283,9 +278,9 @@ export class WebViews {
 		let queries:  any[] | undefined;
 		queries = this.scanNode.queries;
 		if(queries) {
-		for (let i = 0; i < queries.length; i++) { 
-			if(queries[i].$.id == this.queryNode.$.id && this.resultTablePanel){
-			  this.queryNode = queries[i];
+			for (let queryCtr = 0; queryCtr < queries.length; queryCtr++) { 
+			if(queries[queryCtr].$.id == this.queryNode.$.id && this.resultTablePanel){
+			  this.queryNode = queries[queryCtr];
 				this.resultTablePanel.webview.postMessage(this.queryNode);
 				break;
 		}
