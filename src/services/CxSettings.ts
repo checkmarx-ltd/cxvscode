@@ -12,6 +12,7 @@ const CX_ENABLE_WORKSPACE_ONLY_SCAN: string = 'cx.enableWorkspaceOnlyScan';
 const CX_FOLDER_EXCLUSIONS: string = 'cx.folderExclusions';
 const CX_FILE_EXTENSIONS: string = 'cx.fileExtensions';
 const CX_REPORT_PATH: string = 'cx.reportPath';
+const CX_ENABLE_USER_CREDENTIALS_LOGIN: string = 'cx.enableUserCredentialsLogin';
 
 export interface CxServerSettings {
     url: string;
@@ -117,6 +118,15 @@ export class CxSettings {
     return vscode.workspace.getConfiguration().get(CX_ENABLE_WORKSPACE_ONLY_SCAN) as boolean;
 }
 
+
+ /**
+     * Returns value of the cx.enableUserCredentialsLogin setting. The setting controls the User credentials login.
+     * Add "cx.enableUserCredentialsLogin": false to the settings.json
+     * @returns Value of cx.enableUserCredentialsLogin setting
+     */
+  public static isEnableUserCredentialsLogin(): boolean {
+    return vscode.workspace.getConfiguration().get(CX_ENABLE_USER_CREDENTIALS_LOGIN) as boolean;
+}
     /**
      * Returns value of the cx.quiet setting. The setting controls the amount of popup messages displayed to the user.
      * Add "cx.quiet": true to the settings.json

@@ -2,20 +2,17 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as url from "url";
 import { INode } from "../interface/INode";
-import { Logger } from "@checkmarx/cx-common-js-client";
-import { ScanResults } from "@checkmarx/cx-common-js-client";
-import { CxClient } from "@checkmarx/cx-common-js-client";
-import { ScanConfig } from "@checkmarx/cx-common-js-client";
-import { SastConfig } from "@checkmarx/cx-common-js-client";
-import { TeamApiClient } from "@checkmarx/cx-common-js-client";
-import { HttpClient } from "@checkmarx/cx-common-js-client";
+import { Logger,ScanResults,CxClient,ScanConfig ,SastConfig,TeamApiClient,HttpClient, AuthSSODetails} from "@checkmarx/cx-common-js-client";
 import { ProjectNode } from "./ProjectNode";
 import { ScanNode } from "./ScanNode";
 import { Utility } from "../utils/util";
 import { SastClient } from '../services/sastClient';
 import { CxSettings } from "../services/CxSettings";
 import { CxServerSettings } from "../services/CxSettings";
+import { LoginChecks } from "../services/loginChecks";
 import { LoginMethods } from './LoginMethods';
+import { SSOConstants } from './ssoConstant';
+import { SessionStorageService } from '../services/sessionStorageService';
 
 export class ServerNode implements INode {
 
@@ -31,13 +28,16 @@ export class ServerNode implements INode {
     private teamPath: string;
     private currentScanedSource: ScanNode | undefined;
     private currBoundProject: ProjectNode | any;
+    private authSSODetails: AuthSSODetails | any;
+    private storageManager :  SessionStorageService;
+    private loginChecks: LoginChecks | any;
 
-    constructor(public readonly sastUrl: string, private readonly alias: string, private readonly log: Logger) {
+    constructor(public readonly sastUrl: string, private readonly alias: string, private readonly log: Logger,private readonly context: vscode.ExtensionContext) {
         this.username = '';
         this.password = '';
         const workspaceFolders = vscode.workspace.workspaceFolders;
         this.workspaceFolder = workspaceFolders ? workspaceFolders[0].uri : undefined;
-
+       
         // read folder exclusions, or initialize to default
         this.folderExclusion = CxSettings.getFolderExclusions();
 
@@ -48,9 +48,14 @@ export class ServerNode implements INode {
 
         this.httpClient = new HttpClient(baseUrl, "Visual-Studio-Code","", this.log);
 
+        this.storageManager = new SessionStorageService(context.workspaceState);
+
+        this.loginChecks =  new LoginChecks(log,context,this.httpClient);
+        
         this.projectName = '';
         this.teamPath = '';
 
+       
         // read bound project, if available
         const cxServerSettings: CxServerSettings = CxSettings.getServer();
         try {
@@ -89,6 +94,9 @@ export class ServerNode implements INode {
         CxSettings.updateFolderExclusions(this.folderExclusion);
     }
 
+    public isLoggedIn(): boolean {
+        return this.loginChecks.isLoggedIn();
+    }
     public async updateFileExtension() {
         this.fileExtension = CxSettings.updateFSConfigAsCode(this.fileExtension, CxSettings.getFileExtensions());
         this.fileExtension = await this.updateFileSystemPatterns(this.fileExtension, "Add/Modify file extension: included/excluded file starts without/with !");
@@ -141,25 +149,25 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 `       );
     }
 
-    /**
-     * Checks if the user is currently logged in to the server
-     * @returns true if access token or cookies are available; false otherwise 
-     */
-    public isLoggedIn(): boolean {
-        return this.httpClient.accessToken || (this.httpClient.cookies && this.httpClient.cookies.size > 0);
-    }
-
+   
     public async login() {
         try {
-            if (this.isLoggedIn()) {
-                vscode.window.showInformationMessage('You are already logged in!');
-                return;
-            }
+                if (this.loginChecks.isLoggedIn()) {
+                    vscode.window.showInformationMessage('You are already logged in!');
+                    return;
+                }
 
             const loginMethod: string = await Utility.showPickString("Select login method", [LoginMethods.SSO, LoginMethods.CREDENTIALS]);
             if (loginMethod) {
                 if (loginMethod === LoginMethods.CREDENTIALS) {
                     await this.loginWithCredentials();
+                    this.log.info('Login successful');
+                    vscode.window.showInformationMessage('Login successful');
+                    this.storageManager.setValue<string>(SSOConstants.ACCESS_TOKEN, this.httpClient.accessToken);
+
+                    if (this.isBoundToProject()) {
+                        await this.retrieveLatestResults();
+                    }
                 }
                 else {
                     await this.ssoLogin();
@@ -181,6 +189,17 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
    
 
+    private async getLoginMethod(): Promise<string> {
+        let loginMethod: string;
+        if(CxSettings.isEnableUserCredentialsLogin())
+        {
+             loginMethod  = await Utility.showPickString("Select login method", [LoginMethods.CREDENTIALS, LoginMethods.SSO]);
+        }else{
+            loginMethod  =  LoginMethods.SSO;
+
+        }
+        return loginMethod;
+    }
     private async loginWithCredentials() {
         const cxServer: CxServerSettings = CxSettings.getServer();
         if (cxServer.username.length > 0 && cxServer.password.length > 0) {
@@ -195,18 +214,73 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         cxServer.username = this.username;
         cxServer.password = this.password;
         await CxSettings.updateServer(cxServer);
+
+     
     }
 
+    /**
+     * This method invokes browser URL for single sign on login.
+     * User needs to enter credentials in webconsole in order to generate authrorization code
+     */
     private async ssoLogin() {
-        await this.httpClient.ssoLogin();
+        try {
+                this.authSSODetails =  new AuthSSODetails();
+                this.authSSODetails.clientId = SSOConstants.vscode_client_id;
+                this.authSSODetails.scope = SSOConstants.vscode_client_scope;
+                this.authSSODetails.redirectURI = SSOConstants.vscode_redirect_uri ;
+
+                this.log.info('Logging into Checkmarx with authorization code.');
+                let authURL: string = await this.httpClient.getAuthorizationCodeURL(this.authSSODetails);
+                
+                // Open browser windows for SAST server login for SSO
+                vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(authURL));
+               
+        }catch (err) {
+            this.log.error(err);
+            vscode.window.showErrorMessage('Login failed');
+        }
+
     }
 
+    /**
+     * This method gets invoked by URI handler when SSO login in started and
+     * After we receive authorization code. We pass AuthSSODetails object to http client
+     * getAccessTokenFromAuthorizationCode method to get access token
+     */
+    public async loginWithAuthCode(authSSODetails:AuthSSODetails){
+        
+        try{
+
+            vscode.window.showInformationMessage('Logging into Checkmarx with authorization code.');
+            await this.httpClient.getAccessTokenFromAuthorizationCode(authSSODetails);
+
+            vscode.window.showInformationMessage('SSO Login successful with authorization code.');
+            let access_token = <string> this.httpClient.accessToken;
+
+            /* Setting access token in context */ 
+            this.storageManager.setValue<string>(SSOConstants.ACCESS_TOKEN, access_token);
+
+            if (this.isBoundToProject()) {
+                await this.retrieveLatestResults();
+            }
+        }catch (err) {
+            this.log.error(err);
+            vscode.window.showErrorMessage('Login failed. Not able to get access token using Authorization code.');
+        }
+		
+
+    }
+
+    
     public async logout() {
-        if (!this.isLoggedIn()) {
+        
+        if (!this.loginChecks.isLoggedIn()) {
             vscode.window.showErrorMessage('You are not logged in.');
             return;
         }
         this.httpClient.logout();
+        //removing access token from context
+        this.storageManager.setValue<string>(SSOConstants.ACCESS_TOKEN,'');
         this.log.info('Logout successful');
         if (!CxSettings.isQuiet()) {
             vscode.window.showInformationMessage('Logout successful');
@@ -214,6 +288,8 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         const cxServer: CxServerSettings = CxSettings.getServer();
         cxServer.username = '';
         cxServer.password = '';
+        this.authSSODetails = null;
+
         await CxSettings.updateServer(cxServer);
     }
 
@@ -234,7 +310,9 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         if (projectNode) {
             return projectNode.id;
         }
-
+        if (!this.loginChecks.isLoggedIn()) {
+            throw Error('Access token expired. Please login.');
+        }
         const projectList: any[] = await this.httpClient.getRequest('projects');
         if (projectList && projectList.length > 0) {
             const teamsByName = await this.getTeamsByName();
@@ -252,6 +330,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
 
     private async choosePreset(): Promise<string> {
+       
         const allPresets: any[] = await this.httpClient.getRequest('sast/presets');
         const allPresetNames: string[] = allPresets.map(preset => preset.name);
 
@@ -268,6 +347,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
 
     private async chooseTeam(): Promise<string> {
+       
         const allTeams: any[] = await this.httpClient.getRequest('auth/teams');
         const allTeamNames: string[] = allTeams.map(team => team.fullName);
 
@@ -305,6 +385,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
 
     private async getTeamsByName(): Promise<Map<string, number>> {
+       
         const allTeams: any[] = await this.httpClient.getRequest('auth/teams');
         const teamsByName: Map<string, number> = new Map<string, number>();
         allTeams.forEach(team => teamsByName.set(team.fullName, team.id));
@@ -312,6 +393,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
 
     private async getAllTeams(): Promise<[Map<number, string>, Map<string, number>]> {
+        
         const allTeams: any[] = await this.httpClient.getRequest('auth/teams');
         const teamsById: Map<number, string> = new Map<number, string>();
         const teamsByName: Map<string, number> = new Map<string, number>();
@@ -319,6 +401,8 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         allTeams.forEach(team => teamsByName.set(team.fullName, team.id));
         return [teamsById, teamsByName];
     }
+
+    
 
     private async chooseProjectToBind(projectList: any[], teamsById: Map<number, string>): Promise<vscode.QuickPickItem | undefined> {
         let chosenProject: vscode.QuickPickItem | undefined;
@@ -345,15 +429,17 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     public async bindProject() {
         let chosenProject: vscode.QuickPickItem | undefined;
         try {
+            if (!this.loginChecks.isLoggedIn()) {
+                throw Error('Access token expired. Please login.');
+            }
             const projectList: any[] = await this.httpClient.getRequest('projects');
             if (projectList && projectList.length > 0) {
                 const [teamsById, teamsByName] = await this.getAllTeams();
                 chosenProject = await this.chooseProjectToBind(projectList, teamsById);
                 if (chosenProject) {
                     this.log.info('Chosen: ' + chosenProject.label + ', ' + chosenProject.detail);
-                    if (!CxSettings.isQuiet()) {
-                        vscode.window.showInformationMessage('Chosen: ' + chosenProject.label + ', ' + chosenProject.detail);
-                    }
+                    this.showMessage('Chosen: ' + chosenProject.label + ', ' + chosenProject.detail);
+                    
                     chosenProject.label = chosenProject.label.replace("project: ", '');
                     chosenProject.detail = chosenProject.detail?.replace("team: ", '');
                     const boundProject: any = projectList.find(project => project['name'] === chosenProject?.label && project['teamId'] === teamsByName.get(chosenProject?.detail || ''));
@@ -368,19 +454,19 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             }
         } catch (err) {
             this.log.error(err);
-            if (err.message === 'Login failed') {
-                vscode.window.showErrorMessage('Access token expired. Please login.');
-            }
-            else {
-                vscode.window.showErrorMessage(err.message);
-            }
+            vscode.window.showErrorMessage(err.message);
+            
         }
     }
 
     private async retrieveLatestResults() {
+        if (!this.loginChecks.isLoggedIn()) {
+            throw Error('Access token expired. Please login.');
+        }
         const latestScan: any[] = await this.httpClient.getRequest(`sast/scans?last=1&projectId=${this.currBoundProject['id']}&scanStatus=Finished`);
         if (latestScan && latestScan.length === 1) {
-            this.currentScanedSource = new ScanNode(latestScan[0].id, this.currBoundProject['id'], this.currBoundProject['name'], false, this.httpClient, this.log, this, false);
+            this.currentScanedSource = new ScanNode(latestScan[0].id, this.currBoundProject['id'], this.currBoundProject['name'],
+             false, this.httpClient, this.log, this, false,this.loginChecks);
             this.displayCurrentScanedSource();
         }
     }
@@ -416,7 +502,8 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
 
     private addSource(sourceLocation: string, scanId: number, projectId: number, isFolder: boolean) {
-        const newSource: ScanNode = new ScanNode(scanId, projectId, sourceLocation, isFolder, this.httpClient, this.log, this, true);
+        const newSource: ScanNode = new ScanNode(scanId, projectId, sourceLocation, isFolder, 
+            this.httpClient, this.log, this, true,this.loginChecks);
         let found: boolean = false;
         for (const source of this.scanedSources) {
             if (this.isEquivalent(newSource, source)) {
@@ -442,6 +529,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         const encodedName = encodeURIComponent(this.projectName);
         const projectRestApi = `projects?projectname=${encodedName}&teamid=${teamsByName.get(this.teamPath)}`;
         try {
+            
             const projects = await this.httpClient.getRequest(projectRestApi, { suppressWarnings: true });
             if (projects && projects.length) {
                 throw Error(`Project [${this.projectName}] already exists`);
@@ -454,6 +542,25 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         }
     }
 
+    private showMessage(message : string){
+        if (!CxSettings.isQuiet()) {
+            vscode.window.showInformationMessage(message);
+        }
+    }
+
+    async getSourceLocation(isFolder: boolean, scanPath: string): Promise<any> {
+
+        // get the source location; if scanPath is empty, prompt user to select
+        let sourceLocation: string;
+        if (!scanPath || scanPath.length === 0) {
+            const labelType: string = (isFolder) ? 'Scan Folder' : 'Scan File';
+            sourceLocation = await this.selectSourceLocation(isFolder, labelType);
+        }
+        else {
+            sourceLocation = scanPath;
+        }
+        return sourceLocation;
+    }
     /**
      * @param projectNode  CxSAST project, or undefined if this workspace not yet bound to a project
      * @param isFolder True if scanning a folder; false if scanning a single file
@@ -461,7 +568,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
      */
     public async scan(isFolder: boolean, scanPath: string) {
         try {
-            if (!this.isLoggedIn()) {
+            if (!this.loginChecks.isLoggedIn()) {
                 throw Error('Access token expired. Please login.');
             }
 
@@ -478,6 +585,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             this.log.debug('Entering CxScanner...\nReading configuration.');
 
             if (this.currBoundProject) {
+               
                 const settingsResponse = await this.httpClient.getRequest(`sast/scanSettings/${this.currBoundProject.id}`);
                 presetId = settingsResponse && settingsResponse.preset && settingsResponse.preset.id;
 
@@ -486,44 +594,31 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             }
             else {
                 this.projectName = await Utility.showInputBox("Enter project name", false);
-                if (!CxSettings.isQuiet()) {
-                    vscode.window.showInformationMessage('Chosen Project: ' + this.projectName);
-                }
+                this.showMessage('Chosen Project: ' + this.projectName);
+                
                 this.teamPath = await this.chooseTeam();
                 await this.isProjectExists();
                 presetName = await this.choosePreset();
 
                 const isProjectPrivate: string = await Utility.showPickString("Is project private?", ['Yes', 'No']);
                  isProjPrivate = Utility.modeIsEnabled(isProjectPrivate);
-            if (!CxSettings.isQuiet()) {
                 if (isProjPrivate) {
-                    vscode.window.showInformationMessage('Project is private');
+                    this.showMessage('Project is private');
                 } else {
-                    vscode.window.showInformationMessage('Project is public');
+                    this.showMessage('Project is public');
                 }
             }
-            }
 
-            // get the source location; if scanPath is empty, prompt user to select
             let sourceLocation: string;
-            if (!scanPath || scanPath.length === 0) {
-                const labelType: string = (isFolder) ? 'Scan Folder' : 'Scan File';
-                sourceLocation = await this.selectSourceLocation(isFolder, labelType);
-            }
-            else {
-                sourceLocation = scanPath;
-            }
+            sourceLocation = await this.getSourceLocation(isFolder,scanPath);
 
             const isScanIncremental = await Utility.showPickString("Is scan incremental?", ['Yes', 'No']);
             const isIncremental: boolean = Utility.modeIsEnabled(isScanIncremental);
-            if (!CxSettings.isQuiet()) {
-                if (isIncremental) {
-                    vscode.window.showInformationMessage('Scan is incremental');
-                } else {
-                    vscode.window.showInformationMessage('Scan is full');
-                }
+            if (isIncremental) {
+                this.showMessage('Scan is incremental');
+            } else {
+                this.showMessage('Scan is full');
             }
-
             
             var isPrivate : boolean;
             if(!isProjPrivate) // Checking if project is private all its scans are by default private. 
@@ -531,13 +626,12 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             {
             const isScanPrivate = await Utility.showPickString("Is scan private?", ['Yes', 'No']);
              isPrivate = Utility.modeIsEnabled(isScanPrivate);
-            if (!CxSettings.isQuiet()) {
                 if (isPrivate) {
-                    vscode.window.showInformationMessage('Scan is private');
+                    this.showMessage('Scan is private');
                 } else {
-                    vscode.window.showInformationMessage('Scan is public');
+                    this.showMessage('Scan is public');
                 }
-            }
+            
           } else 
           {
             isPrivate = true;
@@ -584,7 +678,8 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 
             const cxClient = new CxClient(this.log);
             const scanResults: ScanResults = await cxClient.scan(config, this.httpClient);
-            const sastClient = new SastClient(scanResults.scanId, this.httpClient, this.log, sastConfig.scanTimeoutInMinutes);
+            const sastClient = new SastClient(scanResults.scanId, this.httpClient, this.log,
+                this.loginChecks, sastConfig.scanTimeoutInMinutes);
             await sastClient.waitForScanToFinish();
 
             const projectId: number = await this.getProjectId(this.currBoundProject);

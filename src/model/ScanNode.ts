@@ -8,6 +8,7 @@ import { ScanResults } from "@checkmarx/cx-common-js-client";
 import { Logger } from "@checkmarx/cx-common-js-client";
 import { ReportingClient } from "@checkmarx/cx-common-js-client";
 import { Utility } from "../utils/util";
+import { LoginChecks } from '../services/loginChecks';
 import { SeverityNode } from './SeverityNode';
 import * as fs from "fs";
 import * as url from "url";
@@ -20,7 +21,7 @@ export class ScanNode implements INode {
     constructor(public scanId: number, public projectId: number,
         public readonly sourceLocation: string, public readonly isFolder: boolean,
         public readonly httpClient: HttpClient, private readonly log: Logger,
-        public parentNode: ServerNode, public readonly isScannedByVSC: boolean) {
+        public parentNode: ServerNode, public readonly isScannedByVSC: boolean,private readonly loginChecks:LoginChecks) {
         this.scanResult = new ScanResults();
         if (parentNode.config) {
             this.scanResult.updateSastDefaultResults(parentNode.config.sastConfig);
@@ -110,6 +111,9 @@ export class ScanNode implements INode {
 
     public async addStatisticsToScanResults() {
         const cxServer: CxServerSettings = CxSettings.getServer();
+        if (!this.loginChecks.isLoggedIn()) {
+            throw Error('Access token expired. Please login.');
+        }
         const statistics: any = await this.httpClient.getRequest(`sast/scans/${this.scanId}/resultsStatistics`);
 
         this.scanResult.scanId = this.scanId;

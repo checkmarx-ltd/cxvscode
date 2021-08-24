@@ -92,6 +92,10 @@
 				"cx.enableWorkspaceOnlyScan": {
 					"type": "boolean",
 					"description": "Forces user to always scan at workspace only (Restart required)"
+				},
+				"cx.enableUserCredentialsLogin": {
+					"type": "boolean",
+					"description": "Enable User Credentials Login."
 				}
 			}
 		},

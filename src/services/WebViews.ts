@@ -1,11 +1,13 @@
 import * as vscode from 'vscode';
 import * as path from "path";
 import * as fs from "fs";
-import { Logger } from "@checkmarx/cx-common-js-client";
-import { HttpClient } from "@checkmarx/cx-common-js-client";
+import { HttpClient, AuthSSODetails,Logger} from "@checkmarx/cx-common-js-client";
 import { ScanNode } from '../model/ScanNode';
 import { QueryNode } from '../model/QueryNode';
 import { Severity } from '@checkmarx/cx-common-js-client/dist/dto/sca/report/severity';
+import { SessionStorageService } from './sessionStorageService';
+import { SSOConstants } from '../model/ssoConstant';
+import { LoginChecks } from './loginChecks';
 
 export class WebViews {
 
@@ -14,19 +16,30 @@ export class WebViews {
 	private resultTablePanel?: vscode.WebviewPanel = undefined;
 	private queryDescriptionPanel?: vscode.WebviewPanel = undefined;
 	public queryNode: any;
+	private storageManager :  SessionStorageService;
+	private accessToken: string = '';
+	private authSSODetails: AuthSSODetails | any;
+	private loginChecks: LoginChecks | any;
 
 	public queryForDescription :any ;
 	constructor(context: vscode.ExtensionContext, private scanNode: ScanNode,
 		private readonly log: Logger, private readonly httpClient: HttpClient) {
 		this.createWebViews(context);
+
+		this.storageManager = new SessionStorageService(context.workspaceState);
+		this.accessToken = this.storageManager.getValue<string>(SSOConstants.ACCESS_TOKEN,'');
+		this.loginChecks =  new LoginChecks(log,context,this.httpClient);
 	}
 
 	async createQueryDescriptionWebView(queryId: number) {
-		if (!this.httpClient.accessToken && !(this.httpClient.cookies && this.httpClient.cookies.size > 0)) {
+
+		if(!this.loginChecks.isLoggedIn())
+		{
 			vscode.window.showErrorMessage('Access token expired. Please login.');
 			return;
 		}
-
+		
+		
 		if (this.queryDescriptionPanel) {
 			this.queryDescriptionPanel.dispose();
 		}
@@ -168,15 +181,15 @@ export class WebViews {
 		}
 	}
 	private async updateShortDescriptionForResult(message: any) {
-		// let scanId = this.scanNode.scanId
-		// let pathId = message.path[0].$.PathId;
-		// let description = await this.httpClient.getRequest(`sast/scans/${scanId}/results/${pathId}/shortDescription`);
-		// this.queryForDescription.description = description;
+		let scanId = this.scanNode.scanId
+		let pathId = message.path[0].$.PathId;
+		let description = await this.httpClient.getRequest(`sast/scans/${scanId}/results/${pathId}/shortDescription`);
+		this.queryForDescription.description = description;
 
-		// this.queryForDescription.mesg = "vsCode";
-		// this.queryForDescription.clickedRow = message.clickedRow;
-		// if(this.resultTablePanel)
-		// this.resultTablePanel.webview.postMessage(this.queryForDescription);
+		this.queryForDescription.mesg = "vsCode";
+		this.queryForDescription.clickedRow = message.clickedRow;
+		if(this.resultTablePanel)
+		this.resultTablePanel.webview.postMessage(this.queryForDescription);
 	}
 
 	private createWebViews(context: vscode.ExtensionContext) {
