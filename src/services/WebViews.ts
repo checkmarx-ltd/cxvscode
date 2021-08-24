@@ -269,7 +269,13 @@ export class WebViews {
 					"userAssignment" : user,
 					"comment" : "comment"
 				};
+				try {
 				await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
+				} catch (err) {
+					if (err.status == 404) {
+						this.log.error('This operation is not supported with CxSAST version in use.');
+					}
+			}
 				nodes[nodeCtr].$.state = state;
 				}
 			  }
