@@ -157,9 +157,8 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                     vscode.window.showInformationMessage('You are already logged in!');
                     return;
                 }
+                let loginMethod = await this.getLoginMethod();
 
-            const loginMethod: string = await Utility.showPickString("Select login method", [LoginMethods.SSO, LoginMethods.CREDENTIALS]);
-            if (loginMethod) {
                 if (loginMethod === LoginMethods.CREDENTIALS) {
                     await this.loginWithCredentials();
                     this.log.info('Login successful');
@@ -173,28 +172,20 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 else {
                     await this.ssoLogin();
                 }
-
-                this.log.info('Login successful');
-                vscode.window.showInformationMessage('Login successful');
-
-                if (this.isBoundToProject()) {
-                    await this.retrieveLatestResults();
-
-                }
+                
             }
-        }
+        
         catch (err) {
             this.log.error(err);
             vscode.window.showErrorMessage('Login failed');
         }
     }
-   
 
     private async getLoginMethod(): Promise<string> {
         let loginMethod: string;
         if(CxSettings.isEnableUserCredentialsLogin())
         {
-             loginMethod  = await Utility.showPickString("Select login method", [LoginMethods.CREDENTIALS, LoginMethods.SSO]);
+             loginMethod  = await Utility.showPickString("Select login method", [ LoginMethods.SSO, LoginMethods.CREDENTIALS]);
         }else{
             loginMethod  =  LoginMethods.SSO;
 
