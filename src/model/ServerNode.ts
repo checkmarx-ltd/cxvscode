@@ -185,7 +185,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         let loginMethod: string;
         if(CxSettings.isEnableUserCredentialsLogin())
         {
-             loginMethod  = await Utility.showPickString("Select login method", [LoginMethods.CREDENTIALS, LoginMethods.SSO]);
+             loginMethod  = await Utility.showPickString("Select login method", [ LoginMethods.SSO, LoginMethods.CREDENTIALS]);
         }else{
             loginMethod  =  LoginMethods.SSO;
 

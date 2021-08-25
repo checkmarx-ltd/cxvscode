@@ -109,7 +109,7 @@ export class ScanNode implements INode {
         }
     }
 
-    private async addStatisticsToScanResults() {
+    public async addStatisticsToScanResults() {
         const cxServer: CxServerSettings = CxSettings.getServer();
         if (!this.loginChecks.isLoggedIn()) {
             throw Error('Access token expired. Please login.');

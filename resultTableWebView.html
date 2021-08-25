@@ -16,6 +16,7 @@
 
 <body>
     <div style="text-align: center; ">
+       
         <table style="text-align: center;">
             <tbody id="list" class="list" style="text-align: center;">
             </tbody>
@@ -59,24 +60,46 @@
             '3': 'Urgent',
             '4': 'Proposed Not Exploitable'
         };
+		const stateOrdinalDictionary = {
+            'To Verify':'0',
+            'Not Exploitable':'1' ,
+            'Confirmed':'2',
+            'Urgent':'3',
+            'Proposed Not Exploitable':'4' 
+        };
         // Get messages
         window.addEventListener('message', event => {
             const message = event.data; // The JSON data our extension sent
-
+             if(message.mesg=="vsCode"){
+            var desc= document.getElementById('desc');
+            desc.innerHTML=message.description.shortDescription;
+            }else{
             $("#list").html(
                 "<!DOCTYPE html>" +
                 "<html>" +
                 "<head>" +
                 '<meta http-equiv="Content-type" content="text/html;charset=UTF-8">' +
                 "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} </style>" +
+
                 "</head>" +
                 "<body>" +
                 "<span id='header'></span>" +
                 "<table id='innertable'>"
             );
+            $("#list").append("<tr><td id ='desc' colspan='16'> "+message.description.shortDescription+"</td></tr>");
+            $("#list").append("<table>");
+			var selectHTML = "<tr style='background:rgba(29,150,178,1)'><td>" +"<select id='resultStateDropDownList'>";
+                selectHTML = selectHTML + "<option>Result State</option>";
+            for (i = 0; i < message.resultStates.states.length; i = i + 1) {
+                selectHTML += "<option value='" + message.resultStates.states[i].name + "'>" + message.resultStates.states[i].name + "</option>";
+            }
+            selectHTML +=  "</select></td> </tr>";
+            $("#list").append(selectHTML);
+			
 
             //This is the fontend change area
             $("#list").append("<tr>" +
+                "<th> </th>"+
                 "<th>No.</th>" +
                 "<th>Status</th>" +
                 "<th>Query Name</th>" +
@@ -93,8 +116,12 @@
                 "<th>Assigned User</th>" +
                 "<th>Comments</th>" +
                 "</tr>");
-
+				
+			if (message.mesg=="firstClick"){
+            vscode.postMessage({ path: message.Result[0].Path ,mesg: "firstTime",clickedRow:0});
+            }
                 $("#list").append("<tr>" +
+				"<td> </td>" +
                 "<td> </td>" +
                 "<td> <input type='text'  id='id-status' name='status'></td>" +
                 "<td> </td>" +
@@ -112,7 +139,7 @@
                 "<td> <input type='text'  id='id-comments' name='comments'></td>" +
                 "</tr>");
 
-            vscode.postMessage({ path: message.Result[0].Path });
+             
 
             //This area is where api data needs to be fetched
             var i = 0;
@@ -120,7 +147,8 @@
                 const pathNodeLength = result.Path[0].PathNode.length;
                 var srcFileName = String(result.Path[0].PathNode[0].FileName);
                 var destFileName = String(result.Path[0].PathNode[pathNodeLength-1].FileName);
-                $("#list").append("<tr style='cursor:pointer;'" + " id='result" + i + "' >" +
+                $("#list").append("<tr style='cursor:pointer; vertical-align:top'" + " id='result" + i + "' >" +
+					"<td class='check'> <input type ='checkbox' id= 'checkbox-"+i+ "'name = 'querySelected' value = '"+result.Path[0].$.PathId+"'>"+"</td>"+
                     "<td class='id'>" + result.Path[0].$.PathId + "</td>" +
                     "<td class='status'>" + result.$.Status + "</td>" +
                     "<td class='name'>" + message.$.name + "</td>" +
@@ -140,11 +168,11 @@
 
                 $("#result" + 0).addClass("selec");
 
-                var result = $("#result" + i);
-                result.on('click', function () {
+                var resultValue = $("#result" + i);
+                resultValue.on('click', function () {
                     $(".selec").removeClass("selec");
-                    result.addClass("selec");
-                    vscode.postMessage({ path: query.Path }); // Node was clicked, send it back
+                    resultValue.addClass("selec");
+                    vscode.postMessage({ path: result.Path,command: "onClick",clickedRow: i}); // Node was clicked, send it back
                 });
 
                 i++;
@@ -153,7 +181,7 @@
 
             $("#id-status").keyup(function() {
                 var input = $('#id-status').val();
-                filterRows(input, 1);
+                filterRows(input, 2);
             });
             $("#id-srcfolder").keyup(function() {
                 var input = $('#id-srcfolder').val();
@@ -161,49 +189,63 @@
             });
             $("#id-srcfilename").keyup(function() {
                 var input = $('#id-srcfilename').val();
-                filterRows(input, 4);
+                filterRows(input, 5);
             });
             $("#id-srcline").keyup(function() {
                 var input = $('#id-srcline').val();
-                filterRows(input, 5);
+                filterRows(input, 6);
             });
             $("#id-srcobject").keyup(function() {
                 var input = $('#id-srcobject').val();
-                filterRows(input, 6);
+                filterRows(input, 7);
             });
             $("#id-destfolder").keyup(function() {
                 var input = $('#id-destfolder').val();
-                filterRows(input, 7);
+                filterRows(input, 8);
             });
             $("#id-destfilename").keyup(function() {
                 var input = $('#id-destfilename').val();
-                filterRows(input, 8);
+                filterRows(input, 9);
             });
             $("#id-destline").keyup(function() {
                 var input = $('#id-destline').val();
-                filterRows(input, 9);
+                filterRows(input, 10);
             });
             $("#id-destobject").keyup(function() {
                 var input = $('#id-destobject').val();
-                filterRows(input, 10);
+                filterRows(input, 11);
             });
             $("#id-state").keyup(function() {
                 var input = $('#id-state').val();
-                filterRows(input, 11);
+                filterRows(input, 12);
             });
             
             $("#id-assigneduser").keyup(function() {
                 var input = $('#id-assigneduser').val();
-                filterRows(input, 13);
+                filterRows(input, 14);
             });
             
             $("#id-comments").keyup(function() {
                 var input = $('#id-comments').val();
-                filterRows(input, 14);
+                filterRows(input, 15);
             });
 
+			$('#resultStateDropDownList').on('change', function() {
+                var selectedResultState = $('#resultStateDropDownList option:selected').val();
+                selectedResultState = stateOrdinalDictionary[selectedResultState];
+                var selectedQueryNodes = [];
+                $.each($("input[name='querySelected']:checked"), function () {
+                    selectedQueryNodes.push($(this).val());
+                   
+                });
+                
+                vscode.postMessage({command: 'resultstateChangeEvent',
+                                    resultStateTobeChange: selectedResultState, 
+                                    data: selectedQueryNodes});
+                });
+				
             $("#list").append("</table></body></html>");
-            
+            }
         });
     </script>
 </body>
