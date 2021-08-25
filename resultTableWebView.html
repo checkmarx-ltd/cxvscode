@@ -79,9 +79,12 @@
                 "<html>" +
                 "<head>" +
                 '<meta http-equiv="Content-type" content="text/html;charset=UTF-8">' +
-                "<style>table{border-collapse:collapse; }table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#808080; color:white;} </style>" +
+                "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} </style>" +
+
                 "</head>" +
-                "<body>"
+                "<body>" +
+                "<span id='header'></span>" +
+                "<table id='innertable'>"
             );
             $("#list").append("<tr><td id ='desc' colspan='16'> "+message.description.shortDescription+"</td></tr>");
             $("#list").append("<table>");
