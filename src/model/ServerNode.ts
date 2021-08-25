@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as url from "url";
 import { INode } from "../interface/INode";
-import { Logger,ScanResults,CxClient,ScanConfig ,SastConfig,TeamApiClient,HttpClient, AuthSSODetails} from "@checkmarx/cx-common-js-client";
+import { Logger,ScanResults,CxClient,ScanConfig ,SastConfig,TeamApiClient,HttpClient, AuthSSODetails,ProxyConfig} from "@checkmarx/cx-common-js-client";
 import { ProjectNode } from "./ProjectNode";
 import { ScanNode } from "./ScanNode";
 import { Utility } from "../utils/util";
@@ -31,6 +31,7 @@ export class ServerNode implements INode {
     private authSSODetails: AuthSSODetails | any;
     private storageManager :  SessionStorageService;
     private loginChecks: LoginChecks | any;
+    private proxyConfig : ProxyConfig | any;
 
     constructor(public readonly sastUrl: string, private readonly alias: string, private readonly log: Logger,private readonly context: vscode.ExtensionContext) {
         this.username = '';
@@ -46,7 +47,7 @@ export class ServerNode implements INode {
 
         const baseUrl = url.resolve(this.sastUrl, 'CxRestAPI/');
 
-        this.httpClient = new HttpClient(baseUrl, "Visual-Studio-Code","", this.log);
+        this.httpClient = new HttpClient(baseUrl, "Visual-Studio-Code","", this.log,this.proxyConfig,CxSettings.getSSLCertPath());
 
         this.storageManager = new SessionStorageService(context.workspaceState);
 

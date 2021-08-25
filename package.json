@@ -96,6 +96,10 @@
 				"cx.enableUserCredentialsLogin": {
 					"type": "boolean",
 					"description": "Enable User Credentials Login."
+				},
+				"cx.sslCertificatePath": {
+					"type": "string",
+					"description": "SSL certificate path."
 				}
 			}
 		},
