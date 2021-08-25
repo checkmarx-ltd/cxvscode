@@ -13,6 +13,7 @@ const CX_FOLDER_EXCLUSIONS: string = 'cx.folderExclusions';
 const CX_FILE_EXTENSIONS: string = 'cx.fileExtensions';
 const CX_REPORT_PATH: string = 'cx.reportPath';
 const CX_ENABLE_USER_CREDENTIALS_LOGIN: string = 'cx.enableUserCredentialsLogin';
+const CX_SSL_CERT_PATH: string = 'cx.sslCertificatePath';
 
 export interface CxServerSettings {
     url: string;
@@ -126,6 +127,15 @@ export class CxSettings {
      */
   public static isEnableUserCredentialsLogin(): boolean {
     return vscode.workspace.getConfiguration().get(CX_ENABLE_USER_CREDENTIALS_LOGIN) as boolean;
+}
+
+ /**
+     * Returns value of the cx.sslCertPath setting. The setting value will be used as certifcate path 
+     * is used for SSL connection.
+     * @returns Value of cx.sslCertPath setting
+     */
+  public static getSSLCertPath(): string {
+    return vscode.workspace.getConfiguration().get(CX_SSL_CERT_PATH) as string;
 }
     /**
      * Returns value of the cx.quiet setting. The setting controls the amount of popup messages displayed to the user.
