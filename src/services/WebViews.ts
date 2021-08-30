@@ -176,15 +176,16 @@ export class WebViews {
 		}
 	}
 	private async updateShortDescriptionForResult(message: any) {
-		let scanId = this.scanNode.scanId
+		let scanId = this.scanNode.scanId;
 		let pathId = message.path[0].$.PathId;
 		let description = await this.httpClient.getRequest(`sast/scans/${scanId}/results/${pathId}/shortDescription`);
 		this.queryForDescription.description = description;
 
 		this.queryForDescription.mesg = "vsCode";
 		this.queryForDescription.clickedRow = message.clickedRow;
-		if(this.resultTablePanel)
+		if(this.resultTablePanel){
 			this.resultTablePanel.webview.postMessage(this.queryForDescription);
+		}
 	}
 
 	private createWebViews(context: vscode.ExtensionContext) {
@@ -253,7 +254,7 @@ export class WebViews {
 		
 	}
 	private async resultStateChanged(selectedResultState: any, rows: any) {
-		let scanId= this.scanNode.scanId
+		let scanId= this.scanNode.scanId;
 		let nodes = this.queryNode.Result;
 		//The below for loop updates the result state
 		for (var i = 0; i < rows.length; i++) {

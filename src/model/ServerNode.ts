@@ -246,7 +246,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             vscode.window.showInformationMessage('Logging into Checkmarx with authorization code.');
             await this.httpClient.getAccessTokenFromAuthorizationCode(authSSODetails);
 
-            vscode.window.showInformationMessage('SSO Login successful with authorization code.');
+            vscode.window.showInformationMessage('Login successful with authorization code.');
             let access_token = <string> this.httpClient.accessToken;
 
             /* Setting access token in context */ 

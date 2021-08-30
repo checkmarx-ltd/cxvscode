@@ -21,8 +21,10 @@ export class CxTreeScans implements vscode.TreeDataProvider<INode> {
     // Refresh Tree
     public refresh(element?: INode): void {
         try {
-            if(element)
-            this._onDidChangeTreeData.fire(element);
+            let treeNode : INode | any;
+            treeNode = element;
+            this._onDidChangeTreeData.fire(treeNode);
+
         } catch (err) {
             this.log.error(err);
             vscode.window.showErrorMessage(err.message);
@@ -35,6 +37,7 @@ export class CxTreeScans implements vscode.TreeDataProvider<INode> {
     }
 
     public async getChildren(element?: INode): Promise<INode[]> {
+        
         if (!element) {
             return [this.scanNode];
         }

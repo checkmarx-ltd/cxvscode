@@ -356,7 +356,7 @@
 		"vscode-test": "^1.2.2"
 	},
 	"dependencies": {
-		"@checkmarx/cx-common-js-client": "^0.1.56",
+		"@checkmarx/cx-common-js-client": "^0.1.57",
 		"aes256": "^1.0.4",
 		"form-data": "^3.0.0",
 		"tmp": "^0.1.0"

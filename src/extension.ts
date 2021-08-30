@@ -40,15 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.login", async (serverNode: ServerNode) => {
 
-		
 		await serverNode.login();
-		
-		// Create our new UriHandler
-		const uriHandler = new SSOUriHandler(serverNode);
-
-		// And register it with VS Code. You can only register a single UriHandler for your extension.
-		context.subscriptions.push(vscode.window.registerUriHandler(uriHandler));
-
 		cxTreeDataProvider.refresh(serverNode);
 		
 	}));

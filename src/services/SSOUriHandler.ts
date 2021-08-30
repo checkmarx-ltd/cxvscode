@@ -9,12 +9,11 @@ import { ServerNode } from '../model/ServerNode';
  */
 export class SSOUriHandler implements vscode.UriHandler {
 	private authSSODetails: AuthSSODetails | any;
-	private localServerNode : ServerNode;
+	private localServerNode : ServerNode | any;
 
-	constructor(serverNode : ServerNode) {
+	public setServerNode(serverNode : ServerNode)	{
 		this.localServerNode = serverNode;
-    }
-	
+	}
 	// This function will get run when something redirects to VS Code
 	// with your extension id as the authority.
 	handleUri(uri: vscode.Uri): vscode.ProviderResult<void> {
@@ -38,8 +37,10 @@ export class SSOUriHandler implements vscode.UriHandler {
 			if(codeValue  !== ''){
 				vscode.window.showInformationMessage('Retrieved authorization code.');
 			}
-			// call login method with authorization code
-			this.localServerNode.loginWithAuthCode(this.authSSODetails);
+			if(this.localServerNode){
+				// call login method with authorization code
+				this.localServerNode.loginWithAuthCode(this.authSSODetails);
+			}
 			
 		}catch (err) {
             vscode.window.showErrorMessage('Error while retrieving authorization code.');
