@@ -69,10 +69,20 @@ export class WebViews {
 	async queryResultClicked(query: any | undefined) {
 		if (this.resultTablePanel) {
 			let pathId =query.Result[0].Path[0].$.PathId;
-			var description = await this.httpClient.getRequest(`sast/scans/${this.scanNode.scanId}/results/${pathId}/shortDescription`);
-			query.description=description;
-			//to know webview its firstClick message
-			query.mesg="firstClick";
+			try {
+				//to know webview its firstClick message
+				query.mesg="firstClick";
+				var description = await this.httpClient.getRequest(`sast/scans/${this.scanNode.scanId}/results/${pathId}/shortDescription`);
+				query.description=description;
+                
+				} catch (err) {
+					if (err.status == 404) {
+						query.description="";
+						query.mesg="";
+						this.log.error('The short description of the result will not be displayed with CxSAST version in use.');
+					}
+			}
+			
 			query.clickedRow=0;
 			this.queryForDescription=query;
 
@@ -178,10 +188,18 @@ export class WebViews {
 	private async updateShortDescriptionForResult(message: any) {
 		let scanId = this.scanNode.scanId;
 		let pathId = message.path[0].$.PathId;
-		let description = await this.httpClient.getRequest(`sast/scans/${scanId}/results/${pathId}/shortDescription`);
-		this.queryForDescription.description = description;
-
-		this.queryForDescription.mesg = "vsCode";
+		try {
+			this.queryForDescription.mesg = "vsCode";
+			let description = await this.httpClient.getRequest(`sast/scans/${scanId}/results/${pathId}/shortDescription`);
+			this.queryForDescription.description = description;
+		
+		} catch (err) {
+			if (err.status == 404) {
+				this.queryForDescription.description="";
+				this.queryForDescription.handleError =  "shortDescAPIUnavailable";
+				this.log.error('The short description of the result will not be displayed with CxSAST version in use.');
+			}
+		}
 		this.queryForDescription.clickedRow = message.clickedRow;
 		if(this.resultTablePanel){
 			this.resultTablePanel.webview.postMessage(this.queryForDescription);

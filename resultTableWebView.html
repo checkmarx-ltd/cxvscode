@@ -72,7 +72,12 @@
             const message = event.data; // The JSON data our extension sent
              if(message.mesg=="vsCode"){
                 var desc= document.getElementById('desc');
+                if(message.handleError == "shortDescAPIUnavailable") {
+                    desc.innerHTML = "";
+                } 
+                else {
                 desc.innerHTML=message.description.shortDescription;
+                }
             }else{
             $("#list").html(
                 "<!DOCTYPE html>" +
@@ -86,7 +91,14 @@
                 "<span id='header'></span>" +
                 "<table id='innertable'>"
             );
-            $("#list").append("<tr><td id ='desc' colspan='16'> "+message.description.shortDescription+"</td></tr>");
+            var descHtml;
+            // Handling SAST 8.9 scenario when empty message being sent, No short description to be shown.
+            if(message.mesg==""){
+                descHtml = '';
+            } else {
+                descHtml = message.description.shortDescription;
+            }
+            $("#list").append("<tr><td id ='desc' colspan='16'> "+descHtml+"</td></tr>");
             $("#list").append("<table>");
 			var selectHTML = "<tr style='background:rgba(29,150,178,1)'><td>" +"<select id='resultStateDropDownList'>";
                 selectHTML = selectHTML + "<option>Result State</option>";
