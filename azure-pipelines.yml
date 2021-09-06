@@ -27,8 +27,18 @@ steps:
     vsce package
   displayName: 'generate VSCode extension'
 
-- script: |
-    vsce publish -p $VSCE_KEY
-  displayName: 'publish VSCode extension'
-  env:
-    VSCE_KEY: $(vscekey)
+- task: CopyFiles@2
+  inputs:
+    contents: '*.vsix'
+    targetFolder: $(Build.ArtifactStagingDirectory)
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: $(Build.ArtifactStagingDirectory)
+    ArtifactName: 'drop'
+
+#- script: |
+#    vsce publish -p $VSCE_KEY
+#  displayName: 'publish VSCode extension'
+#  env:
+#    VSCE_KEY: $(vscekey)
