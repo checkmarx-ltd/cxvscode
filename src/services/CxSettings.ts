@@ -7,10 +7,13 @@ const DEFAULT_FILE_EXTENSIONS: string = "!**/*.DS_Store, !**/*.ipr, !**/*.iws, !
 const DEFAULT_FOLDER_EXCLUSIONS: string = "cvs, .svn, .hg, .git, .bzr, bin, obj, backup, .idea, .vscode, node_modules";
 const CXSERVER: string = 'cx.server';
 const CXQUIET: string = 'cx.quiet';
-const CX_ENABLE_SCAN_BUTTONS: string = 'cx.enableScanButtons'
+const CX_ENABLE_SCAN_BUTTONS: string = 'cx.enableScanButtons';
+const CX_ENABLE_WORKSPACE_ONLY_SCAN: string = 'cx.enableWorkspaceOnlyScan';
 const CX_FOLDER_EXCLUSIONS: string = 'cx.folderExclusions';
 const CX_FILE_EXTENSIONS: string = 'cx.fileExtensions';
 const CX_REPORT_PATH: string = 'cx.reportPath';
+const CX_ENABLE_USER_CREDENTIALS_LOGIN: string = 'cx.enableUserCredentialsLogin';
+const CX_SSL_CERT_PATH: string = 'cx.sslCertificatePath';
 
 export interface CxServerSettings {
     url: string;
@@ -107,7 +110,33 @@ export class CxSettings {
     public static isScanButtonsEnabled(): boolean {
         return vscode.workspace.getConfiguration().get(CX_ENABLE_SCAN_BUTTONS) as boolean;
     }
+ /**
+     * Returns value of the cx.enableWorkspaceOnlyScan setting. The setting controls the scan any file/folder buttons.
+     * Add "cx.enableWorkspaceOnlyScan": true to the settings.json
+     * @returns Value of cx.enableWorkspaceOnlyScan setting
+     */
+  public static isWorkspaceOnlyScanEnabled(): boolean {
+    return vscode.workspace.getConfiguration().get(CX_ENABLE_WORKSPACE_ONLY_SCAN) as boolean;
+}
 
+
+ /**
+     * Returns value of the cx.enableUserCredentialsLogin setting. The setting controls the User credentials login.
+     * Add "cx.enableUserCredentialsLogin": false to the settings.json
+     * @returns Value of cx.enableUserCredentialsLogin setting
+     */
+  public static isEnableUserCredentialsLogin(): boolean {
+    return vscode.workspace.getConfiguration().get(CX_ENABLE_USER_CREDENTIALS_LOGIN) as boolean;
+}
+
+ /**
+     * Returns value of the cx.sslCertPath setting. The setting value will be used as certifcate path 
+     * is used for SSL connection.
+     * @returns Value of cx.sslCertPath setting
+     */
+  public static getSSLCertPath(): string {
+    return vscode.workspace.getConfiguration().get(CX_SSL_CERT_PATH) as string;
+}
     /**
      * Returns value of the cx.quiet setting. The setting controls the amount of popup messages displayed to the user.
      * Add "cx.quiet": true to the settings.json

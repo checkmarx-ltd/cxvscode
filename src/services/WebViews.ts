@@ -1,9 +1,11 @@
 import * as vscode from 'vscode';
 import * as path from "path";
 import * as fs from "fs";
-import { Logger } from "@checkmarx/cx-common-js-client";
-import { HttpClient } from "@checkmarx/cx-common-js-client";
+import { HttpClient, AuthSSODetails,Logger} from "@checkmarx/cx-common-js-client";
 import { ScanNode } from '../model/ScanNode';
+import { SessionStorageService } from './sessionStorageService';
+import { SSOConstants } from '../model/ssoConstant';
+import { LoginChecks } from './loginChecks';
 
 export class WebViews {
 
@@ -11,18 +13,31 @@ export class WebViews {
 	private attackVectorPanel?: vscode.WebviewPanel = undefined;
 	private resultTablePanel?: vscode.WebviewPanel = undefined;
 	private queryDescriptionPanel?: vscode.WebviewPanel = undefined;
+	public queryNode: any;
+	private storageManager :  SessionStorageService;
+	private accessToken: string = '';
+	private authSSODetails: AuthSSODetails | any;
+	private loginChecks: LoginChecks | any;
 
+	public queryForDescription :any ;
 	constructor(context: vscode.ExtensionContext, private scanNode: ScanNode,
 		private readonly log: Logger, private readonly httpClient: HttpClient) {
 		this.createWebViews(context);
+
+		this.storageManager = new SessionStorageService(context.workspaceState);
+		this.accessToken = this.storageManager.getValue<string>(SSOConstants.ACCESS_TOKEN,'');
+		this.loginChecks =  new LoginChecks(log,context,this.httpClient);
 	}
 
 	async createQueryDescriptionWebView(queryId: number) {
-		if (!this.httpClient.accessToken && !(this.httpClient.cookies && this.httpClient.cookies.size > 0)) {
+
+		if(!this.loginChecks.isLoggedIn())
+		{
 			vscode.window.showErrorMessage('Access token expired. Please login.');
 			return;
 		}
-
+		
+		
 		if (this.queryDescriptionPanel) {
 			this.queryDescriptionPanel.dispose();
 		}
@@ -51,10 +66,32 @@ export class WebViews {
 		this.queryDescriptionPanel.webview.html = content;
 	}
 
-	queryResultClicked(query: any | undefined) {
+	async queryResultClicked(query: any | undefined) {
 		if (this.resultTablePanel) {
+			let pathId =query.Result[0].Path[0].$.PathId;
+			try {
+				//to know webview its firstClick message
+				query.mesg="firstClick";
+				var description = await this.httpClient.getRequest(`sast/scans/${this.scanNode.scanId}/results/${pathId}/shortDescription`);
+				query.description=description;
+                
+				} catch (err) {
+					if (err.status == 404) {
+						query.description="";
+						query.mesg="";
+						this.log.error('The short description of the result will not be displayed with CxSAST version in use.');
+					}
+			}
+			
+			query.clickedRow=0;
+			this.queryForDescription=query;
+
+			const resultStates: string[] = await this.httpClient.getRequest(`sast/result-states`);
+			query.resultStates = resultStates;
+			this.queryNode = query;
 			this.resultTablePanel.webview.postMessage(query);
 		}
+
 	}
 
 	private createAttackVectorWebView(context: vscode.ExtensionContext) {
@@ -106,18 +143,30 @@ export class WebViews {
 				retainContextWhenHidden: true
 			}
 		);
-
 		try {
 			const resultTableViewPath: string = path.join(context.extensionPath, 'resultTableWebView.html');
 			fs.readFile(resultTableViewPath, "utf8",
 				(err: any, data: any) => {
 					if (this.resultTablePanel) {
 						this.resultTablePanel.webview.html = data;
+						
 						// Handle messages from the webview
 						this.resultTablePanel.webview.onDidReceiveMessage(
-							message => {
+							async message => {
+								
 								if (this.attackVectorPanel) {
 									this.attackVectorPanel.webview.postMessage(message.path);
+								}
+								if(this.resultTablePanel) {
+									switch (message.command) {
+										case 'resultstateChangeEvent':
+											this.resultStateChanged(message.resultStateTobeChange,  message.data);
+										 	 return;
+										case 'onClick':
+											this.updateShortDescriptionForResult(message);
+											return;
+									  }
+
 								}
 							},
 							undefined,
@@ -134,6 +183,26 @@ export class WebViews {
 				});
 		} catch (err) {
 			this.log.error(err);
+		}
+	}
+	private async updateShortDescriptionForResult(message: any) {
+		let scanId = this.scanNode.scanId;
+		let pathId = message.path[0].$.PathId;
+		try {
+			this.queryForDescription.mesg = "vsCode";
+			let description = await this.httpClient.getRequest(`sast/scans/${scanId}/results/${pathId}/shortDescription`);
+			this.queryForDescription.description = description;
+		
+		} catch (err) {
+			if (err.status == 404) {
+				this.queryForDescription.description="";
+				this.queryForDescription.handleError =  "shortDescAPIUnavailable";
+				this.log.error('The short description of the result will not be displayed with CxSAST version in use.');
+			}
+		}
+		this.queryForDescription.clickedRow = message.clickedRow;
+		if(this.resultTablePanel){
+			this.resultTablePanel.webview.postMessage(this.queryForDescription);
 		}
 	}
 
@@ -192,6 +261,7 @@ export class WebViews {
 		} else {
 			fullSourcePath = this.getFullSourcePathIfExistsForBoundProject(node.FileName[0]);
 		}
+
 		const uri = vscode.Uri.file(fullSourcePath);
 		let found: boolean = this.isTextEditorVisible(node, fullSourcePath);
 		if (!found) {
@@ -199,8 +269,51 @@ export class WebViews {
 				found = this.isTextEditorVisible(node, fullSourcePath);
 			});
 		}
+		
 	}
-
+	private async resultStateChanged(selectedResultState: any, rows: any) {
+		let scanId= this.scanNode.scanId;
+		let nodes = this.queryNode.Result;
+		//The below for loop updates the result state
+		for (var i = 0; i < rows.length; i++) {
+			var pathId = rows[i];
+			for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) { 
+				if( pathId == nodes[nodeCtr].Path[0].$.PathId) {
+				let state = selectedResultState;
+				let severity = nodes[nodeCtr].$.SeverityIndex;
+				let user = nodes[nodeCtr].$.AssignToUser;
+				const request = {
+					"state" :state,
+					"severity" : severity,
+					"userAssignment" : user,
+					"comment" : "comment"
+				};
+				try {
+				await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
+				} catch (err) {
+					if (err.status == 404) {
+						this.log.error('This operation is not supported with CxSAST version in use.');
+					}
+			}
+				nodes[nodeCtr].$.state = state;
+				}
+			  }
+		}
+		this.scanNode.addStatisticsToScanResults();
+		let queries:  any[] | undefined;
+		queries = this.scanNode.queries;
+		if(queries) {
+			for (let queryCtr = 0; queryCtr < queries.length; queryCtr++) { 
+			if(queries[queryCtr].$.id == this.queryNode.$.id && this.resultTablePanel){
+			  this.queryNode = queries[queryCtr];
+			  this.queryNode.mesg='onChange';
+				this.resultTablePanel.webview.postMessage(this.queryNode);
+				break;
+		}
+		}
+	}
+	
+	}
 	private getFullSourcePathIfExistsForBoundProject(sastFileName: string): string {
 		const glob = require("glob");
 		let fullSourcePath: string = '';
@@ -221,3 +334,5 @@ export class WebViews {
 		return fullSourcePath;
 	}
 }
+
+

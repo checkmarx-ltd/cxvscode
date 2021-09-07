@@ -16,6 +16,7 @@
 
 <body>
     <div style="text-align: center; ">
+       
         <table style="text-align: center;">
             <tbody id="list" class="list" style="text-align: center;">
             </tbody>
@@ -23,6 +24,34 @@
     </div>
 
     <script>
+        var end = 0;
+        function filterRows(inputValue, column)
+        {
+            var filter, td, textValue, table;
+            var rows = end;
+            filter = inputValue.toUpperCase();
+            table = document.getElementsByTagName("table");
+            for(row = 0 ; row < rows ; row++)
+            {
+                tr = document.getElementById("result" + row);
+                td = tr.getElementsByTagName("td")[column];
+                if(td)
+                {
+                    textValue = td.textContent || td.innerText;
+                    if (textValue.toUpperCase().indexOf(filter) > -1)
+                    {
+                        tr.style.display = "";
+                    } 
+                    else 
+                    {
+                        tr.style.display = "none";
+                    }
+                }
+            }
+            document.getElementById("header").innerText = table;
+            
+        }
+
         const vscode = acquireVsCodeApi();
         const stateDictionary = {
             '0': 'To Verify',
@@ -31,57 +60,206 @@
             '3': 'Urgent',
             '4': 'Proposed Not Exploitable'
         };
+		const stateOrdinalDictionary = {
+            'To Verify':'0',
+            'Not Exploitable':'1' ,
+            'Confirmed':'2',
+            'Urgent':'3',
+            'Proposed Not Exploitable':'4' 
+        };
         // Get messages
         window.addEventListener('message', event => {
             const message = event.data; // The JSON data our extension sent
-
+             if(message.mesg=="vsCode"){
+                var desc= document.getElementById('desc');
+                if(message.handleError == "shortDescAPIUnavailable") {
+                    desc.innerHTML = "";
+                } 
+                else {
+                desc.innerHTML=message.description.shortDescription;
+                }
+            }else{
             $("#list").html(
                 "<!DOCTYPE html>" +
                 "<html>" +
                 "<head>" +
                 '<meta http-equiv="Content-type" content="text/html;charset=UTF-8">' +
-                "<style>table{border-collapse:collapse; }table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444} </style>" +
+                "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} </style>" +
+
                 "</head>" +
                 "<body>" +
-                "<table>"
+                "<span id='header'></span>" +
+                "<table id='innertable'>"
             );
+            var descHtml;
+            // Handling SAST 8.9 scenario when empty message being sent, No short description to be shown.
+            if(message.mesg==""){
+                descHtml = '';
+            } else {
+                descHtml = message.description.shortDescription;
+            }
+            $("#list").append("<tr><td id ='desc' colspan='16'> "+descHtml+"</td></tr>");
+            $("#list").append("<table>");
+			var selectHTML = "<tr style='background:rgba(29,150,178,1)'><td>" +"<select id='resultStateDropDownList'>";
+                selectHTML = selectHTML + "<option>Result State</option>";
+            for (i = 0; i < message.resultStates.states.length; i = i + 1) {
+                selectHTML += "<option value='" + message.resultStates.states[i].name + "'>" + message.resultStates.states[i].name + "</option>";
+            }
+            selectHTML +=  "</select></td> </tr>";
+            $("#list").append(selectHTML);
+			
 
+            //This is the fontend change area
             $("#list").append("<tr>" +
-                "<th>Query Name</th>" +
+                "<th> </th>"+
+                "<th>No.</th>" +
+                "<th>Result State</th>" +
                 "<th>Status</th>" +
+                "<th>Query Name</th>" +
+                "<th>Source Folder</th>" +
                 "<th>Source Filename</th>" +
                 "<th>Source Line</th>" +
-                "<th>State</th>" +
-                "<th>Severity</th>" +
+                "<th>Source Object</th>" +
+                "<th>Destination Folder</th>" +
+                "<th>Destination Filename</th>" +
+                "<th>Destination Line</th>" +
+                "<th>Destination Object</th>" +
+                "<th>Result Severity</th>" +
+                "<th>Assigned User</th>" +
+                "<th>Comments</th>" +
+                "</tr>");
+				
+			if (message.mesg=="firstClick"){
+            vscode.postMessage({ path: message.Result[0].Path ,mesg: "firstTime",clickedRow:0});
+            }
+                $("#list").append("<tr>" +
+				"<td> </td>" +
+                "<td> </td>" +
+                "<td><input type='text'  id='id-state' name='resultstate'></td>" +
+                "<td> <input type='text'  id='id-status' name='status'></td>" +
+                "<td> </td>" +
+                "<td> <input type='text'  id='id-srcfolder' name='sourcefolder'></td>" +
+                "<td> <input type='text'  id='id-srcfilename' name='sourcefilename'></td>" +
+                "<td> <input type='text'  id='id-srcline' name='sourceline'></td>" +
+                "<td> <input type='text'  id='id-srcobject' name='sourceobject'></td>" +
+                "<td> <input type='text'  id='id-destfolder' name='destfolder'></td>" +
+                "<td> <input type='text'  id='id-destfilename' name='destfilename'></td>" +
+                "<td> <input type='text'  id='id-destline' name='destline'></td>" +
+                "<td> <input type='text'  id='id-destobject' name='destobject'></td>" +
+                "<td> </td>" +
+                "<td> <input type='text'  id='id-assigneduser' name='assigneduser'></td>" +
+                "<td> <input type='text'  id='id-comments' name='comments'></td>" +
                 "</tr>");
 
-            vscode.postMessage({ path: message.Result[0].Path });
+             
 
+            //This area is where api data needs to be fetched
             var i = 0;
-            message.Result.forEach(query => {
-                $("#list").append("<tr style='cursor:pointer;'" + " id='result" + i + "' >" +
-                    "<td class='queryname'>" + message.$.name + "</td>" +
-                    "<td class='status'>" + query.$.Status + "</td>" +
-                    "<td class='sourcefilename'>" + query.$.FileName + "</td>" +
-                    "<td class='sourceline'>" + query.$.Line + "</td>" +
-                    "<td class='state'>" + stateDictionary[query.$.state] + "</td>" +
-                    "<td class='severity'>" + query.$.Severity + "</td>" +
+            message.Result.forEach(result => {
+                const pathNodeLength = result.Path[0].PathNode.length;
+                var srcFileName = String(result.Path[0].PathNode[0].FileName);
+                var destFileName = String(result.Path[0].PathNode[pathNodeLength-1].FileName);
+                $("#list").append("<tr style='cursor:pointer; vertical-align:top'" + " id='result" + i + "' >" +
+					"<td class='check'> <input type ='checkbox' id= 'checkbox-"+i+ "'name = 'querySelected' value = '"+result.Path[0].$.PathId+"'>"+"</td>"+
+                    "<td class='id'>" + result.Path[0].$.PathId + "</td>" +
+                    "<td class='state'>" + stateDictionary[result.$.state] + "</td>" +
+                    "<td class='status'>" + result.$.Status + "</td>" +
+                    "<td class='name'>" + message.$.name + "</td>" +
+                    "<td class='sourcefolder'>" + srcFileName.slice(0,srcFileName.lastIndexOf("/")) + "</td>" +
+                    "<td class='sourcefilename'>" + result.Path[0].PathNode[0].FileName + "</td>" +
+                    "<td class='sourceline'>" + result.Path[0].PathNode[0].Line + "</td>" +
+                    "<td class='sourceobject'>" + result.Path[0].PathNode[0].Name + "</td>" +
+                    "<td class='destinationfolder'>" + destFileName.slice(0,destFileName.lastIndexOf("/")) + "</td>" +
+                    "<td class='destinationfilename'>" + result.Path[0].PathNode[pathNodeLength-1].FileName + "</td>" +
+                    "<td class='destinationline'>" + result.Path[0].PathNode[pathNodeLength-1].Line + "</td>" +
+                    "<td class='destinationobject'>" + result.Path[0].PathNode[pathNodeLength-1].Name + "</td>" +
+                    "<td class='severity'>" + result.$.Severity + "</td>" +
+                    "<td class='assigneduser'>" + result.$.AssignToUser + "</td>" +
+                    "<td class='comments'>" + result.$.Remark + "</td>" +
                     + "</tr>");
 
                 $("#result" + 0).addClass("selec");
 
-                var result = $("#result" + i);
-                result.on('click', function () {
+                var resultValue = $("#result" + i);
+                resultValue.on('click', function () {
                     $(".selec").removeClass("selec");
-                    result.addClass("selec");
-                    vscode.postMessage({ path: query.Path }); // Node was clicked, send it back
+                    resultValue.addClass("selec");
+                    vscode.postMessage({ path: result.Path,command: "onClick",clickedRow: i}); // Node was clicked, send it back
                 });
 
                 i++;
             });
+            end = i;
+
+            $("#id-state").keyup(function() {
+                var input = $('#id-state').val();
+                filterRows(input, 2);
+            });
+            
+            $("#id-status").keyup(function() {
+                var input = $('#id-status').val();
+                filterRows(input, 3);
+            });
+            $("#id-srcfolder").keyup(function() {
+                var input = $('#id-srcfolder').val();
+                filterRows(input, 5);
+            });
+            $("#id-srcfilename").keyup(function() {
+                var input = $('#id-srcfilename').val();
+                filterRows(input, 6);
+            });
+            $("#id-srcline").keyup(function() {
+                var input = $('#id-srcline').val();
+                filterRows(input, 7);
+            });
+            $("#id-srcobject").keyup(function() {
+                var input = $('#id-srcobject').val();
+                filterRows(input, 8);
+            });
+            $("#id-destfolder").keyup(function() {
+                var input = $('#id-destfolder').val();
+                filterRows(input, 9);
+            });
+            $("#id-destfilename").keyup(function() {
+                var input = $('#id-destfilename').val();
+                filterRows(input, 10);
+            });
+            $("#id-destline").keyup(function() {
+                var input = $('#id-destline').val();
+                filterRows(input, 11);
+            });
+            $("#id-destobject").keyup(function() {
+                var input = $('#id-destobject').val();
+                filterRows(input, 12);
+            });
+            
+            $("#id-assigneduser").keyup(function() {
+                var input = $('#id-assigneduser').val();
+                filterRows(input, 14);
+            });
+            
+            $("#id-comments").keyup(function() {
+                var input = $('#id-comments').val();
+                filterRows(input, 15);
+            });
+
+			$('#resultStateDropDownList').on('change', function() {
+                var selectedResultState = $('#resultStateDropDownList option:selected').val();
+                selectedResultState = stateOrdinalDictionary[selectedResultState];
+                var selectedQueryNodes = [];
+                $.each($("input[name='querySelected']:checked"), function () {
+                    selectedQueryNodes.push($(this).val());
+                   
+                });
+                
+                vscode.postMessage({command: 'resultstateChangeEvent',
+                                    resultStateTobeChange: selectedResultState, 
+                                    data: selectedQueryNodes});
+                });
+				
             $("#list").append("</table></body></html>");
+            }
         });
     </script>
 </body>
-
 </html>

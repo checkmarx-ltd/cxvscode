@@ -8,6 +8,7 @@ import { ConsoleLogger } from "../services/consoleLogger";
 import { CxTreeScans } from './CxTreeScans';
 import { WebViews } from "../services/WebViews";
 import { QueryNode } from './QueryNode';
+import { SSOUriHandler } from '../services/SSOUriHandler';
 
 export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     public _onDidChangeTreeData: vscode.EventEmitter<INode> = new vscode.EventEmitter<INode>();
@@ -15,10 +16,15 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
 
     private readonly log: Logger;
     private serverNodes: ServerNodeTreeItem[];
+    private vsCodeContext:  vscode.ExtensionContext | any;
+    private uriHandler = new SSOUriHandler();
 
-    constructor(checkmarxOutput: vscode.OutputChannel) {
+    constructor(checkmarxOutput: vscode.OutputChannel,context: vscode.ExtensionContext) {
         this.log = new ConsoleLogger(checkmarxOutput);
         this.serverNodes = [];
+        this.vsCodeContext = context;
+        // register urihandler with VS Code. We can only register a single UriHandler for extension.
+        context.subscriptions.push(vscode.window.registerUriHandler(this.uriHandler));
     }
 
     /**
@@ -34,13 +40,16 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     }
 
     // Refresh Tree
-    public refresh(element?: INode): void {
+    public refresh(element?: INode ): void {
+        let treeNode : INode | any;
+        treeNode = element;
         try {
-            this._onDidChangeTreeData.fire(element);
+            this._onDidChangeTreeData.fire(treeNode);
         } catch (err) {
             this.log.error(err);
             vscode.window.showErrorMessage(err.message);
         }
+
     }
 
     // Edit Tree Item (Node)
@@ -48,10 +57,11 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
         try {
             const cxServer = CxSettings.getServer();
             if (this.serverNodes.length > 0) {
+               
                 if (this.serverNodes[0].sastUrl === cxServer.url) {
                     await CxSettings.configureServer();
-                }
-                else {
+               }else{
+                
                     await CxSettings.clearBoundProject();
                 }
                 if (this.serverNodes[0].isLoggedIn()) {
@@ -101,6 +111,7 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
             if (cxServer) {
                 this.convertToNode(cxServer);
             }
+            this.uriHandler.setServerNode(this.serverNodes[0]);
             return this.serverNodes;
         }
         return element.getChildren("CxTreeDataProvider");
@@ -110,7 +121,7 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     private convertToNode(server: CxServerSettings) {
         this.serverNodes = [];
         if (Object.entries(server).length > 0) {
-            this.serverNodes.push(new ServerNodeTreeItem(server.url, server.alias, this.log));
+            this.serverNodes.push(new ServerNodeTreeItem(server.url, server.alias, this.log,this.vsCodeContext));
         }
     }
 

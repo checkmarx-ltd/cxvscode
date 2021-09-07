@@ -3,6 +3,9 @@ import { CxTreeDataProvider } from "./model/CxTreeDataProvider";
 import { ServerNode } from './model/ServerNode';
 import { ScanNode } from './model/ScanNode';
 import { CxSettings } from "./services/CxSettings";
+import { SSOUriHandler } from './services/SSOUriHandler';
+import { SessionStorageService } from './services/sessionStorageService';
+import { SSOConstants } from './model/ssoConstant';
 
 export function activate(context: vscode.ExtensionContext) {
 	if (context && context.subscriptions && context.subscriptions.length > 0) {
@@ -16,7 +19,9 @@ export function activate(context: vscode.ExtensionContext) {
 	const checkmarxOutput: vscode.OutputChannel = vscode.window.createOutputChannel('Checkmarx');
 	context.subscriptions.push(checkmarxOutput);
 
-	const cxTreeDataProvider = new CxTreeDataProvider(checkmarxOutput);
+	const cxTreeDataProvider = new CxTreeDataProvider(checkmarxOutput,context);
+	let storageManager = new SessionStorageService(context.workspaceState);
+	storageManager.setValue<string>(SSOConstants.ACCESS_TOKEN,'');
 
 	// Register Window (Explorer CxPortal)
 	context.subscriptions.push(vscode.window.registerTreeDataProvider("cxportalwin", cxTreeDataProvider));
@@ -34,10 +39,13 @@ export function activate(context: vscode.ExtensionContext) {
 		await serverNode.updateFileExtension();
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.login", async (serverNode: ServerNode) => {
+
 		await serverNode.login();
 		cxTreeDataProvider.refresh(serverNode);
+		
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.logout", async (serverNode: ServerNode) => {
+
 		await serverNode.logout();
 		cxTreeDataProvider.refresh(serverNode);
 	}));
@@ -59,21 +67,35 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showWarningMessage('\'Scan Any Folder\' button is disabled');
 		}
 	}));
+if(CxSettings.isWorkspaceOnlyScanEnabled()) {
+	vscode.commands.executeCommand('setContext', 'cxSettings.showWorkspaceOnly', true);
+} else {
+	vscode.commands.executeCommand('setContext', 'cxSettings.showWorkspaceOnly', false);
+}
+
 	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanFile", async (uri: vscode.Uri) => {
 		const cxServerNode = cxTreeDataProvider.getCurrentServerNode();
+		if(!CxSettings.isWorkspaceOnlyScanEnabled()) {
 		if (cxServerNode) {
 			await cxServerNode.scan(false, uri.fsPath);
 			cxTreeDataProvider.refresh(cxServerNode);
 			cxServerNode.displayCurrentScanedSource();
 		}
+	} else {
+		vscode.window.showWarningMessage('\'Checkmarx: Scan Current File\' option is disabled \n. Scan can be performed at workspace level only.');
+	}
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanFolder", async (uri: vscode.Uri) => {
 		const cxServerNode = cxTreeDataProvider.getCurrentServerNode();
+		if(!CxSettings.isWorkspaceOnlyScanEnabled()) {
 		if (cxServerNode) {
 			await cxServerNode.scan(true, uri.fsPath);
 			cxTreeDataProvider.refresh(cxServerNode);
 			cxServerNode.displayCurrentScanedSource();
 		}
+	} else {
+		vscode.window.showWarningMessage('\'Checkmarx: Scan Current Folder\' option is disabled \n. Scan can be performed at workspace level only.');
+	}
 	}));
 
 	context.subscriptions.push(vscode.commands.registerCommand("Explorer.scanWorkspace", async () => {

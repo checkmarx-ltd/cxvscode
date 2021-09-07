@@ -6,6 +6,7 @@ import { Waiter } from "@checkmarx/cx-common-js-client";
 import { Logger } from "@checkmarx/cx-common-js-client";
 import { PollingSettings } from "@checkmarx/cx-common-js-client";
 import { CxSettings } from "./CxSettings";
+import { LoginChecks } from "./loginChecks";
 
 export class SastClient {
     private static readonly POLLING_INTERVAL_IN_SECONDS = 10;
@@ -15,7 +16,9 @@ export class SastClient {
     constructor(private readonly scanId: number,
         private readonly httpClient: HttpClient,
         private readonly log: Logger,
-        private readonly scanTimeoutInMinutes?: number) {
+        private readonly loginChecks:LoginChecks,
+        private readonly scanTimeoutInMinutes?: number,
+        ) {
     }
 
     async waitForScanToFinish() {
@@ -60,6 +63,9 @@ export class SastClient {
     }
 
     private checkIfScanFinished = () => {
+        if (!this.loginChecks.isLoggedIn()) {
+            throw Error('Access token expired. Please login.');
+        }
         return new Promise<ScanStatus>((resolve, reject) => {
             this.httpClient.getRequest(`sast/scansQueue/${this.scanId}`)
                 .then((scanStatus: ScanStatus) => {
