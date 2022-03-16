@@ -24,6 +24,25 @@
     </div>
 
     <script>
+        function getPathId(){
+            var commentId = $("td.editComment").attr("id");
+            var rowNumber = commentId.split("-")[1];
+            return $("#pathId-"+rowNumber).html();
+        }
+        function enterComment()
+        {    
+            $("#inputCommentForm").css("display","block"); 
+        }
+        function submitComment(){
+            $("#inputCommentForm").css("display","none");
+            var inputComment = $("#inputCommentValue").val();
+            $("td.editComment").text(inputComment);
+            $("#inputCommentValue").val("");
+            return inputComment;
+        }
+        function cancelComment(){
+            $("#inputCommentForm").css("display","none");
+        }
         var end = 0;
         function filterRows(inputValue, column)
         {
@@ -84,10 +103,16 @@
                 "<html>" +
                 "<head>" +
                 '<meta http-equiv="Content-type" content="text/html;charset=UTF-8">' +
-                "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} </style>" +
+                "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} #inputCommentForm{display: none;	position: fixed; z-index: 1; padding-top: 100px; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgb(0,0,0); 	background-color: rgba(0,0,0,0.4);} #inputCommentForm-Content {	background-color: #fefefe;margin: auto;	padding: 20px; border: 1px solid #888; width: 80%;} </style>" +
 
                 "</head>" +
                 "<body>" +
+                '<div id="inputCommentForm">' +
+		        '<div id="inputCommentForm-Content">' +
+			    '<textarea id="inputCommentValue" row="4"></textarea><br><br>' +
+                '<input type="submit" id="submitCommentButton" name="submitCommentButton" value="Submit">' +
+                '<input type="submit" id="cancelCommentButton" name="cancelCommentButton" value="Cancel">' +
+                '</div></div>'+
                 "<span id='header'></span>" +
                 "<table id='innertable'>"
             );
@@ -138,7 +163,7 @@
                 "<td><input type='text'  id='id-state' name='resultstate'></td>" +
                 "<td> <input type='text'  id='id-status' name='status'></td>" +
                 "<td> </td>" +
-                "<td> <input type='text'  id='id-srcfolder' name='sourcefolder'></td>" +
+                "<td> <input type='text'  id='id-srcfolder' name='sourcefolder' placeholder=''></td>" +
                 "<td> <input type='text'  id='id-srcfilename' name='sourcefilename'></td>" +
                 "<td> <input type='text'  id='id-srcline' name='sourceline'></td>" +
                 "<td> <input type='text'  id='id-srcobject' name='sourceobject'></td>" +
@@ -150,18 +175,40 @@
                 "<td> <input type='text'  id='id-assigneduser' name='assigneduser'></td>" +
                 "<td> <input type='text'  id='id-comments' name='comments'></td>" +
                 "</tr>");
-
-             
-
+  
             //This area is where api data needs to be fetched
             var i = 0;
             message.Result.forEach(result => {
                 const pathNodeLength = result.Path[0].PathNode.length;
                 var srcFileName = String(result.Path[0].PathNode[0].FileName);
                 var destFileName = String(result.Path[0].PathNode[pathNodeLength-1].FileName);
+                var comments = String(result.$.Remark).split(/\r?\n/);
+                var comment0 = '', comment1 = '',comment2 = '',comment3 = '',comment4 = '';
+                
+                if(typeof comments[0] != "undefined"){
+                    const [first0, ...rest0] = comments[0].split(",");
+                    comment0 = rest0;
+                }
+                if(typeof comments[1] != "undefined"){
+                    const [first1, ...rest1] = comments[1].split(",");
+                    comment1 = rest1;
+                }
+                if(typeof comments[2] != "undefined"){
+                    const [first2, ...rest2] = comments[2].split(",");
+                    comment2 = rest2;
+                }
+                if(typeof comments[3] != "undefined"){
+                    const [first3, ...rest3] = comments[3].split(",");
+                    comment3 = rest3;
+                }
+                if(typeof comments[4] != "undefined"){
+                    const [first4, ...rest4] = comments[4].split(",");
+                    comment4 = rest4;
+                }
+            
                 $("#list").append("<tr style='cursor:pointer; vertical-align:top'" + " id='result" + i + "' >" +
 					"<td class='check'> <input type ='checkbox' id= 'checkbox-"+i+ "'name = 'querySelected' value = '"+result.Path[0].$.PathId+"'>"+"</td>"+
-                    "<td class='id'>" + result.Path[0].$.PathId + "</td>" +
+                    "<td class='id' id='pathId-" + i + "'>" + result.Path[0].$.PathId + "</td>" +
                     "<td class='state'>" + stateDictionary[result.$.state] + "</td>" +
                     "<td class='status'>" + result.$.Status + "</td>" +
                     "<td class='name'>" + message.$.name + "</td>" +
@@ -174,10 +221,16 @@
                     "<td class='destinationline'>" + result.Path[0].PathNode[pathNodeLength-1].Line + "</td>" +
                     "<td class='destinationobject'>" + result.Path[0].PathNode[pathNodeLength-1].Name + "</td>" +
                     "<td class='severity'>" + result.$.Severity + "</td>" +
-                    "<td class='assigneduser'>" + result.$.AssignToUser + "</td>" +
-                    "<td class='comments'>" + result.$.Remark + "</td>" +
+                    "<td class='assigneduser'>" + result.$.AssignToUser + "</td>" + 
+                    "<td id='comment-" + i + "'>" + 
+                        "<p>" + comment0  + "</p>" +
+                        "<p>" + comment1 + "</p>" +
+                        "<p>" + comment2 + "</p>" +
+                        "<p>" + comment3 + "</p>" +
+                        "<p>" + comment4 + "</p>" 
                     + "</tr>");
 
+                
                 $("#result" + 0).addClass("selec");
 
                 var resultValue = $("#result" + i);
@@ -185,11 +238,32 @@
                     $(".selec").removeClass("selec");
                     resultValue.addClass("selec");
                     vscode.postMessage({ path: result.Path,command: "onClick",clickedRow: i}); // Node was clicked, send it back
-                });
+                });    
 
+                $("#comment-"+0).addClass("editComment");
+                var commentClick = $("#comment-" + i);
+                commentClick.on('click', function(){
+                    $(".editComment").removeClass("editComment");
+                    commentClick.addClass("editComment");
+                    enterComment();
+                })
                 i++;
             });
             end = i;
+ 
+            $("#submitCommentButton").click(function(){
+                var oldComment = $("td.editComment").val();
+                var inputComment = submitComment();
+                var pathId = getPathId();
+                $("td.editComment").text("Updating Comment to '" + inputComment + "'");
+                vscode.postMessage({command: 'updateComment', 
+                                    inputCommentValue: inputComment,
+                                    pathId: pathId});
+            });
+
+            $("#cancelCommentButton").click(function(){
+                cancelComment();
+            });
 
             $("#id-state").keyup(function() {
                 var input = $('#id-state').val();

@@ -6,6 +6,7 @@ import { ScanNode } from '../model/ScanNode';
 import { SessionStorageService } from './sessionStorageService';
 import { SSOConstants } from '../model/ssoConstant';
 import { LoginChecks } from './loginChecks';
+import { timeStamp } from 'console';
 
 export class WebViews {
 
@@ -165,6 +166,9 @@ export class WebViews {
 										case 'onClick':
 											this.updateShortDescriptionForResult(message);
 											return;
+										case 'updateComment':
+											this.updateUserComment(message.inputCommentValue, message.pathId);
+											return;
 									  }
 
 								}
@@ -271,48 +275,89 @@ export class WebViews {
 		}
 		
 	}
-	private async resultStateChanged(selectedResultState: any, rows: any) {
+	private async updateUserComment(inputCommentValue: any, pathId: any)
+	{
 		let scanId= this.scanNode.scanId;
+		const request = {
+			"comment" : inputCommentValue
+		};
+		try {
+			await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
+		} 
+		catch (err) 
+		{
+			if (err.status == 404) 
+			{
+				this.log.error('This operation is not supported with CxSAST version in use.');
+			}
+		}
+
+		const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+		const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+		const dateTimeNow = new Date();
+		const time = `${dateTimeNow.getHours()%12}:${dateTimeNow.getMinutes()}:${dateTimeNow.getSeconds()} ${dateTimeNow.getHours()>=12 ? 'PM' : 'AM'}`; 
+		let commentTimeStamp = `[${days[dateTimeNow.getDay()]}, ${months[dateTimeNow.getMonth()]} ${dateTimeNow.getDate()}, ${dateTimeNow.getFullYear()} ${time}]: `;
+
+		let nodes = this.queryNode.Result
+		for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) {
+			if( pathId == nodes[nodeCtr].Path[0].$.PathId ) {
+				nodes[nodeCtr].$.Remark = `New Comment,${commentTimeStamp}${inputCommentValue}\r\n${nodes[nodeCtr].$.Remark}`;	
+			}
+		}
+		
+		let queries:  any[] | undefined;
+		queries = this.scanNode.queries;
+		if(queries) 
+		{
+			for (let queryCtr = 0; queryCtr < queries.length; queryCtr++) 
+			{ 
+				if(queries[queryCtr].$.id == this.queryNode.$.id && this.resultTablePanel)
+				{
+					this.queryNode = queries[queryCtr];
+					this.queryNode.mesg='onChange';
+					this.resultTablePanel.webview.postMessage(this.queryNode);
+					break;
+				}
+			}
+		}	
+	}
+	private async resultStateChanged(selectedResultState: any, rows: any){
+		let scanId = this.scanNode.scanId;
 		let nodes = this.queryNode.Result;
 		//The below for loop updates the result state
 		for (var i = 0; i < rows.length; i++) {
 			var pathId = rows[i];
 			for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) { 
 				if( pathId == nodes[nodeCtr].Path[0].$.PathId) {
-				let state = selectedResultState;
-				let severity = nodes[nodeCtr].$.SeverityIndex;
-				let user = nodes[nodeCtr].$.AssignToUser;
-				const request = {
-					"state" :state,
-					"severity" : severity,
-					"userAssignment" : user,
-					"comment" : "comment"
-				};
-				try {
-				await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
-				} catch (err) {
-					if (err.status == 404) {
-						this.log.error('This operation is not supported with CxSAST version in use.');
-					}
-			}
-				nodes[nodeCtr].$.state = state;
+					let state = selectedResultState;
+					const request = {
+						"state" : state						
+					};
+					try {
+						await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
+						nodes[nodeCtr].$.state = state;						
+					} 
+					catch (err) {
+						if (err.status == 404) {
+							this.log.error('This operation is not supported with CxSAST version in use.');
+						}
+					}	
 				}
-			  }
+			}
 		}
 		this.scanNode.addStatisticsToScanResults();
 		let queries:  any[] | undefined;
 		queries = this.scanNode.queries;
 		if(queries) {
 			for (let queryCtr = 0; queryCtr < queries.length; queryCtr++) { 
-			if(queries[queryCtr].$.id == this.queryNode.$.id && this.resultTablePanel){
-			  this.queryNode = queries[queryCtr];
-			  this.queryNode.mesg='onChange';
-				this.resultTablePanel.webview.postMessage(this.queryNode);
-				break;
-		}
-		}
-	}
-	
+				if(queries[queryCtr].$.id == this.queryNode.$.id && this.resultTablePanel){
+					this.queryNode = queries[queryCtr];
+					this.queryNode.mesg='onChange';
+					this.resultTablePanel.webview.postMessage(this.queryNode);
+					break;
+				}
+			}
+		}	
 	}
 	private getFullSourcePathIfExistsForBoundProject(sastFileName: string): string {
 		const glob = require("glob");
