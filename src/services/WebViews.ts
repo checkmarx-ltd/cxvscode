@@ -298,7 +298,7 @@ export class WebViews {
 		const time = `${dateTimeNow.getHours()%12}:${dateTimeNow.getMinutes()}:${dateTimeNow.getSeconds()} ${dateTimeNow.getHours()>=12 ? 'PM' : 'AM'}`; 
 		let commentTimeStamp = `[${days[dateTimeNow.getDay()]}, ${months[dateTimeNow.getMonth()]} ${dateTimeNow.getDate()}, ${dateTimeNow.getFullYear()} ${time}]: `;
 
-		let nodes = this.queryNode.Result
+		let nodes = this.queryNode.Result;
 		for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) {
 			if( pathId == nodes[nodeCtr].Path[0].$.PathId ) {
 				nodes[nodeCtr].$.Remark = `New Comment,${commentTimeStamp}${inputCommentValue}\r\n${nodes[nodeCtr].$.Remark}`;	
