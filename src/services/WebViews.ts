@@ -67,18 +67,19 @@ export class WebViews {
 	}
 
 	async queryResultClicked(query: any | undefined) {
-		if (this.resultTablePanel) {
-			let pathId =query.Result[0].Path[0].$.PathId;
+		if (this.resultTablePanel) 
+		{
+			let pathId = query.Result[0].Path[0].$.PathId;
 			try {
 				//to know webview its firstClick message
-				query.mesg="firstClick";
+				query.mesg = "firstClick";
 				var description = await this.httpClient.getRequest(`sast/scans/${this.scanNode.scanId}/results/${pathId}/shortDescription`);
-				query.description=description;
+				query.description = description;
                 
 				} catch (err) {
 					if (err.status == 404) {
 						query.description="";
-						query.mesg="";
+						query.mesg = "";
 						this.log.error('The short description of the result will not be displayed with CxSAST version in use.');
 					}
 			}
@@ -88,6 +89,18 @@ export class WebViews {
 
 			const resultStates: string[] = await this.httpClient.getRequest(`sast/result-states`);
 			query.resultStates = resultStates;
+
+			let usersResponse = await this.httpClient.getRequest(`auth/AssignableUsers`);
+			let usersList: string[] = [];
+			if(usersResponse)
+			{
+				for(let userCtr = 0; userCtr < usersResponse.length; userCtr++)
+				{
+					usersList.push(usersResponse[userCtr].username);
+				}
+				
+			}
+			query.usersList = usersList;
 			this.queryNode = query;
 			this.resultTablePanel.webview.postMessage(query);
 		}
@@ -165,6 +178,9 @@ export class WebViews {
 										case 'onClick':
 											this.updateShortDescriptionForResult(message);
 											return;
+										case 'assignUser':
+											this.assignUser(message);
+											return;
 									  }
 
 								}
@@ -185,6 +201,50 @@ export class WebViews {
 			this.log.error(err);
 		}
 	}
+
+	private async assignUser(message: any) {
+		let scanId= this.scanNode.scanId;
+		let nodes = this.queryNode.Result;
+		const request = {
+			"userAssignment" : message.inputUserValue
+		};
+		try {
+			await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${message.pathId}`, request);
+			for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) {
+				if( message.pathId == nodes[nodeCtr].Path[0].$.PathId ) {
+					nodes[nodeCtr].$.AssignToUser = `${message.inputUserValue}`;	
+				}
+			}
+		} 
+		catch (err) {
+			if (err.status == 404) 
+			{
+				this.log.error('This operation is not supported with CxSAST version in use.');
+				for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) {
+					if( message.pathId == nodes[nodeCtr].Path[0].$.PathId ) {
+						nodes[nodeCtr].$.AssignToUser = "Not a valid username";	
+					}
+				}
+			}
+		}
+		
+		let queries:  any[] | undefined;
+		queries = this.scanNode.queries;
+		if(queries) 
+		{
+			for (let queryCtr = 0; queryCtr < queries.length; queryCtr++) 
+			{ 
+				if(queries[queryCtr].$.id == this.queryNode.$.id && this.resultTablePanel)
+				{
+					this.queryNode = queries[queryCtr];
+					this.queryNode.mesg='onChange';
+					this.resultTablePanel.webview.postMessage(this.queryNode);
+					break;
+				}
+			}
+		}
+	}
+
 	private async updateShortDescriptionForResult(message: any) {
 		let scanId = this.scanNode.scanId;
 		let pathId = message.path[0].$.PathId;

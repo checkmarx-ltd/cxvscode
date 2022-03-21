@@ -24,6 +24,26 @@
     </div>
 
     <script>
+        function getUserPathId(){
+            var commentId = $("td.assignUser").attr("id");
+            var rowNumber = commentId.split("-")[1];
+            return $("#pathId-"+rowNumber).html();
+        }
+        function assignUserPopUp(){
+            $("#assignUserForm").css("display","block");
+        }
+
+        function submitUser(){
+            $("#assignUserForm").css("display","none");
+            var inputComment = $("#assignUserValue").val();
+            $("td.assignUser").text(inputComment);
+            $("#assignUserValue").val("");
+            return inputComment;
+        }
+        function cancelUser(){
+            $("#assignUserForm").css("display","none");
+        }
+
         var end = 0;
         function filterRows(inputValue, column)
         {
@@ -70,6 +90,7 @@
         // Get messages
         window.addEventListener('message', event => {
             const message = event.data; // The JSON data our extension sent
+            console.log("Hello World " + message);
              if(message.mesg=="vsCode"){
                 var desc= document.getElementById('desc');
                 if(message.handleError == "shortDescAPIUnavailable") {
@@ -79,15 +100,26 @@
                 desc.innerHTML=message.description.shortDescription;
                 }
             }else{
+                var assignUserDropdownHTML = "<select id='assignUserValue' name='assignUserValue'>";
+                for (i = 0; i < message.usersList.length; i++){
+                    assignUserDropdownHTML += "<option value='" + message.usersList[i] + "'>" + message.usersList[i] + "</option>";
+                }
+                assignUserDropdownHTML +=  "</select>"; 
             $("#list").html(
                 "<!DOCTYPE html>" +
                 "<html>" +
                 "<head>" +
                 '<meta http-equiv="Content-type" content="text/html;charset=UTF-8">' +
-                "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} </style>" +
+                "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} #assignUserForm{display: none; position: fixed; z-index: 1; padding-top: 100px; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgb(0,0,0); background-color: rgba(0,0,0,0.4);} #assignUserForm-Content {background-color: #fefefe;margin: auto; padding: 20px; border: 1px solid #888; width: 80%;} #assignUserValue{border: #000000}</style>" +
 
                 "</head>" +
                 "<body>" +
+                '<div id="assignUserForm">' +
+		        '<div id="assignUserForm-Content">' +
+                    assignUserDropdownHTML +                
+                '<input type="submit" id="submitUserButton" name="submitCommentButton" value="Submit">' +
+                '<input type="submit" id="cancelUserButton" name="cancelCommentButton" value="Cancel">' +
+                '</div></div>'+
                 "<span id='header'></span>" +
                 "<table id='innertable'>"
             );
@@ -107,6 +139,11 @@
             }
             selectHTML +=  "</select></td> </tr>";
             $("#list").append(selectHTML);
+
+            /*var selectHTML1 = "<tr><td><p>";
+            selectHTML1 = selectHTML1 + message.usersList;
+            selectHTML1 +=  "</p></td></tr>";
+            $("#list").append(selectHTML1);*/
 			
 
             //This is the fontend change area
@@ -161,7 +198,7 @@
                 var destFileName = String(result.Path[0].PathNode[pathNodeLength-1].FileName);
                 $("#list").append("<tr style='cursor:pointer; vertical-align:top'" + " id='result" + i + "' >" +
 					"<td class='check'> <input type ='checkbox' id= 'checkbox-"+i+ "'name = 'querySelected' value = '"+result.Path[0].$.PathId+"'>"+"</td>"+
-                    "<td class='id'>" + result.Path[0].$.PathId + "</td>" +
+                    "<td class='id' id='pathId-" + i + "'>" + result.Path[0].$.PathId + "</td>" +
                     "<td class='state'>" + stateDictionary[result.$.state] + "</td>" +
                     "<td class='status'>" + result.$.Status + "</td>" +
                     "<td class='name'>" + message.$.name + "</td>" +
@@ -174,7 +211,7 @@
                     "<td class='destinationline'>" + result.Path[0].PathNode[pathNodeLength-1].Line + "</td>" +
                     "<td class='destinationobject'>" + result.Path[0].PathNode[pathNodeLength-1].Name + "</td>" +
                     "<td class='severity'>" + result.$.Severity + "</td>" +
-                    "<td class='assigneduser'>" + result.$.AssignToUser + "</td>" +
+                    "<td id='user-" + i + "'>" + result.$.AssignToUser + "</td>" +
                     "<td class='comments'>" + result.$.Remark + "</td>" +
                     + "</tr>");
 
@@ -187,9 +224,30 @@
                     vscode.postMessage({ path: result.Path,command: "onClick",clickedRow: i}); // Node was clicked, send it back
                 });
 
+                $("#user-"+0).addClass("assignUser");
+                var userClick = $("#user-" + i);
+                userClick.on('click', function(){
+                    $(".assignUser").removeClass("assignUser");
+                    userClick.addClass("assignUser");
+                    assignUserPopUp();
+                });
+
                 i++;
             });
             end = i;
+
+            $("#submitUserButton").click(function(){
+                var inputUser = submitUser();
+                var pathId = getUserPathId();
+                $("td.assignUser").text("Updating User to '" + inputUser + "'");
+                vscode.postMessage({command: 'assignUser', 
+                                    inputUserValue: inputUser,
+                                    pathId: pathId});
+            });
+
+            $("#cancelUserButton").click(function(){
+                cancelUser();
+            });
 
             $("#id-state").keyup(function() {
                 var input = $('#id-state').val();
