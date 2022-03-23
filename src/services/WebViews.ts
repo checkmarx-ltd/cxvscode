@@ -89,6 +89,19 @@ export class WebViews {
 
 			const resultStates: string[] = await this.httpClient.getRequest(`sast/result-states`);
 			query.resultStates = resultStates;
+
+			let usersResponse = await this.httpClient.getRequest(`auth/AssignableUsers`);
+			let usersList: string[] = [];
+			if(usersResponse)
+			{
+				for(let userCtr = 0; userCtr < usersResponse.length; userCtr++)
+				{
+					usersList.push(usersResponse[userCtr].username);
+				}
+				
+			}
+			query.usersList = usersList;
+
 			this.queryNode = query;
 			this.resultTablePanel.webview.postMessage(query);
 		}
@@ -169,6 +182,9 @@ export class WebViews {
 										case 'updateComment':
 											this.updateUserComment(message.inputCommentValue, message.pathId);
 											return;
+										case 'assignUser':
+											this.assignUser(message.assignUser, message.data);
+											return;
 									  }
 
 								}
@@ -189,6 +205,42 @@ export class WebViews {
 			this.log.error(err);
 		}
 	}
+
+	private async assignUser(assignUser: any, rows: any) {
+		let scanId= this.scanNode.scanId;
+		let nodes = this.queryNode.Result;
+
+		for (var i = 0; i < rows.length; i++) {
+			var pathId = rows[i];
+			for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) { 
+				if( pathId == nodes[nodeCtr].Path[0].$.PathId) {
+					const request = {"userAssignment" : assignUser};
+					try {
+						await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
+						nodes[nodeCtr].$.AssignToUser = `${assignUser}`;
+					} catch (err) {
+						if (err.status == 404) {
+							this.log.error('This operation is not supported with CxSAST version in use.');
+						}
+					}
+				}
+			}
+		}
+
+		let queries:  any[] | undefined;
+		queries = this.scanNode.queries;
+		if(queries) {
+			for (let queryCtr = 0; queryCtr < queries.length; queryCtr++) { 
+				if(queries[queryCtr].$.id == this.queryNode.$.id && this.resultTablePanel){
+					this.queryNode = queries[queryCtr];
+					this.queryNode.mesg='onChange';
+					this.resultTablePanel.webview.postMessage(this.queryNode);
+					break;
+				}
+			}
+		}
+	}
+
 	private async updateShortDescriptionForResult(message: any) {
 		let scanId = this.scanNode.scanId;
 		let pathId = message.path[0].$.PathId;
@@ -278,32 +330,39 @@ export class WebViews {
 	private async updateUserComment(inputCommentValue: any, pathId: any)
 	{
 		let scanId= this.scanNode.scanId;
+		let nodes = this.queryNode.Result;
 		const request = {
 			"comment" : inputCommentValue
 		};
 		try {
 			await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
+			for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) {
+				if( pathId == nodes[nodeCtr].Path[0].$.PathId ) {
+					nodes[nodeCtr].$.Remark = `New Comment,${inputCommentValue}\r\n${nodes[nodeCtr].$.Remark}`;	
+				}
+			}
 		} 
 		catch (err) 
 		{
+			for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) {
+				if( pathId == nodes[nodeCtr].Path[0].$.PathId ) {
+					nodes[nodeCtr].$.Remark = `New Comment,Error Occurred while updating on the server.\r\n${nodes[nodeCtr].$.Remark}`;	
+				}
+			}
 			if (err.status == 404) 
 			{
 				this.log.error('This operation is not supported with CxSAST version in use.');
 			}
 		}
 
-		const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+		/*const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 		const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 		const dateTimeNow = new Date();
 		const time = `${dateTimeNow.getHours()%12}:${dateTimeNow.getMinutes()}:${dateTimeNow.getSeconds()} ${dateTimeNow.getHours()>=12 ? 'PM' : 'AM'}`; 
 		let commentTimeStamp = `[${days[dateTimeNow.getDay()]}, ${months[dateTimeNow.getMonth()]} ${dateTimeNow.getDate()}, ${dateTimeNow.getFullYear()} ${time}]: `;
-
-		let nodes = this.queryNode.Result;
-		for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) {
-			if( pathId == nodes[nodeCtr].Path[0].$.PathId ) {
-				nodes[nodeCtr].$.Remark = `New Comment,${commentTimeStamp}${inputCommentValue}\r\n${nodes[nodeCtr].$.Remark}`;	
-			}
-		}
+		*/
+		
+		
 		
 		let queries:  any[] | undefined;
 		queries = this.scanNode.queries;
