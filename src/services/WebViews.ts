@@ -179,7 +179,7 @@ export class WebViews {
 											this.updateShortDescriptionForResult(message);
 											return;
 										case 'assignUser':
-											this.assignUser(message);
+											this.assignUser(message.assignUser, message.data);
 											return;
 									  }
 
@@ -202,40 +202,32 @@ export class WebViews {
 		}
 	}
 
-	private async assignUser(message: any) {
+	private async assignUser(assignUser: any, rows: any) {
 		let scanId= this.scanNode.scanId;
 		let nodes = this.queryNode.Result;
-		const request = {
-			"userAssignment" : message.inputUserValue
-		};
-		try {
-			await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${message.pathId}`, request);
-			for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) {
-				if( message.pathId == nodes[nodeCtr].Path[0].$.PathId ) {
-					nodes[nodeCtr].$.AssignToUser = `${message.inputUserValue}`;	
-				}
-			}
-		} 
-		catch (err) {
-			if (err.status == 404) 
-			{
-				this.log.error('This operation is not supported with CxSAST version in use.');
-				for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) {
-					if( message.pathId == nodes[nodeCtr].Path[0].$.PathId ) {
-						nodes[nodeCtr].$.AssignToUser = "Not a valid username";	
+
+		for (var i = 0; i < rows.length; i++) {
+			var pathId = rows[i];
+			for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) { 
+				if( pathId == nodes[nodeCtr].Path[0].$.PathId) {
+					const request = {"userAssignment" : assignUser};
+					try {
+						await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
+						nodes[nodeCtr].$.AssignToUser = `${assignUser}`;
+					} catch (err) {
+						if (err.status == 404) {
+							this.log.error('This operation is not supported with CxSAST version in use.');
+						}
 					}
 				}
 			}
 		}
-		
+
 		let queries:  any[] | undefined;
 		queries = this.scanNode.queries;
-		if(queries) 
-		{
-			for (let queryCtr = 0; queryCtr < queries.length; queryCtr++) 
-			{ 
-				if(queries[queryCtr].$.id == this.queryNode.$.id && this.resultTablePanel)
-				{
+		if(queries) {
+			for (let queryCtr = 0; queryCtr < queries.length; queryCtr++) { 
+				if(queries[queryCtr].$.id == this.queryNode.$.id && this.resultTablePanel){
 					this.queryNode = queries[queryCtr];
 					this.queryNode.mesg='onChange';
 					this.resultTablePanel.webview.postMessage(this.queryNode);

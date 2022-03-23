@@ -29,20 +29,6 @@
             var rowNumber = commentId.split("-")[1];
             return $("#pathId-"+rowNumber).html();
         }
-        function assignUserPopUp(){
-            $("#assignUserForm").css("display","block");
-        }
-
-        function submitUser(){
-            $("#assignUserForm").css("display","none");
-            var inputComment = $("#assignUserValue").val();
-            $("td.assignUser").text(inputComment);
-            $("#assignUserValue").val("");
-            return inputComment;
-        }
-        function cancelUser(){
-            $("#assignUserForm").css("display","none");
-        }
 
         var end = 0;
         function filterRows(inputValue, column)
@@ -100,26 +86,16 @@
                 desc.innerHTML=message.description.shortDescription;
                 }
             }else{
-                var assignUserDropdownHTML = "<select id='assignUserValue' name='assignUserValue'>";
-                for (i = 0; i < message.usersList.length; i++){
-                    assignUserDropdownHTML += "<option value='" + message.usersList[i] + "'>" + message.usersList[i] + "</option>";
-                }
-                assignUserDropdownHTML +=  "</select>"; 
+                
             $("#list").html(
                 "<!DOCTYPE html>" +
                 "<html>" +
                 "<head>" +
                 '<meta http-equiv="Content-type" content="text/html;charset=UTF-8">' +
-                "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} #assignUserForm{display: none; position: fixed; z-index: 1; padding-top: 100px; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgb(0,0,0); background-color: rgba(0,0,0,0.4);} #assignUserForm-Content {background-color: #fefefe;margin: auto; padding: 20px; border: 1px solid #888; width: 80%;} #assignUserValue{border: #000000}</style>" +
+                "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} </style>" +
 
                 "</head>" +
                 "<body>" +
-                '<div id="assignUserForm">' +
-		        '<div id="assignUserForm-Content">' +
-                    assignUserDropdownHTML +                
-                '<input type="submit" id="submitUserButton" name="submitCommentButton" value="Submit">' +
-                '<input type="submit" id="cancelUserButton" name="cancelCommentButton" value="Cancel">' +
-                '</div></div>'+
                 "<span id='header'></span>" +
                 "<table id='innertable'>"
             );
@@ -137,14 +113,13 @@
             for (i = 0; i < message.resultStates.states.length; i = i + 1) {
                 selectHTML += "<option value='" + message.resultStates.states[i].name + "'>" + message.resultStates.states[i].name + "</option>";
             }
-            selectHTML +=  "</select></td> </tr>";
-            $("#list").append(selectHTML);
-
-            /*var selectHTML1 = "<tr><td><p>";
-            selectHTML1 = selectHTML1 + message.usersList;
-            selectHTML1 +=  "</p></td></tr>";
-            $("#list").append(selectHTML1);*/
-			
+            selectHTML +=  "</select></td><td></td>";
+            selectHTML += "<td> <select id='assignUserDropDownList'> <option>Assign User</option>";
+            for (i = 0; i < message.usersList.length; i++){
+                selectHTML += "<option value='" + message.usersList[i] + "'>" + message.usersList[i] + "</option>";
+                }
+            selectHTML +=  "</select></td></tr>";
+            $("#list").append(selectHTML);			
 
             //This is the fontend change area
             $("#list").append("<tr>" +
@@ -224,30 +199,9 @@
                     vscode.postMessage({ path: result.Path,command: "onClick",clickedRow: i}); // Node was clicked, send it back
                 });
 
-                $("#user-"+0).addClass("assignUser");
-                var userClick = $("#user-" + i);
-                userClick.on('click', function(){
-                    $(".assignUser").removeClass("assignUser");
-                    userClick.addClass("assignUser");
-                    assignUserPopUp();
-                });
-
                 i++;
             });
             end = i;
-
-            $("#submitUserButton").click(function(){
-                var inputUser = submitUser();
-                var pathId = getUserPathId();
-                $("td.assignUser").text("Updating User to '" + inputUser + "'");
-                vscode.postMessage({command: 'assignUser', 
-                                    inputUserValue: inputUser,
-                                    pathId: pathId});
-            });
-
-            $("#cancelUserButton").click(function(){
-                cancelUser();
-            });
 
             $("#id-state").keyup(function() {
                 var input = $('#id-state').val();
@@ -300,6 +254,15 @@
                 var input = $('#id-comments').val();
                 filterRows(input, 15);
             });
+
+            $('#assignUserDropDownList').on('change', function() {
+                var selectedAssignUser = $('#assignUserDropDownList option:selected').val();
+                var selectedQueryNodes = [];
+                $.each($("input[name='querySelected']:checked"), function () {
+                    selectedQueryNodes.push($(this).val());
+                });
+                vscode.postMessage({command: 'assignUser', assignUser: selectedAssignUser, data: selectedQueryNodes});
+                });
 
 			$('#resultStateDropDownList').on('change', function() {
                 var selectedResultState = $('#resultStateDropDownList option:selected').val();
