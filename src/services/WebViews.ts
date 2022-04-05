@@ -226,9 +226,9 @@ export class WebViews {
 		let queries:  any[] | undefined;
 		queries = this.scanNode.queries;
 		if(queries) {
-			for (let queryCtr = 0; queryCtr < queries.length; queryCtr++) { 
-				if(queries[queryCtr].$.id == this.queryNode.$.id && this.resultTablePanel){
-					this.queryNode = queries[queryCtr];
+			for (let query of queries) { 
+				if(query.$.id == this.queryNode.$.id && this.resultTablePanel){
+					this.queryNode = query;
 					this.queryNode.mesg='onChange';
 					this.resultTablePanel.webview.postMessage(this.queryNode);
 					break;
