@@ -206,16 +206,14 @@ export class WebViews {
 
 		for (var i = 0; i < rows.length; i++) {
 			var pathId = rows[i];
-			for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) { 
-				if( pathId == nodes[nodeCtr].Path[0].$.PathId) {
+			for (let node of nodes) { 
+				if( pathId == node.Path[0].$.PathId) {
 					const request = {"userAssignment" : assignUser};
 					try {
 						await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
-						nodes[nodeCtr].$.AssignToUser = `${assignUser}`;
+						node.$.AssignToUser = `${assignUser}`;
 					} catch (err) {
-						if (err.status == 404) {
-							this.log.error('This operation is not supported with CxSAST version in use.');
-						}
+						this.log.error(`The following error occurred while updating the user: ${err}`);
 					}
 				}
 			}
