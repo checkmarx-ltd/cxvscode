@@ -204,8 +204,8 @@ export class WebViews {
 		let scanId= this.scanNode.scanId;
 		let nodes = this.queryNode.Result;
 
-		for (var i = 0; i < rows.length; i++) {
-			var pathId = rows[i];
+		for (let row of rows) {
+			let pathId = row;
 			for (let node of nodes) { 
 				if( pathId == node.Path[0].$.PathId) {
 					const request = {"userAssignment" : assignUser};
