@@ -76,7 +76,6 @@
         // Get messages
         window.addEventListener('message', event => {
             const message = event.data; // The JSON data our extension sent
-            console.log("Hello World " + message);
              if(message.mesg=="vsCode"){
                 var desc= document.getElementById('desc');
                 if(message.handleError == "shortDescAPIUnavailable") {
