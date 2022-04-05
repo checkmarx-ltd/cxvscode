@@ -200,16 +200,6 @@ export class WebViews {
 		}
 	}
 
-	private async apiCallToUpdateUser(node: any, scanId: any, pathId: any, assignUser:any) {
-		const request = {"userAssignment" : assignUser};
-		try {
-			await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
-			node.$.AssignToUser = `${assignUser}`;
-		} catch (err) {
-			this.log.error(`The following error occurred while updating the user: ${err}`);
-		}
-	}
-
 	private async assignUser(assignUser: any, rows: any) {
 		let scanId= this.scanNode.scanId;
 		let nodes = this.queryNode.Result;
@@ -218,7 +208,13 @@ export class WebViews {
 			let pathId = row;
 			for (let node of nodes) { 
 				if( pathId == node.Path[0].$.PathId) {
-					this.apiCallToUpdateUser(node, scanId, pathId, assignUser);	
+					const request = {"userAssignment" : assignUser};
+					try {
+						await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
+						node.$.AssignToUser = `${assignUser}`;
+					} catch (err) {
+						this.log.error(`The following error occurred while updating the user: ${err}`);
+					}
 				}
 			}
 		}
