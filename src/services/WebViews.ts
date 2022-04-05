@@ -92,11 +92,9 @@ export class WebViews {
 
 			let usersResponse = await this.httpClient.getRequest(`auth/AssignableUsers`);
 			let usersList: string[] = [];
-			if(usersResponse)
-			{
-				for(let userCtr = 0; userCtr < usersResponse.length; userCtr++)
-				{
-					usersList.push(usersResponse[userCtr].username);
+			if(usersResponse){
+				for(let user of usersResponse){
+					usersList.push(user.username);
 				}
 				
 			}
