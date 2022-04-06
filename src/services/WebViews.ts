@@ -278,30 +278,20 @@ export class WebViews {
 	private async updateUserComment(inputCommentValue: any, pathId: any)
 	{
 		let scanId= this.scanNode.scanId;
+		let nodes = this.queryNode.Result;
 		const request = {
 			"comment" : inputCommentValue
 		};
 		try {
 			await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
-		} 
-		catch (err) 
-		{
-			if (err.status == 404) 
-			{
-				this.log.error('This operation is not supported with CxSAST version in use.');
+			for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) {
+				if( pathId == nodes[nodeCtr].Path[0].$.PathId ) {
+					nodes[nodeCtr].$.Remark = `New Comment,${inputCommentValue}\r\n${nodes[nodeCtr].$.Remark}`;	
+				}
 			}
-		}
-
-		const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-		const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-		const dateTimeNow = new Date();
-		const time = `${dateTimeNow.getHours()%12}:${dateTimeNow.getMinutes()}:${dateTimeNow.getSeconds()} ${dateTimeNow.getHours()>=12 ? 'PM' : 'AM'}`; 
-		let commentTimeStamp = `[${days[dateTimeNow.getDay()]}, ${months[dateTimeNow.getMonth()]} ${dateTimeNow.getDate()}, ${dateTimeNow.getFullYear()} ${time}]: `;
-
-		let nodes = this.queryNode.Result;
-		for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) {
-			if( pathId == nodes[nodeCtr].Path[0].$.PathId ) {
-				nodes[nodeCtr].$.Remark = `New Comment,${commentTimeStamp}${inputCommentValue}\r\n${nodes[nodeCtr].$.Remark}`;	
+		} catch (err) {
+			if (err.status == 404) {
+				this.log.error('This operation is not supported with CxSAST version in use.');
 			}
 		}
 		

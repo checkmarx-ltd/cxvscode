@@ -32,6 +32,8 @@
         function enterComment()
         {    
             $("#inputCommentForm").css("display","block"); 
+            var oldComment = $("td.editComment").html();
+            $("#oldComment").html(oldComment);
         }
         function submitComment(){
             $("#inputCommentForm").css("display","none");
@@ -42,33 +44,27 @@
         }
         function cancelComment(){
             $("#inputCommentForm").css("display","none");
+            $("#inputCommentValue").val("")
         }
         var end = 0;
-        function filterRows(inputValue, column)
-        {
+        function filterRows(inputValue, column){
             var filter, td, textValue, table;
             var rows = end;
             filter = inputValue.toUpperCase();
             table = document.getElementsByTagName("table");
-            for(row = 0 ; row < rows ; row++)
-            {
+            for(row = 0 ; row < rows ; row++){
                 tr = document.getElementById("result" + row);
                 td = tr.getElementsByTagName("td")[column];
-                if(td)
-                {
+                if(td){
                     textValue = td.textContent || td.innerText;
-                    if (textValue.toUpperCase().indexOf(filter) > -1)
-                    {
+                    if (textValue.toUpperCase().indexOf(filter) > -1){
                         tr.style.display = "";
                     } 
-                    else 
-                    {
+                    else {
                         tr.style.display = "none";
                     }
                 }
-            }
-            
-            
+            }           
         }
 
         const vscode = acquireVsCodeApi();
@@ -103,15 +99,21 @@
                 "<html>" +
                 "<head>" +
                 '<meta http-equiv="Content-type" content="text/html;charset=UTF-8">' +
-                "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} #inputCommentForm{display: none;	position: fixed; z-index: 1; padding-top: 100px; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgb(0,0,0); 	background-color: rgba(0,0,0,0.4);} #inputCommentForm-Content {	background-color: #fefefe;margin: auto;	padding: 20px; border: 1px solid #888; width: 80%;} </style>" +
+                "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} #inputCommentForm{display: none;	position: fixed; z-index: 1; padding-top: 100px; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgb(0,0,0); 	background-color: rgba(0,0,0,0.4);} #inputCommentForm-Content {	background-color: #fefefe;margin: auto;	padding: 10px 20px 20px 20px; border: 1px solid #888; width: 50%;} #submitCommentButton {background-color:rgba(29,150,178,0.8); border-radius: 5px; font-size: 15px; color:white; cursor: pointer; padding: 8px 12px 8px 12px; border: none} #cancelCommentButton { border-radius: 5px; font-size: 15px; color:black; cursor: pointer; padding: 8px 12px 8px 12px; border: none} #inputCommentValue {width: 80%; height: 100px; padding: 10px; foxt-size: 10px;} #submitCommentButton:hover { background-color:rgba(29,150,178,1) } #cancelCommentButton:hover { background-color:rgba(192,192,192,0.6) } </style>" +
 
                 "</head>" +
                 "<body>" +
-                '<div id="inputCommentForm">' +
-		        '<div id="inputCommentForm-Content">' +
-			    '<textarea id="inputCommentValue" row="4"></textarea><br><br>' +
-                '<input type="submit" id="submitCommentButton" name="submitCommentButton" value="Submit">' +
-                '<input type="submit" id="cancelCommentButton" name="cancelCommentButton" value="Cancel">' +
+                '<div id="inputCommentForm">' + 
+		        '<div id="inputCommentForm-Content">' + 
+                    '<p style="color:black; text-align: left; font-size: 20px; font-weight: bold; margin-top: 0px; margin- bottom: 0px">Add Comment</p>' +
+                    '<hr>' +
+			        '<textarea id="inputCommentValue" row="6"></textarea><br><br>' +
+                    '<input type="submit" id="submitCommentButton" name="submitCommentButton" value="Submit">' +
+                    '<input type="submit" id="cancelCommentButton" name="cancelCommentButton" value="Cancel" style="margin-left:20px">' +
+                    '<hr>' + 
+                    '<div style="text-align: left">' + 
+                    '<h3 style="text-align: centre; color:black">Comment History</h3>' + 
+                    '<span style="color:black" id="oldComment"></span></div>' +
                 '</div></div>'+
                 "<span id='header'></span>" +
                 "<table id='innertable'>"
@@ -155,7 +157,7 @@
                 "</tr>");
 				
 			if (message.mesg=="firstClick"){
-            vscode.postMessage({ path: message.Result[0].Path ,mesg: "firstTime",clickedRow:0});
+            vscode.postMessage({ path: message.Result[0].Path, mesg: "firstTime",clickedRow:0});
             }
                 $("#list").append("<tr>" +
 				"<td> </td>" +
@@ -222,13 +224,13 @@
                     "<td class='destinationobject'>" + result.Path[0].PathNode[pathNodeLength-1].Name + "</td>" +
                     "<td class='severity'>" + result.$.Severity + "</td>" +
                     "<td class='assigneduser'>" + result.$.AssignToUser + "</td>" + 
-                    "<td id='comment-" + i + "'>" + 
-                        "<p>" + comment0  + "</p>" +
-                        "<p>" + comment1 + "</p>" +
-                        "<p>" + comment2 + "</p>" +
-                        "<p>" + comment3 + "</p>" +
-                        "<p>" + comment4 + "</p>" 
-                    + "</tr>");
+                    "<td style='text-align: left' id='comment-" + i + "'>" + 
+                        "<span>" + comment0  + "</span><br>" +
+                        "<span>" + comment1 + "</span><br>" +
+                        "<span>" + comment2 + "</span><br>" +
+                        "<span>" + comment3 + "</span><br>" +
+                        "<span>" + comment4 + "</span>" + 
+                        "</tr>");
 
                 
                 $("#result" + 0).addClass("selec");
