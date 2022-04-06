@@ -180,7 +180,6 @@ export class WebViews {
 											this.assignUser(message.assignUser, message.data);
 											return;
 									  }
-
 								}
 							},
 							undefined,
@@ -200,6 +199,7 @@ export class WebViews {
 		}
 	}
 
+	//calls server api to update user assigned
 	private async apiCallToUpdateUser(node: any, scanId: any, pathId: any, assignUser:any) {
 		const request = {"userAssignment" : assignUser};
 		try {
@@ -214,6 +214,7 @@ export class WebViews {
 		let scanId= this.scanNode.scanId;
 		let nodes = this.queryNode.Result;
 
+		//loop to fetch pathId of all selected rows one by one.
 		for (let row of rows) {
 			let pathId = row;
 			for (let node of nodes) { 
@@ -223,6 +224,7 @@ export class WebViews {
 			}
 		}
 
+		//mesg of node query currently open is changed to 'Onchange' fir webview to refresh and display updated value.  
 		let queries:  any[] | undefined;
 		queries = this.scanNode.queries;
 		if(queries) {

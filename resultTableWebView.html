@@ -24,12 +24,6 @@
     </div>
 
     <script>
-        function getUserPathId(){
-            var commentId = $("td.assignUser").attr("id");
-            var rowNumber = commentId.split("-")[1];
-            return $("#pathId-"+rowNumber).html();
-        }
-
         var end = 0;
         function filterRows(inputValue, column)
         {
@@ -253,7 +247,7 @@
                 var input = $('#id-comments').val();
                 filterRows(input, 15);
             });
-
+            //On change  of assign user dropdown, selected rows are fetched and posts a message to typescript function.
             $('#assignUserDropDownList').on('change', function() {
                 var selectedAssignUser = $('#assignUserDropDownList option:selected').val();
                 var selectedQueryNodes = [];
