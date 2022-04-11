@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"> 
 
 <head>
     <meta charset="UTF-8">
@@ -24,32 +24,47 @@
     </div>
 
     <script>
+        function getPathId(){
+            var commentId = $("td.editComment").attr("id");
+            var rowNumber = commentId.split("-")[1];
+            return $("#pathId-"+rowNumber).html();
+        }
+        function enterComment()
+        {    
+            $("#inputCommentForm").css("display","block"); 
+            var oldComment = $("td.editComment").html();
+            $("#oldComment").html(oldComment);
+        }
+        function submitComment(){
+            $("#inputCommentForm").css("display","none");
+            var inputComment = $("#inputCommentValue").val();
+            $("td.editComment").text(inputComment);
+            $("#inputCommentValue").val("");
+            return inputComment;
+        }
+        function cancelComment(){
+            $("#inputCommentForm").css("display","none");
+            $("#inputCommentValue").val("")
+        }
         var end = 0;
-        function filterRows(inputValue, column)
-        {
+        function filterRows(inputValue, column){
             var filter, td, textValue, table;
             var rows = end;
             filter = inputValue.toUpperCase();
             table = document.getElementsByTagName("table");
-            for(row = 0 ; row < rows ; row++)
-            {
+            for(row = 0 ; row < rows ; row++){
                 tr = document.getElementById("result" + row);
                 td = tr.getElementsByTagName("td")[column];
-                if(td)
-                {
+                if(td){
                     textValue = td.textContent || td.innerText;
-                    if (textValue.toUpperCase().indexOf(filter) > -1)
-                    {
+                    if (textValue.toUpperCase().indexOf(filter) > -1){
                         tr.style.display = "";
                     } 
-                    else 
-                    {
+                    else {
                         tr.style.display = "none";
                     }
                 }
-            }
-            
-            
+            }           
         }
 
         const vscode = acquireVsCodeApi();
@@ -85,10 +100,22 @@
                 "<html>" +
                 "<head>" +
                 '<meta http-equiv="Content-type" content="text/html;charset=UTF-8">' +
-                "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} </style>" +
+                "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} #inputCommentForm{display: none;	position: fixed; z-index: 1; padding-top: 100px; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgb(0,0,0); 	background-color: rgba(0,0,0,0.4);} #inputCommentForm-Content {	background-color: #fefefe;margin: auto;	padding: 10px 20px 20px 20px; border: 1px solid #888; width: 50%;} #submitCommentButton {background-color:rgba(29,150,178,0.8); border-radius: 5px; font-size: 15px; color:white; cursor: pointer; padding: 8px 12px 8px 12px; border: none} #cancelCommentButton { border-radius: 5px; font-size: 15px; color:black; cursor: pointer; padding: 8px 12px 8px 12px; border: none} #inputCommentValue {width: 80%; height: 100px; padding: 10px; foxt-size: 10px;} #submitCommentButton:hover { background-color:rgba(29,150,178,1) } #cancelCommentButton:hover { background-color:rgba(192,192,192,0.6) } </style>" +
 
                 "</head>" +
                 "<body>" +
+                '<div id="inputCommentForm">' + 
+		        '<div id="inputCommentForm-Content">' + 
+                    '<p style="color:black; text-align: left; font-size: 20px; font-weight: bold; margin-top: 0px; margin- bottom: 0px">Add Comment</p>' +
+                    '<hr>' +
+			        '<textarea id="inputCommentValue" row="6"></textarea><br><br>' +
+                    '<input type="submit" id="submitCommentButton" name="submitCommentButton" value="Submit">' +
+                    '<input type="submit" id="cancelCommentButton" name="cancelCommentButton" value="Cancel" style="margin-left:20px">' +
+                    '<hr>' + 
+                    '<div style="text-align: left">' + 
+                    '<h3 style="text-align: centre; color:black">Comment History</h3>' + 
+                    '<span style="color:black" id="oldComment"></span></div>' +
+                '</div></div>'+
                 "<span id='header'></span>" +
                 "<table id='innertable'>"
             );
@@ -135,7 +162,7 @@
                 "</tr>");
 				
 			if (message.mesg=="firstClick"){
-            vscode.postMessage({ path: message.Result[0].Path ,mesg: "firstTime",clickedRow:0});
+            vscode.postMessage({ path: message.Result[0].Path, mesg: "firstTime",clickedRow:0});
             }
                 $("#list").append("<tr>" +
 				"<td> </td>" +
@@ -143,7 +170,7 @@
                 "<td><input type='text'  id='id-state' name='resultstate'></td>" +
                 "<td> <input type='text'  id='id-status' name='status'></td>" +
                 "<td> </td>" +
-                "<td> <input type='text'  id='id-srcfolder' name='sourcefolder'></td>" +
+                "<td> <input type='text'  id='id-srcfolder' name='sourcefolder' placeholder=''></td>" +
                 "<td> <input type='text'  id='id-srcfilename' name='sourcefilename'></td>" +
                 "<td> <input type='text'  id='id-srcline' name='sourceline'></td>" +
                 "<td> <input type='text'  id='id-srcobject' name='sourceobject'></td>" +
@@ -155,15 +182,37 @@
                 "<td> <input type='text'  id='id-assigneduser' name='assigneduser'></td>" +
                 "<td> <input type='text'  id='id-comments' name='comments'></td>" +
                 "</tr>");
-
-             
-
+  
             //This area is where api data needs to be fetched
             var i = 0;
             message.Result.forEach(result => {
                 const pathNodeLength = result.Path[0].PathNode.length;
                 var srcFileName = String(result.Path[0].PathNode[0].FileName);
                 var destFileName = String(result.Path[0].PathNode[pathNodeLength-1].FileName);
+                var comments = String(result.$.Remark).split(/\r?\n/);
+                var comment0 = '', comment1 = '',comment2 = '',comment3 = '',comment4 = '';
+                
+                if(typeof comments[0] != "undefined"){
+                    const [first0, ...rest0] = comments[0].split(",");
+                    comment0 = rest0;
+                }
+                if(typeof comments[1] != "undefined"){
+                    const [first1, ...rest1] = comments[1].split(",");
+                    comment1 = rest1;
+                }
+                if(typeof comments[2] != "undefined"){
+                    const [first2, ...rest2] = comments[2].split(",");
+                    comment2 = rest2;
+                }
+                if(typeof comments[3] != "undefined"){
+                    const [first3, ...rest3] = comments[3].split(",");
+                    comment3 = rest3;
+                }
+                if(typeof comments[4] != "undefined"){
+                    const [first4, ...rest4] = comments[4].split(",");
+                    comment4 = rest4;
+                }
+            
                 $("#list").append("<tr style='cursor:pointer; vertical-align:top'" + " id='result" + i + "' >" +
 					"<td class='check'> <input type ='checkbox' id= 'checkbox-"+i+ "'name = 'querySelected' value = '"+result.Path[0].$.PathId+"'>"+"</td>"+
                     "<td class='id' id='pathId-" + i + "'>" + result.Path[0].$.PathId + "</td>" +
@@ -183,6 +232,7 @@
                     "<td class='comments'>" + result.$.Remark + "</td>" +
                     + "</tr>");
 
+                
                 $("#result" + 0).addClass("selec");
 
                 var resultValue = $("#result" + i);
@@ -190,11 +240,33 @@
                     $(".selec").removeClass("selec");
                     resultValue.addClass("selec");
                     vscode.postMessage({ path: result.Path,command: "onClick",clickedRow: i}); // Node was clicked, send it back
+                });    
+
+                $("#comment-"+0).addClass("editComment");
+                var commentClick = $("#comment-" + i);
+                commentClick.on('click', function(){
+                    $(".editComment").removeClass("editComment");
+                    commentClick.addClass("editComment");
+                    enterComment();
                 });
 
                 i++;
             });
             end = i;
+ 
+            $("#submitCommentButton").click(function(){
+                var oldComment = $("td.editComment").val();
+                var inputComment = submitComment();
+                var pathId = getPathId();
+                $("td.editComment").text("Updating Comment to '" + inputComment + "'");
+                vscode.postMessage({command: 'updateComment', 
+                                    inputCommentValue: inputComment,
+                                    pathId: pathId});
+            });
+
+            $("#cancelCommentButton").click(function(){
+                cancelComment();
+            });
 
             $("#id-state").keyup(function() {
                 var input = $('#id-state').val();
