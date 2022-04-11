@@ -79,6 +79,7 @@
                 desc.innerHTML=message.description.shortDescription;
                 }
             }else{
+                
             $("#list").html(
                 "<!DOCTYPE html>" +
                 "<html>" +
@@ -105,9 +106,13 @@
             for (i = 0; i < message.resultStates.states.length; i = i + 1) {
                 selectHTML += "<option value='" + message.resultStates.states[i].name + "'>" + message.resultStates.states[i].name + "</option>";
             }
-            selectHTML +=  "</select></td> </tr>";
-            $("#list").append(selectHTML);
-			
+            selectHTML +=  "</select></td><td></td>";
+            selectHTML += "<td> <select id='assignUserDropDownList'> <option>Assign User</option>";
+            for (i = 0; i < message.usersList.length; i++){
+                selectHTML += "<option value='" + message.usersList[i] + "'>" + message.usersList[i] + "</option>";
+                }
+            selectHTML +=  "</select></td></tr>";
+            $("#list").append(selectHTML);			
 
             //This is the fontend change area
             $("#list").append("<tr>" +
@@ -161,7 +166,7 @@
                 var destFileName = String(result.Path[0].PathNode[pathNodeLength-1].FileName);
                 $("#list").append("<tr style='cursor:pointer; vertical-align:top'" + " id='result" + i + "' >" +
 					"<td class='check'> <input type ='checkbox' id= 'checkbox-"+i+ "'name = 'querySelected' value = '"+result.Path[0].$.PathId+"'>"+"</td>"+
-                    "<td class='id'>" + result.Path[0].$.PathId + "</td>" +
+                    "<td class='id' id='pathId-" + i + "'>" + result.Path[0].$.PathId + "</td>" +
                     "<td class='state'>" + stateDictionary[result.$.state] + "</td>" +
                     "<td class='status'>" + result.$.Status + "</td>" +
                     "<td class='name'>" + message.$.name + "</td>" +
@@ -174,7 +179,7 @@
                     "<td class='destinationline'>" + result.Path[0].PathNode[pathNodeLength-1].Line + "</td>" +
                     "<td class='destinationobject'>" + result.Path[0].PathNode[pathNodeLength-1].Name + "</td>" +
                     "<td class='severity'>" + result.$.Severity + "</td>" +
-                    "<td class='assigneduser'>" + result.$.AssignToUser + "</td>" +
+                    "<td id='user-" + i + "'>" + result.$.AssignToUser + "</td>" +
                     "<td class='comments'>" + result.$.Remark + "</td>" +
                     + "</tr>");
 
@@ -242,6 +247,15 @@
                 var input = $('#id-comments').val();
                 filterRows(input, 15);
             });
+            //On change  of assign user dropdown, selected rows are fetched and posts a message to typescript function.
+            $('#assignUserDropDownList').on('change', function() {
+                var selectedAssignUser = $('#assignUserDropDownList option:selected').val();
+                var selectedQueryNodes = [];
+                $.each($("input[name='querySelected']:checked"), function () {
+                    selectedQueryNodes.push($(this).val());
+                });
+                vscode.postMessage({command: 'assignUser', assignUser: selectedAssignUser, data: selectedQueryNodes});
+                });
 
 			$('#resultStateDropDownList').on('change', function() {
                 var selectedResultState = $('#resultStateDropDownList option:selected').val();
