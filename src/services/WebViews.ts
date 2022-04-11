@@ -6,7 +6,7 @@ import { ScanNode } from '../model/ScanNode';
 import { SessionStorageService } from './sessionStorageService';
 import { SSOConstants } from '../model/ssoConstant';
 import { LoginChecks } from './loginChecks';
-import { timeStamp } from 'console';
+
 
 export class WebViews {
 
@@ -284,9 +284,9 @@ export class WebViews {
 		};
 		try {
 			await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
-			for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) {
-				if( pathId == nodes[nodeCtr].Path[0].$.PathId ) {
-					nodes[nodeCtr].$.Remark = `New Comment,${inputCommentValue}\r\n${nodes[nodeCtr].$.Remark}`;	
+			for (const nodeIterator of nodes) {
+				if( pathId == nodeIterator.Path[0].$.PathId ) {
+					nodeIterator.$.Remark = `New Comment,${inputCommentValue}\r\n${nodeIterator.$.Remark}`;	
 				}
 			}
 		} catch (err) {
@@ -299,16 +299,16 @@ export class WebViews {
 		queries = this.scanNode.queries;
 		if(queries) 
 		{
-			for (let queryCtr = 0; queryCtr < queries.length; queryCtr++) 
-			{ 
-				if(queries[queryCtr].$.id == this.queryNode.$.id && this.resultTablePanel)
+			for (const queryIterator of queries) {
+				if(queryIterator.$.id == this.queryNode.$.id && this.resultTablePanel)
 				{
-					this.queryNode = queries[queryCtr];
+					this.queryNode = queryIterator;
 					this.queryNode.mesg='onChange';
 					this.resultTablePanel.webview.postMessage(this.queryNode);
 					break;
 				}
 			}
+		
 		}	
 	}
 	private async resultStateChanged(selectedResultState: any, rows: any){
