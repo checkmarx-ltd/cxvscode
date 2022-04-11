@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"> 
 
 <head>
     <meta charset="UTF-8">
@@ -94,6 +94,7 @@
                 desc.innerHTML=message.description.shortDescription;
                 }
             }else{
+                
             $("#list").html(
                 "<!DOCTYPE html>" +
                 "<html>" +
@@ -132,9 +133,13 @@
             for (i = 0; i < message.resultStates.states.length; i = i + 1) {
                 selectHTML += "<option value='" + message.resultStates.states[i].name + "'>" + message.resultStates.states[i].name + "</option>";
             }
-            selectHTML +=  "</select></td> </tr>";
-            $("#list").append(selectHTML);
-			
+            selectHTML +=  "</select></td><td></td>";
+            selectHTML += "<td> <select id='assignUserDropDownList'> <option>Assign User</option>";
+            for (i = 0; i < message.usersList.length; i++){
+                selectHTML += "<option value='" + message.usersList[i] + "'>" + message.usersList[i] + "</option>";
+                }
+            selectHTML +=  "</select></td></tr>";
+            $("#list").append(selectHTML);			
 
             //This is the fontend change area
             $("#list").append("<tr>" +
@@ -223,14 +228,9 @@
                     "<td class='destinationline'>" + result.Path[0].PathNode[pathNodeLength-1].Line + "</td>" +
                     "<td class='destinationobject'>" + result.Path[0].PathNode[pathNodeLength-1].Name + "</td>" +
                     "<td class='severity'>" + result.$.Severity + "</td>" +
-                    "<td class='assigneduser'>" + result.$.AssignToUser + "</td>" + 
-                    "<td style='text-align: left' id='comment-" + i + "'>" + 
-                        "<span>" + comment0  + "</span><br>" +
-                        "<span>" + comment1 + "</span><br>" +
-                        "<span>" + comment2 + "</span><br>" +
-                        "<span>" + comment3 + "</span><br>" +
-                        "<span>" + comment4 + "</span>" + 
-                        "</tr>");
+                    "<td id='user-" + i + "'>" + result.$.AssignToUser + "</td>" +
+                    "<td class='comments'>" + result.$.Remark + "</td>" +
+                    + "</tr>");
 
                 
                 $("#result" + 0).addClass("selec");
@@ -319,6 +319,15 @@
                 var input = $('#id-comments').val();
                 filterRows(input, 15);
             });
+            //On change  of assign user dropdown, selected rows are fetched and posts a message to typescript function.
+            $('#assignUserDropDownList').on('change', function() {
+                var selectedAssignUser = $('#assignUserDropDownList option:selected').val();
+                var selectedQueryNodes = [];
+                $.each($("input[name='querySelected']:checked"), function () {
+                    selectedQueryNodes.push($(this).val());
+                });
+                vscode.postMessage({command: 'assignUser', assignUser: selectedAssignUser, data: selectedQueryNodes});
+                });
 
 			$('#resultStateDropDownList').on('change', function() {
                 var selectedResultState = $('#resultStateDropDownList option:selected').val();
