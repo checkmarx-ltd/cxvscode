@@ -177,9 +177,9 @@ export class WebViews {
 										case 'onClick':
 											this.updateShortDescriptionForResult(message);
 											return;
-
 										case 'updateComment':
 											this.updateUserComment(message.inputCommentValue, message.pathId);
+											return;
 										case 'assignUser':
 											this.assignUser(message.assignUser, message.data);
 											return;
@@ -223,7 +223,7 @@ export class WebViews {
 			let pathId = row;
 			for (let node of nodes) { 
 				if( pathId == node.Path[0].$.PathId) {
-					this.apiCallToUpdateUser(node, scanId, pathId, assignUser);	
+					await this.apiCallToUpdateUser(node, scanId, pathId, assignUser);	
 				}
 			}
 		}

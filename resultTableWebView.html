@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"> 
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -29,11 +29,10 @@
             var rowNumber = commentId.split("-")[1];
             return $("#pathId-"+rowNumber).html();
         }
-        function enterComment()
-        {    
-            $("#inputCommentForm").css("display","block"); 
+        function enterComment(){    
+            $("#inputCommentForm").css("display","block");
             var oldComment = $("td.editComment").html();
-            $("#oldComment").html(oldComment);
+            $("#oldComment").html(oldComment); 
         }
         function submitComment(){
             $("#inputCommentForm").css("display","none");
@@ -44,7 +43,7 @@
         }
         function cancelComment(){
             $("#inputCommentForm").css("display","none");
-            $("#inputCommentValue").val("")
+            $("#inputCommentValue").val("");
         }
         var end = 0;
         function filterRows(inputValue, column){
@@ -64,7 +63,9 @@
                         tr.style.display = "none";
                     }
                 }
-            }           
+            }
+            
+            
         }
 
         const vscode = acquireVsCodeApi();
@@ -94,7 +95,13 @@
                 desc.innerHTML=message.description.shortDescription;
                 }
             }else{
-                
+
+                var assignUserDropdownHTML = "<select id='assignUserValue' name='assignUserValue'>";
+                for (i = 0; i < message.usersList.length; i++){
+                    assignUserDropdownHTML += "<option value='" + message.usersList[i] + "'>" + message.usersList[i] + "</option>";
+                }
+                assignUserDropdownHTML +=  "</select>"; 
+
             $("#list").html(
                 "<!DOCTYPE html>" +
                 "<html>" +
@@ -108,7 +115,7 @@
 		        '<div id="inputCommentForm-Content">' + 
                     '<p style="color:black; text-align: left; font-size: 20px; font-weight: bold; margin-top: 0px; margin- bottom: 0px">Add Comment</p>' +
                     '<hr>' +
-			        '<textarea id="inputCommentValue" row="6"></textarea><br><br>' +
+                    '<textarea id="inputCommentValue" row="6"></textarea><br><br>' +
                     '<input type="submit" id="submitCommentButton" name="submitCommentButton" value="Submit">' +
                     '<input type="submit" id="cancelCommentButton" name="cancelCommentButton" value="Cancel" style="margin-left:20px">' +
                     '<hr>' + 
@@ -139,7 +146,7 @@
                 selectHTML += "<option value='" + message.usersList[i] + "'>" + message.usersList[i] + "</option>";
                 }
             selectHTML +=  "</select></td></tr>";
-            $("#list").append(selectHTML);			
+            $("#list").append(selectHTML);
 
             //This is the fontend change area
             $("#list").append("<tr>" +
@@ -228,8 +235,13 @@
                     "<td class='destinationline'>" + result.Path[0].PathNode[pathNodeLength-1].Line + "</td>" +
                     "<td class='destinationobject'>" + result.Path[0].PathNode[pathNodeLength-1].Name + "</td>" +
                     "<td class='severity'>" + result.$.Severity + "</td>" +
-                    "<td id='user-" + i + "'>" + result.$.AssignToUser + "</td>" +
-                    "<td class='comments'>" + result.$.Remark + "</td>" +
+                    "<td id='user-" + i + "'>" + result.$.AssignToUser + "</td>" + 
+                    "<td id='comment-" + i + "'>" + 
+                        "<p>" + comment0  + "</p>" +
+                        "<p>" + comment1 + "</p>" +
+                        "<p>" + comment2 + "</p>" +
+                        "<p>" + comment3 + "</p>" +
+                        "<p>" + comment4 + "</p>" 
                     + "</tr>");
 
                 

@@ -387,9 +387,9 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
 
     private async getAllTeams(): Promise<any[]> {
-        this.log.info(`<performance> ${new Date()}: Fetching teams. `);
+        this.log.debug(`<performance> ${new Date()}: Fetching teams. `);
         let allTeams = await this.httpClient.getRequest('auth/teams');
-        this.log.info(`<performance> ${new Date()}: Fetched ${allTeams.length} teams. `);
+        this.log.debug(`<performance> ${new Date()}: Fetched ${allTeams.length} teams successfully.`);
         
         return allTeams;
     }
@@ -400,20 +400,20 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 
         let teamsList = await this.getAllTeams();
 
-        this.log.info(`<performance> ${new Date()}: Entering for loop for teams.`);
+        this.log.debug(`<performance> ${new Date()}: Populating teams.`);
         for (let team of teamsList){
             teams.push({ 
                 label: "Team: " + team['fullName'],
                 detail: "Team Id: " + team['id']
             });
         }
-        this.log.info(`<performance> ${new Date()}: Exiting for loop for teams.`);
+        this.log.debug(`<performance> ${new Date()}: Populated teams successfully.`);
 
-        this.log.info(`<performance> ${new Date()}: Selecting a team.`);
+        this.log.debug(`<performance> ${new Date()}: Selecting a team.`);
         await vscode.window.showQuickPick(teams, { placeHolder: 'Choose a team' }).then((team) => {
             chosenTeam = team;
         });
-        this.log.info(`<performance> ${new Date()}: Selected a team.`);
+        this.log.debug(`<performance> ${new Date()}: Selected ${chosenTeam ? chosenTeam : "team undefined"}.`);
         return chosenTeam;
     }
 
@@ -421,20 +421,20 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         let chosenProject: vscode.QuickPickItem | undefined;
         const projects: vscode.QuickPickItem[] = [];
         
-        this.log.info(`<performance> ${new Date()}: Starting for loop for projects.`);
+        this.log.debug(`<performance> ${new Date()}: Populating projects.`);
         projectList.forEach((project) => {
             projects.push({
                 label: "Project: " + project['name']
             });
         }
         );
-        this.log.info(`<performance> ${new Date()}: Exiting for loop for projects.`);
+        this.log.debug(`<performance> ${new Date()}: Populated projects successfully.`);
 
-        this.log.info(`<performance> ${new Date()}: Selecting a project.`);
+        this.log.debug(`<performance> ${new Date()}: Selecting a project.`);
         await vscode.window.showQuickPick(projects, { placeHolder: 'Choose project to bind' }).then((project) => {
             chosenProject = project;
         });
-        this.log.info(`<performance> ${new Date()}: Selected a project.`);
+        this.log.debug(`<performance> ${new Date()}: Selected ${chosenProject ? chosenProject : "project undefined"}.`);
         return chosenProject;
     }
 
@@ -456,9 +456,9 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 chosenTeam.detail = chosenTeam.detail?.replace("Team Id: ", '');
                 let teamId = chosenTeam.detail;
 
-                this.log.info(`<performance> ${new Date()}: Fetching Projects for ${chosenTeam.label}.`);
+                this.log.debug(`<performance> ${new Date()}: Fetching Projects for ${chosenTeam.label} team.`);
                 let projectList = await this.httpClient.getRequest(`projects?teamid=${teamId}`);
-                this.log.info(`<performance> ${new Date()}: Fetched ${projectList.length} Projects.`);
+                this.log.debug(`<performance> ${new Date()}: Fetched ${projectList.length} projects successfully.`);
                 
                 if(projectList && projectList.length > 0) {
                     chosenProject = await this.chooseProjectToBind(projectList);
