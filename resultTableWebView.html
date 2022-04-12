@@ -35,10 +35,16 @@
             $("#oldComment").html(oldComment); 
         }
         function submitComment(){
-            $("#inputCommentForm").css("display","none");
             var inputComment = $("#inputCommentValue").val();
-            $("td.editComment").text(inputComment);
-            $("#inputCommentValue").val("");
+            if(inputComment){
+                $("#inputCommentForm").css("display","none");
+                $("#inputCommentValue").val("");
+                $("td.editComment").text("Updating Comment to '" + inputComment + "'"); 
+            }
+            else{
+                $("#commentValidation").text("Empty comment cannot be submitted.");
+            }
+            
             return inputComment;
         }
         function cancelComment(){
@@ -118,6 +124,7 @@
                     '<textarea id="inputCommentValue" row="6"></textarea><br><br>' +
                     '<input type="submit" id="submitCommentButton" name="submitCommentButton" value="Submit">' +
                     '<input type="submit" id="cancelCommentButton" name="cancelCommentButton" value="Cancel" style="margin-left:20px">' +
+                    '<br><span style="color:orange" id="commentValidation"></span>' + 
                     '<hr>' + 
                     '<div style="text-align: left">' + 
                     '<h3 style="text-align: centre; color:black">Comment History</h3>' + 
@@ -267,13 +274,14 @@
             end = i;
  
             $("#submitCommentButton").click(function(){
-                var oldComment = $("td.editComment").val();
                 var inputComment = submitComment();
-                var pathId = getPathId();
-                $("td.editComment").text("Updating Comment to '" + inputComment + "'");
-                vscode.postMessage({command: 'updateComment', 
+                if(inputComment){
+                    var pathId = getPathId();
+                    vscode.postMessage({command: 'updateComment', 
                                     inputCommentValue: inputComment,
                                     pathId: pathId});
+                }
+                
             });
 
             $("#cancelCommentButton").click(function(){
