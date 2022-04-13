@@ -39,7 +39,7 @@
             if(inputComment){
                 $("#inputCommentForm").css("display","none");
                 $("#inputCommentValue").val("");
-                $("td.editComment").text("Updating Comment to '" + inputComment + "'"); 
+                $("td.editComment").text("Updating Comment to '" + inputComment.replace(/[\r\n]+/g," ") + "'"); 
             }
             else{
                 $("#commentValidation").text("Empty comment cannot be submitted.");

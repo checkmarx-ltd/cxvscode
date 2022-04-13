@@ -340,6 +340,7 @@ export class WebViews {
 			await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
 			for (const nodeIterator of nodes) {
 				if( pathId == nodeIterator.Path[0].$.PathId ) {
+					inputCommentValue = inputCommentValue.replace(/[\r\n]+/g," ");
 					nodeIterator.$.Remark = `New Comment,${inputCommentValue}\r\n${nodeIterator.$.Remark}`;	
 				}
 			}
