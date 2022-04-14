@@ -99,7 +99,7 @@
                     desc.innerHTML = "";
                 } 
                 else {
-                desc.innerHTML=message.description.shortDescription;
+                    desc.innerHTML=message.description.shortDescription;
                 }
             }else{
 
@@ -114,7 +114,7 @@
                 "<html>" +
                 "<head>" +
                 '<meta http-equiv="Content-type" content="text/html;charset=UTF-8">' +
-                "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} #inputCommentForm{display: none;	position: fixed; z-index: 1; padding-top: 100px; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgb(0,0,0); 	background-color: rgba(0,0,0,0.4);} #inputCommentForm-Content {	background-color: #fefefe;margin: auto;	padding: 10px 20px 20px 20px; border: 1px solid #888; width: 50%; overflow-x: auto; white-space: nowrap;} #submitCommentButton {background-color:rgba(29,150,178,0.8); border-radius: 5px; font-size: 15px; color:white; cursor: pointer; padding: 8px 12px 8px 12px; border: none} #cancelCommentButton { border-radius: 5px; font-size: 15px; color:black; cursor: pointer; padding: 8px 12px 8px 12px; border: none} #inputCommentValue {width: 80%; height: 100px; padding: 10px; foxt-size: 10px;} #submitCommentButton:hover { background-color:rgba(29,150,178,1) } #cancelCommentButton:hover { background-color:rgba(192,192,192,0.6) } </style>" +
+                "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} #inputCommentForm{display: none;	position: fixed; z-index: 1; padding-top: 100px; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgb(0,0,0); 	background-color: rgba(0,0,0,0.4);} #inputCommentForm-Content {	background-color: #fefefe;margin: auto;	padding: 10px 20px 20px 20px; border: 1px solid #888; width: 50%; overflow-x: auto; white-space: nowrap;} #submitCommentButton {background-color:rgba(29,150,178,0.8); border-radius: 5px; font-size: 15px; color:white; cursor: pointer; padding: 8px 12px 8px 12px; border: none} #cancelCommentButton { border-radius: 5px; font-size: 15px; color:black; cursor: pointer; padding: 8px 12px 8px 12px; border: none} #inputCommentValue {width: 80%; height: 100px; padding: 10px; foxt-size: 10px;} #submitCommentButton:hover { background-color:rgba(29,150,178,1) } #cancelCommentButton:hover { background-color:rgba(192,192,192,0.6) } input{padding: 5px 5px 5px 5px; border:none} ::placeholder{color: #d0d0d0}</style>" +
 
                 "</head>" +
                 "<body>" +
@@ -182,20 +182,20 @@
                 $("#list").append("<tr>" +
 				"<td> </td>" +
                 "<td> </td>" +
-                "<td><input type='text'  id='id-state' name='resultstate'></td>" +
-                "<td> <input type='text'  id='id-status' name='status'></td>" +
+                "<td><input type='text'  id='id-state' name='resultstate' placeholder='Filter by result state' style='background-color: #979797; color: white'></td>" +
+                "<td> <input type='text'  id='id-status' name='status' placeholder='Filter by status' style='background-color: #979797; color: white'></td>" +
                 "<td> </td>" +
-                "<td> <input type='text'  id='id-srcfolder' name='sourcefolder' placeholder=''></td>" +
-                "<td> <input type='text'  id='id-srcfilename' name='sourcefilename'></td>" +
-                "<td> <input type='text'  id='id-srcline' name='sourceline'></td>" +
-                "<td> <input type='text'  id='id-srcobject' name='sourceobject'></td>" +
-                "<td> <input type='text'  id='id-destfolder' name='destfolder'></td>" +
-                "<td> <input type='text'  id='id-destfilename' name='destfilename'></td>" +
-                "<td> <input type='text'  id='id-destline' name='destline'></td>" +
-                "<td> <input type='text'  id='id-destobject' name='destobject'></td>" +
+                "<td> <input type='text'  id='id-srcfolder' name='sourcefolder' placeholder='Filter by source folder' style='background-color: #979797; color: white'></td>" +
+                "<td> <input type='text'  id='id-srcfilename' name='sourcefilename' placeholder='Filter by source filename' style='background-color: #979797; color: white'></td>" +
+                "<td> <input type='text'  id='id-srcline' name='sourceline' placeholder='Filter by source line' style='background-color: #979797; color: white'></td>" +
+                "<td> <input type='text'  id='id-srcobject' name='sourceobject' placeholder='Filter by source object' style='background-color: #979797; color: white'></td>" +
+                "<td> <input type='text'  id='id-destfolder' name='destfolder' placeholder='Filter destination folder' style='background-color: #979797; color: white'></td>" +
+                "<td> <input type='text'  id='id-destfilename' name='destfilename' placeholder='Filter destination filename' style='background-color: #979797; color: white'></td>" +
+                "<td> <input type='text'  id='id-destline' name='destline' placeholder='Filter by destination line' style='background-color: #979797; color: white'></td>" +
+                "<td> <input type='text'  id='id-destobject' name='destobject' placeholder='Filter by destination object' style='background-color: #979797; color: white'></td>" +
                 "<td> </td>" +
-                "<td> <input type='text'  id='id-assigneduser' name='assigneduser'></td>" +
-                "<td> <input type='text'  id='id-comments' name='comments'></td>" +
+                "<td> <input type='hidden'  id='id-assigneduser' name='assigneduser' style='background-color: #979797; color: white'></td>" +
+                "<td> <input type='hidden'  id='id-comments' name='comments' style='background-color: #979797; color: white'></td>" +
                 "</tr>");
   
             //This area is where api data needs to be fetched
