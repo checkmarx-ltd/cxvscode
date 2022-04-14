@@ -7,6 +7,7 @@ import { SessionStorageService } from './sessionStorageService';
 import { SSOConstants } from '../model/ssoConstant';
 import { LoginChecks } from './loginChecks';
 
+
 export class WebViews {
 
 	public static webViews: WebViews;
@@ -67,18 +68,19 @@ export class WebViews {
 	}
 
 	async queryResultClicked(query: any | undefined) {
-		if (this.resultTablePanel) {
-			let pathId =query.Result[0].Path[0].$.PathId;
+		if (this.resultTablePanel) 
+		{
+			let pathId = query.Result[0].Path[0].$.PathId;
 			try {
 				//to know webview its firstClick message
-				query.mesg="firstClick";
+				query.mesg = "firstClick";
 				var description = await this.httpClient.getRequest(`sast/scans/${this.scanNode.scanId}/results/${pathId}/shortDescription`);
-				query.description=description;
+				query.description = description;
                 
 				} catch (err) {
 					if (err.status == 404) {
 						query.description="";
-						query.mesg="";
+						query.mesg = "";
 						this.log.error('The short description of the result will not be displayed with CxSAST version in use.');
 					}
 			}
@@ -88,6 +90,16 @@ export class WebViews {
 
 			const resultStates: string[] = await this.httpClient.getRequest(`sast/result-states`);
 			query.resultStates = resultStates;
+
+			let usersResponse = await this.httpClient.getRequest(`auth/AssignableUsers`);
+			let usersList: string[] = [];
+			if(usersResponse){
+				for(let user of usersResponse){
+					usersList.push(user.username);
+				}
+				
+			}
+			query.usersList = usersList;
 			this.queryNode = query;
 			this.resultTablePanel.webview.postMessage(query);
 		}
@@ -165,8 +177,13 @@ export class WebViews {
 										case 'onClick':
 											this.updateShortDescriptionForResult(message);
 											return;
+										case 'updateComment':
+											this.updateUserComment(message.inputCommentValue, message.pathId);
+											return;
+										case 'assignUser':
+											this.assignUser(message.assignUser, message.data);
+											return;
 									  }
-
 								}
 							},
 							undefined,
@@ -185,6 +202,47 @@ export class WebViews {
 			this.log.error(err);
 		}
 	}
+
+	//calls server api to update user assigned
+	private async apiCallToUpdateUser(node: any, scanId: any, pathId: any, assignUser:any) {
+		const request = {"userAssignment" : assignUser};
+		try {
+			await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
+			node.$.AssignToUser = `${assignUser}`;
+		} catch (err) {
+			this.log.error(`The following error occurred while updating the user: ${err}`);
+		}
+	}
+
+	private async assignUser(assignUser: any, rows: any) {
+		let scanId= this.scanNode.scanId;
+		let nodes = this.queryNode.Result;
+
+		//loop to fetch pathId of all selected rows one by one.
+		for (let row of rows) {
+			let pathId = row;
+			for (let node of nodes) { 
+				if( pathId == node.Path[0].$.PathId) {
+					await this.apiCallToUpdateUser(node, scanId, pathId, assignUser);	
+				}
+			}
+		}
+
+		//mesg of node query currently open is changed to 'Onchange' fir webview to refresh and display updated value.  
+		let queries:  any[] | undefined;
+		queries = this.scanNode.queries;
+		if(queries) {
+			for (let query of queries) { 
+				if(query.$.id == this.queryNode.$.id && this.resultTablePanel){
+					this.queryNode = query;
+					this.queryNode.mesg='onChange';
+					this.resultTablePanel.webview.postMessage(this.queryNode);
+					break;
+				}
+			}
+		}
+	}
+
 	private async updateShortDescriptionForResult(message: any) {
 		let scanId = this.scanNode.scanId;
 		let pathId = message.path[0].$.PathId;
@@ -271,48 +329,80 @@ export class WebViews {
 		}
 		
 	}
-	private async resultStateChanged(selectedResultState: any, rows: any) {
+	private async updateUserComment(inputCommentValue: any, pathId: any)
+	{
 		let scanId= this.scanNode.scanId;
+		let nodes = this.queryNode.Result;
+		const request = {
+			"comment" : inputCommentValue
+		};
+		try {
+			await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
+			for (const nodeIterator of nodes) {
+				if( pathId == nodeIterator.Path[0].$.PathId ) {
+					inputCommentValue = inputCommentValue.replace(/[\r\n]+/g," ");
+					nodeIterator.$.Remark = `New Comment,${inputCommentValue}\r\n${nodeIterator.$.Remark}`;	
+				}
+			}
+		} catch (err) {
+			if (err.status == 404) {
+				this.log.error('This operation is not supported with CxSAST version in use.');
+			}
+		}
+		
+		let queries:  any[] | undefined;
+		queries = this.scanNode.queries;
+		if(queries) 
+		{
+			for (const queryIterator of queries) {
+				if(queryIterator.$.id == this.queryNode.$.id && this.resultTablePanel)
+				{
+					this.queryNode = queryIterator;
+					this.queryNode.mesg='onChange';
+					this.resultTablePanel.webview.postMessage(this.queryNode);
+					break;
+				}
+			}
+		
+		}	
+	}
+	private async resultStateChanged(selectedResultState: any, rows: any){
+		let scanId = this.scanNode.scanId;
 		let nodes = this.queryNode.Result;
 		//The below for loop updates the result state
 		for (var i = 0; i < rows.length; i++) {
 			var pathId = rows[i];
 			for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) { 
 				if( pathId == nodes[nodeCtr].Path[0].$.PathId) {
-				let state = selectedResultState;
-				let severity = nodes[nodeCtr].$.SeverityIndex;
-				let user = nodes[nodeCtr].$.AssignToUser;
-				const request = {
-					"state" :state,
-					"severity" : severity,
-					"userAssignment" : user,
-					"comment" : "comment"
-				};
-				try {
-				await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
-				} catch (err) {
-					if (err.status == 404) {
-						this.log.error('This operation is not supported with CxSAST version in use.');
-					}
-			}
-				nodes[nodeCtr].$.state = state;
+					let state = selectedResultState;
+					const request = {
+						"state" : state						
+					};
+					try {
+						await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
+						nodes[nodeCtr].$.state = state;						
+					} 
+					catch (err) {
+						if (err.status == 404) {
+							this.log.error('This operation is not supported with CxSAST version in use.');
+						}
+					}	
 				}
-			  }
+			}
 		}
 		this.scanNode.addStatisticsToScanResults();
 		let queries:  any[] | undefined;
 		queries = this.scanNode.queries;
 		if(queries) {
 			for (let queryCtr = 0; queryCtr < queries.length; queryCtr++) { 
-			if(queries[queryCtr].$.id == this.queryNode.$.id && this.resultTablePanel){
-			  this.queryNode = queries[queryCtr];
-			  this.queryNode.mesg='onChange';
-				this.resultTablePanel.webview.postMessage(this.queryNode);
-				break;
-		}
-		}
-	}
-	
+				if(queries[queryCtr].$.id == this.queryNode.$.id && this.resultTablePanel){
+					this.queryNode = queries[queryCtr];
+					this.queryNode.mesg='onChange';
+					this.resultTablePanel.webview.postMessage(this.queryNode);
+					break;
+				}
+			}
+		}	
 	}
 	private getFullSourcePathIfExistsForBoundProject(sastFileName: string): string {
 		const glob = require("glob");

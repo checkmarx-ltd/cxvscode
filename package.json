@@ -2,7 +2,7 @@
 	"name": "cxvscode",
 	"displayName": "CxVSCode",
 	"description": "CxVSCode is a Checkmarx IDE extension that enables scanning/retrieving results on/from Checkmarx CxSAST",
-	"version": "2021.3.1",
+	"version": "2022.1.2",
 	"publisher": "Checkmarx",
 	"icon": "resources/icons/Checkmarx.png",
 	"license": "SEE LICENSE IN checkmarx-license-terms.md",
@@ -356,7 +356,7 @@
 		"vscode-test": "^1.2.2"
 	},
 	"dependencies": {
-		"@checkmarx/cx-common-js-client": "^0.1.57",
+		"@checkmarx/cx-common-js-client": "0.1.57",
 		"aes256": "^1.0.4",
 		"form-data": "^3.0.0",
 		"tmp": "^0.1.0"

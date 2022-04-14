@@ -55,7 +55,6 @@ export class ServerNode implements INode {
         
         this.projectName = '';
         this.teamPath = '';
-
        
         // read bound project, if available
         const cxServerSettings: CxServerSettings = CxSettings.getServer();
@@ -151,36 +150,39 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
     }
 
    
-    public async login() {
-        try {
-                if (this.loginChecks.isLoggedIn()) {
-                    vscode.window.showInformationMessage('You are already logged in!');
-                    return;
-                }
-                let loginMethod = await this.getLoginMethod();
-
-                if (loginMethod === LoginMethods.CREDENTIALS) {
-                    await this.loginWithCredentials();
-                    this.log.info('Login successful');
-                    vscode.window.showInformationMessage('Login successful');
-                    this.storageManager.setValue<string>(SSOConstants.ACCESS_TOKEN, this.httpClient.accessToken);
-
-                    if (this.isBoundToProject()) {
-                        await this.retrieveLatestResults();
-                    }
-                }
-                else {
-                    await this.ssoLogin();
-                }
-                
+    public async login() 
+    {
+        try 
+        {
+            if (this.loginChecks.isLoggedIn()) 
+            {
+                vscode.window.showInformationMessage('You are already logged in!');
+                return;
             }
-        
+            let loginMethod = await this.getLoginMethod();
+
+            if(loginMethod === LoginMethods.CREDENTIALS) 
+            {
+                await this.loginWithCredentials();
+                this.log.info('Login successful');
+                vscode.window.showInformationMessage('Login successful');
+                this.storageManager.setValue<string>(SSOConstants.ACCESS_TOKEN, this.httpClient.accessToken);
+
+                if (this.isBoundToProject()) 
+                {
+                    await this.retrieveLatestResults();
+                }
+            }
+            else 
+            {
+                await this.ssoLogin();
+            }         
+        }    
         catch (err) {
             this.log.error(err);
             vscode.window.showErrorMessage('Login failed');
         }
     }
-
     private async getLoginMethod(): Promise<string> {
         let loginMethod: string;
         if(CxSettings.isEnableUserCredentialsLogin())
@@ -384,65 +386,104 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         return teamsByName;
     }
 
-    private async getAllTeams(): Promise<[Map<number, string>, Map<string, number>]> {
+    private async getAllTeams(): Promise<any[]> {
+        this.log.debug(`<performance> ${new Date()}: Fetching teams. `);
+        let allTeams = await this.httpClient.getRequest('auth/teams');
+        this.log.debug(`<performance> ${new Date()}: Fetched ${allTeams.length} teams successfully.`);
         
-        const allTeams: any[] = await this.httpClient.getRequest('auth/teams');
-        const teamsById: Map<number, string> = new Map<number, string>();
-        const teamsByName: Map<string, number> = new Map<string, number>();
-        allTeams.forEach(team => teamsById.set(team.id, team.fullName));
-        allTeams.forEach(team => teamsByName.set(team.fullName, team.id));
-        return [teamsById, teamsByName];
+        return allTeams;
     }
 
-    
+    private async chooseBindTeam(): Promise<vscode.QuickPickItem | undefined> {
+        let chosenTeam: vscode.QuickPickItem | undefined;
+        const teams: vscode.QuickPickItem[] = [];
 
-    private async chooseProjectToBind(projectList: any[], teamsById: Map<number, string>): Promise<vscode.QuickPickItem | undefined> {
+        let teamsList = await this.getAllTeams();
+
+        this.log.debug(`<performance> ${new Date()}: Populating teams.`);
+        for (let team of teamsList){
+            teams.push({ 
+                label: "Team: " + team['fullName'],
+                detail: "Team Id: " + team['id']
+            });
+        }
+        this.log.debug(`<performance> ${new Date()}: Populated teams successfully.`);
+
+        this.log.debug(`<performance> ${new Date()}: Selecting a team.`);
+        await vscode.window.showQuickPick(teams, { placeHolder: 'Choose a team' }).then((team) => {
+            chosenTeam = team;
+        });
+        this.log.debug(`<performance> ${new Date()}: Selected ${chosenTeam ? chosenTeam : "team undefined"}.`);
+        return chosenTeam;
+    }
+
+    private async chooseProjectToBind(projectList: any[]): Promise<vscode.QuickPickItem | undefined> {
         let chosenProject: vscode.QuickPickItem | undefined;
         const projects: vscode.QuickPickItem[] = [];
-        // let lastScan: any[];
-
+        
+        this.log.debug(`<performance> ${new Date()}: Populating projects.`);
         projectList.forEach((project) => {
-            // lastScan = await this.httpClient.getRequest(`sast/scans?projectId=${project['id']}&last=1`);
             projects.push({
-                label: "project: " + project['name'],
-                detail: "team: " + teamsById.get(project['teamId'])
-                // description: "owner: " + lastScan && lastScan[0] && lastScan[0].owner
+                label: "Project: " + project['name']
             });
         }
         );
+        this.log.debug(`<performance> ${new Date()}: Populated projects successfully.`);
 
+        this.log.debug(`<performance> ${new Date()}: Selecting a project.`);
         await vscode.window.showQuickPick(projects, { placeHolder: 'Choose project to bind' }).then((project) => {
             chosenProject = project;
         });
-
+        this.log.debug(`<performance> ${new Date()}: Selected ${chosenProject ? chosenProject : "project undefined"}.`);
         return chosenProject;
     }
 
-    public async bindProject() {
+    public async bindProject() 
+    {
         let chosenProject: vscode.QuickPickItem | undefined;
+        let chosenTeam: vscode.QuickPickItem | undefined;
         try {
             if (!this.loginChecks.isLoggedIn()) {
                 throw Error('Access token expired. Please login.');
             }
-            const projectList: any[] = await this.httpClient.getRequest('projects');
-            if (projectList && projectList.length > 0) {
-                const [teamsById, teamsByName] = await this.getAllTeams();
-                chosenProject = await this.chooseProjectToBind(projectList, teamsById);
-                if (chosenProject) {
-                    this.log.info('Chosen: ' + chosenProject.label + ', ' + chosenProject.detail);
-                    this.showMessage('Chosen: ' + chosenProject.label + ', ' + chosenProject.detail);
-                    
-                    chosenProject.label = chosenProject.label.replace("project: ", '');
-                    chosenProject.detail = chosenProject.detail?.replace("team: ", '');
-                    const boundProject: any = projectList.find(project => project['name'] === chosenProject?.label && project['teamId'] === teamsByName.get(chosenProject?.detail || ''));
-                    if (boundProject) {
-                        this.currBoundProject = new ProjectNode(boundProject['id'], boundProject['teamId'], boundProject['name']);
-                        await CxSettings.updateBoundProject(this.currBoundProject['id'], this.currBoundProject['teamId'], this.currBoundProject['name']);
-                        await this.retrieveLatestResults();
-                    }
+
+            chosenTeam = await this.chooseBindTeam();
+            
+            if (chosenTeam){
+                this.log.info(`Chosen Team:  ${chosenTeam.label}`);
+                this.showMessage('Chosen ' + chosenTeam.label + ', ' + chosenTeam.detail);
+                chosenTeam.label = chosenTeam.label.replace("Team: ", '');
+                chosenTeam.detail = chosenTeam.detail?.replace("Team Id: ", '');
+                let teamId = chosenTeam.detail;
+
+                this.log.debug(`<performance> ${new Date()}: Fetching Projects for ${chosenTeam.label} team.`);
+                let projectList = await this.httpClient.getRequest(`projects?teamid=${teamId}`);
+                this.log.debug(`<performance> ${new Date()}: Fetched ${projectList.length} projects successfully.`);
+                
+                if(projectList && projectList.length > 0) {
+                    chosenProject = await this.chooseProjectToBind(projectList);
+                    if (chosenProject) {
+                        this.log.info('Chosen ' + chosenProject.label);
+                        this.showMessage('Chosen ' + chosenProject.label + ', Team Id: ' + teamId);
+                        
+                        chosenProject.label = chosenProject.label.replace("Project: ", '');
+                        let chosenProjectName = chosenProject.label;
+                        const boundProject: any = projectList.find( (project: { name: string; }) => project.name === chosenProjectName );
+                        if (boundProject) {
+                            this.currBoundProject = new ProjectNode(boundProject['id'], boundProject['teamId'], boundProject['name']);
+                            await CxSettings.updateBoundProject(this.currBoundProject['id'], this.currBoundProject['teamId'], this.currBoundProject['name']);
+                            await this.retrieveLatestResults();
+                        } 
+                    }  
                 }
-            } else {
-                vscode.window.showErrorMessage('There are no projects to bind to.');
+                else 
+                {
+                    vscode.window.showErrorMessage('There are no projects to bind to.');
+                }
+            }
+            else
+            {
+                vscode.window.showErrorMessage('There are no teams on CxSAST server.');
             }
         } catch (err) {
             this.log.error(err);

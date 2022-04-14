@@ -24,26 +24,49 @@
     </div>
 
     <script>
+        function getPathId(){
+            var commentId = $("td.editComment").attr("id");
+            var rowNumber = commentId.split("-")[1];
+            return $("#pathId-"+rowNumber).html();
+        }
+        function enterComment(){    
+            $("#inputCommentForm").css("display","block");
+            var oldComment = $("td.editComment").html();
+            $("#oldComment").html(oldComment); 
+        }
+        function submitComment(){
+            var inputComment = $("#inputCommentValue").val();
+            if(inputComment){
+                $("#inputCommentForm").css("display","none");
+                $("#inputCommentValue").val("");
+                $("td.editComment").text("Updating Comment to '" + inputComment.replace(/[\r\n]+/g," ") + "'"); 
+            }
+            else{
+                $("#commentValidation").text("Empty comment cannot be submitted.");
+            }
+            
+            return inputComment;
+        }
+        function cancelComment(){
+            $("#commentValidation").text("");
+            $("#inputCommentForm").css("display","none");
+            $("#inputCommentValue").val("");
+        }
         var end = 0;
-        function filterRows(inputValue, column)
-        {
+        function filterRows(inputValue, column){
             var filter, td, textValue, table;
             var rows = end;
             filter = inputValue.toUpperCase();
             table = document.getElementsByTagName("table");
-            for(row = 0 ; row < rows ; row++)
-            {
+            for(row = 0 ; row < rows ; row++){
                 tr = document.getElementById("result" + row);
                 td = tr.getElementsByTagName("td")[column];
-                if(td)
-                {
+                if(td){
                     textValue = td.textContent || td.innerText;
-                    if (textValue.toUpperCase().indexOf(filter) > -1)
-                    {
+                    if (textValue.toUpperCase().indexOf(filter) > -1){
                         tr.style.display = "";
                     } 
-                    else 
-                    {
+                    else {
                         tr.style.display = "none";
                     }
                 }
@@ -76,18 +99,38 @@
                     desc.innerHTML = "";
                 } 
                 else {
-                desc.innerHTML=message.description.shortDescription;
+                    desc.innerHTML=message.description.shortDescription;
                 }
             }else{
+
+                var assignUserDropdownHTML = "<select id='assignUserValue' name='assignUserValue'>";
+                for (i = 0; i < message.usersList.length; i++){
+                    assignUserDropdownHTML += "<option value='" + message.usersList[i] + "'>" + message.usersList[i] + "</option>";
+                }
+                assignUserDropdownHTML +=  "</select>"; 
+
             $("#list").html(
                 "<!DOCTYPE html>" +
                 "<html>" +
                 "<head>" +
                 '<meta http-equiv="Content-type" content="text/html;charset=UTF-8">' +
-                "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} </style>" +
+                "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} #inputCommentForm{display: none;	position: fixed; z-index: 1; padding-top: 100px; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgb(0,0,0); 	background-color: rgba(0,0,0,0.4);} #inputCommentForm-Content {	background-color: #fefefe;margin: auto;	padding: 10px 20px 20px 20px; border: 1px solid #888; width: 50%; overflow-x: auto; white-space: nowrap;} #submitCommentButton {background-color:rgba(29,150,178,0.8); border-radius: 5px; font-size: 15px; color:white; cursor: pointer; padding: 8px 12px 8px 12px; border: none} #cancelCommentButton { border-radius: 5px; font-size: 15px; color:black; cursor: pointer; padding: 8px 12px 8px 12px; border: none} #inputCommentValue {width: 80%; height: 100px; padding: 10px; foxt-size: 10px;} #submitCommentButton:hover { background-color:rgba(29,150,178,1) } #cancelCommentButton:hover { background-color:rgba(192,192,192,0.6) } input{padding: 5px 5px 5px 5px; border:none} ::placeholder{color: #d0d0d0}</style>" +
 
                 "</head>" +
                 "<body>" +
+                '<div id="inputCommentForm">' + 
+		        '<div id="inputCommentForm-Content">' + 
+                    '<p style="color:black; text-align: left; font-size: 20px; font-weight: bold; margin-top: 0px; margin- bottom: 0px">Add Comment</p>' +
+                    '<hr>' +
+                    '<textarea id="inputCommentValue" row="6"></textarea><br><br>' +
+                    '<input type="submit" id="submitCommentButton" name="submitCommentButton" value="Submit">' +
+                    '<input type="submit" id="cancelCommentButton" name="cancelCommentButton" value="Cancel" style="margin-left:20px">' +
+                    '<br><span style="color:orange" id="commentValidation"></span>' + 
+                    '<hr>' + 
+                    '<div style="text-align: left">' + 
+                    '<h3 style="text-align: centre; color:black">Comment History</h3>' + 
+                    '<span style="color:black" id="oldComment"></span></div>' +
+                '</div></div>'+
                 "<span id='header'></span>" +
                 "<table id='innertable'>"
             );
@@ -105,9 +148,13 @@
             for (i = 0; i < message.resultStates.states.length; i = i + 1) {
                 selectHTML += "<option value='" + message.resultStates.states[i].name + "'>" + message.resultStates.states[i].name + "</option>";
             }
-            selectHTML +=  "</select></td> </tr>";
+            selectHTML +=  "</select></td><td></td>";
+            selectHTML += "<td> <select id='assignUserDropDownList'> <option>Assign User</option>";
+            for (i = 0; i < message.usersList.length; i++){
+                selectHTML += "<option value='" + message.usersList[i] + "'>" + message.usersList[i] + "</option>";
+                }
+            selectHTML +=  "</select></td></tr>";
             $("#list").append(selectHTML);
-			
 
             //This is the fontend change area
             $("#list").append("<tr>" +
@@ -130,38 +177,60 @@
                 "</tr>");
 				
 			if (message.mesg=="firstClick"){
-            vscode.postMessage({ path: message.Result[0].Path ,mesg: "firstTime",clickedRow:0});
+            vscode.postMessage({ path: message.Result[0].Path, mesg: "firstTime",clickedRow:0});
             }
                 $("#list").append("<tr>" +
 				"<td> </td>" +
                 "<td> </td>" +
-                "<td><input type='text'  id='id-state' name='resultstate'></td>" +
-                "<td> <input type='text'  id='id-status' name='status'></td>" +
+                "<td><input type='text'  id='id-state' name='resultstate' placeholder='Filter by result state' style='background-color: #979797; color: white'></td>" +
+                "<td> <input type='text'  id='id-status' name='status' placeholder='Filter by status' style='background-color: #979797; color: white'></td>" +
                 "<td> </td>" +
-                "<td> <input type='text'  id='id-srcfolder' name='sourcefolder'></td>" +
-                "<td> <input type='text'  id='id-srcfilename' name='sourcefilename'></td>" +
-                "<td> <input type='text'  id='id-srcline' name='sourceline'></td>" +
-                "<td> <input type='text'  id='id-srcobject' name='sourceobject'></td>" +
-                "<td> <input type='text'  id='id-destfolder' name='destfolder'></td>" +
-                "<td> <input type='text'  id='id-destfilename' name='destfilename'></td>" +
-                "<td> <input type='text'  id='id-destline' name='destline'></td>" +
-                "<td> <input type='text'  id='id-destobject' name='destobject'></td>" +
+                "<td> <input type='text'  id='id-srcfolder' name='sourcefolder' placeholder='Filter by source folder' style='background-color: #979797; color: white'></td>" +
+                "<td> <input type='text'  id='id-srcfilename' name='sourcefilename' placeholder='Filter by source filename' style='background-color: #979797; color: white'></td>" +
+                "<td> <input type='text'  id='id-srcline' name='sourceline' placeholder='Filter by source line' style='background-color: #979797; color: white'></td>" +
+                "<td> <input type='text'  id='id-srcobject' name='sourceobject' placeholder='Filter by source object' style='background-color: #979797; color: white'></td>" +
+                "<td> <input type='text'  id='id-destfolder' name='destfolder' placeholder='Filter destination folder' style='background-color: #979797; color: white'></td>" +
+                "<td> <input type='text'  id='id-destfilename' name='destfilename' placeholder='Filter destination filename' style='background-color: #979797; color: white'></td>" +
+                "<td> <input type='text'  id='id-destline' name='destline' placeholder='Filter by destination line' style='background-color: #979797; color: white'></td>" +
+                "<td> <input type='text'  id='id-destobject' name='destobject' placeholder='Filter by destination object' style='background-color: #979797; color: white'></td>" +
                 "<td> </td>" +
-                "<td> <input type='text'  id='id-assigneduser' name='assigneduser'></td>" +
-                "<td> <input type='text'  id='id-comments' name='comments'></td>" +
+                "<td> <input type='hidden'  id='id-assigneduser' name='assigneduser' style='background-color: #979797; color: white'></td>" +
+                "<td> <input type='hidden'  id='id-comments' name='comments' style='background-color: #979797; color: white'></td>" +
                 "</tr>");
-
-             
-
+  
             //This area is where api data needs to be fetched
             var i = 0;
             message.Result.forEach(result => {
                 const pathNodeLength = result.Path[0].PathNode.length;
                 var srcFileName = String(result.Path[0].PathNode[0].FileName);
                 var destFileName = String(result.Path[0].PathNode[pathNodeLength-1].FileName);
+                var comments = String(result.$.Remark).split(/\r?\n/);
+                var comment0 = '', comment1 = '',comment2 = '',comment3 = '',comment4 = '';
+                
+                if(typeof comments[0] != "undefined"){
+                    const [first0, ...rest0] = comments[0].split(",");
+                    comment0 = rest0;
+                }
+                if(typeof comments[1] != "undefined"){
+                    const [first1, ...rest1] = comments[1].split(",");
+                    comment1 = rest1;
+                }
+                if(typeof comments[2] != "undefined"){
+                    const [first2, ...rest2] = comments[2].split(",");
+                    comment2 = rest2;
+                }
+                if(typeof comments[3] != "undefined"){
+                    const [first3, ...rest3] = comments[3].split(",");
+                    comment3 = rest3;
+                }
+                if(typeof comments[4] != "undefined"){
+                    const [first4, ...rest4] = comments[4].split(",");
+                    comment4 = rest4;
+                }
+            
                 $("#list").append("<tr style='cursor:pointer; vertical-align:top'" + " id='result" + i + "' >" +
 					"<td class='check'> <input type ='checkbox' id= 'checkbox-"+i+ "'name = 'querySelected' value = '"+result.Path[0].$.PathId+"'>"+"</td>"+
-                    "<td class='id'>" + result.Path[0].$.PathId + "</td>" +
+                    "<td class='id' id='pathId-" + i + "'>" + result.Path[0].$.PathId + "</td>" +
                     "<td class='state'>" + stateDictionary[result.$.state] + "</td>" +
                     "<td class='status'>" + result.$.Status + "</td>" +
                     "<td class='name'>" + message.$.name + "</td>" +
@@ -174,10 +243,16 @@
                     "<td class='destinationline'>" + result.Path[0].PathNode[pathNodeLength-1].Line + "</td>" +
                     "<td class='destinationobject'>" + result.Path[0].PathNode[pathNodeLength-1].Name + "</td>" +
                     "<td class='severity'>" + result.$.Severity + "</td>" +
-                    "<td class='assigneduser'>" + result.$.AssignToUser + "</td>" +
-                    "<td class='comments'>" + result.$.Remark + "</td>" +
+                    "<td id='user-" + i + "'>" + result.$.AssignToUser + "</td>" + 
+                    "<td style='text-align: left' id='comment-" + i + "'>" + 
+                        "<span>" + comment0  + "</span><br>" +
+                        "<span>" + comment1 + "</span><br>" +
+                        "<span>" + comment2 + "</span><br>" +
+                        "<span>" + comment3 + "</span><br>" +
+                        "<span>" + comment4 + "</span><br>" 
                     + "</tr>");
 
+                
                 $("#result" + 0).addClass("selec");
 
                 var resultValue = $("#result" + i);
@@ -185,11 +260,34 @@
                     $(".selec").removeClass("selec");
                     resultValue.addClass("selec");
                     vscode.postMessage({ path: result.Path,command: "onClick",clickedRow: i}); // Node was clicked, send it back
+                });    
+
+                $("#comment-"+0).addClass("editComment");
+                var commentClick = $("#comment-" + i);
+                commentClick.on('click', function(){
+                    $(".editComment").removeClass("editComment");
+                    commentClick.addClass("editComment");
+                    enterComment();
                 });
 
                 i++;
             });
             end = i;
+ 
+            $("#submitCommentButton").click(function(){
+                var inputComment = submitComment();
+                if(inputComment){
+                    var pathId = getPathId();
+                    vscode.postMessage({command: 'updateComment', 
+                                    inputCommentValue: inputComment,
+                                    pathId: pathId});
+                }
+                
+            });
+
+            $("#cancelCommentButton").click(function(){
+                cancelComment();
+            });
 
             $("#id-state").keyup(function() {
                 var input = $('#id-state').val();
@@ -242,6 +340,15 @@
                 var input = $('#id-comments').val();
                 filterRows(input, 15);
             });
+            //On change  of assign user dropdown, selected rows are fetched and posts a message to typescript function.
+            $('#assignUserDropDownList').on('change', function() {
+                var selectedAssignUser = $('#assignUserDropDownList option:selected').val();
+                var selectedQueryNodes = [];
+                $.each($("input[name='querySelected']:checked"), function () {
+                    selectedQueryNodes.push($(this).val());
+                });
+                vscode.postMessage({command: 'assignUser', assignUser: selectedAssignUser, data: selectedQueryNodes});
+                });
 
 			$('#resultStateDropDownList').on('change', function() {
                 var selectedResultState = $('#resultStateDropDownList option:selected').val();
