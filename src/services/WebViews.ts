@@ -183,6 +183,9 @@ export class WebViews {
 										case 'assignUser':
 											this.assignUser(message.assignUser, message.data);
 											return;
+										case 'bulkComments':
+											this.addBulkComments(message.bulkComment, message.data);
+											return;
 									  }
 								}
 							},
@@ -200,6 +203,46 @@ export class WebViews {
 				});
 		} catch (err) {
 			this.log.error(err);
+		}
+	}
+
+	private async apiCallToUpdateComment(node: any, scanId: any, pathId: any, comment:any) {
+		const request = {"comment" : comment};
+		try {
+			await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
+			comment = comment.replace(/[\r\n]+/g," ");
+			node.$.Remark = `New Comment,${comment}\r\n${node.$.Remark}`;	
+		} catch (err) {
+			this.log.error(`The following error occurred while updating the user: ${err}`);
+		}
+	}
+
+	private async addBulkComments(comment: any, rows: any) {
+		let scanId= this.scanNode.scanId;
+		let nodes = this.queryNode.Result;
+
+		//loop to fetch pathId of all selected rows one by one.
+		for (let row of rows) {
+			let pathId = row;
+			for (let node of nodes) { 
+				if( pathId == node.Path[0].$.PathId) {
+					await this.apiCallToUpdateComment(node, scanId, pathId, comment);	
+				}
+			}
+		}
+
+		//mesg of node query currently open is changed to 'Onchange' fir webview to refresh and display updated value.  
+		let queries:  any[] | undefined;
+		queries = this.scanNode.queries;
+		if(queries) {
+			for (let query of queries) { 
+				if(query.$.id == this.queryNode.$.id && this.resultTablePanel){
+					this.queryNode = query;
+					this.queryNode.mesg='onChange';
+					this.resultTablePanel.webview.postMessage(this.queryNode);
+					break;
+				}
+			}
 		}
 	}
 
