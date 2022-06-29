@@ -172,7 +172,10 @@ export class WebViews {
 								if(this.resultTablePanel) {
 									switch (message.command) {
 										case 'resultstateChangeEvent':
-											this.resultStateChanged(message.resultStateTobeChange,  message.data);
+											if(message.bulkComment)
+												this.resultStateChanged(message.bulkComment, message.resultStateTobeChange, message.data);
+											else
+												this.resultStateChanged('', message.resultStateTobeChange, message.data);
 										 	 return;
 										case 'onClick':
 											this.updateShortDescriptionForResult(message);
@@ -409,21 +412,21 @@ export class WebViews {
 		
 		}	
 	}
-	private async resultStateChanged(selectedResultState: any, rows: any){
+	private async resultStateChanged(bulkComment: any, selectedResultState: any, rows: any){
 		let scanId = this.scanNode.scanId;
 		let nodes = this.queryNode.Result;
+
+		const request = bulkComment === '' ? {"state" : selectedResultState} : {"state" : selectedResultState,"comment" : bulkComment};
 		//The below for loop updates the result state
 		for (var i = 0; i < rows.length; i++) {
 			var pathId = rows[i];
 			for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) { 
 				if( pathId == nodes[nodeCtr].Path[0].$.PathId) {
-					let state = selectedResultState;
-					const request = {
-						"state" : state						
-					};
+					
 					try {
 						await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
-						nodes[nodeCtr].$.state = state;						
+						nodes[nodeCtr].$.state = selectedResultState;	
+						nodes[nodeCtr].$.Remark = bulkComment === '' ? nodes[nodeCtr].$.Remark  : `New Comment,${bulkComment}\r\n${nodes[nodeCtr].$.Remark}`;					
 					} 
 					catch (err) {
 						if (err.status == 404) {

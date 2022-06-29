@@ -24,6 +24,7 @@
     </div>
 
     <script>
+        var mandatoryComment = false;
         function getPathId(){
             var commentId = $("td.editComment").attr("id");
             var rowNumber = commentId.split("-")[1];
@@ -327,12 +328,20 @@
 
             $("#bulkSubmitCommentButton").click(function(){
                 var bulkInputComment = bulkSubmitComment();
-                if(bulkInputComment){
+                if(bulkInputComment)
+                {
                     var selectedQueryNodes = [];
                     $.each($("input[name='querySelected']:checked"), function () {
                         selectedQueryNodes.push($(this).val());
                     });
-                    vscode.postMessage({command: 'bulkComments', bulkComment: bulkInputComment, data: selectedQueryNodes});
+                    if(mandatoryComment){
+                        var selectedResultState = $('#resultStateDropDownList option:selected').val();
+                        selectedResultState = stateOrdinalDictionary[selectedResultState];
+                        vscode.postMessage({command: 'resultstateChangeEvent', bulkComment: bulkInputComment, resultStateTobeChange: selectedResultState, data: selectedQueryNodes});
+                    }
+                    else{
+                        vscode.postMessage({command: 'bulkComments', bulkComment: bulkInputComment, data: selectedQueryNodes});
+                    }
                 }
                 
             });
@@ -414,18 +423,20 @@
                 vscode.postMessage({command: 'assignUser', assignUser: selectedAssignUser, data: selectedQueryNodes});
                 });
 
-			$('#resultStateDropDownList').on('change', function() {
+			$('#resultStateDropDownList').on('change', function() 
+            {
                 var selectedResultState = $('#resultStateDropDownList option:selected').val();
                 selectedResultState = stateOrdinalDictionary[selectedResultState];
                 var selectedQueryNodes = [];
-                $.each($("input[name='querySelected']:checked"), function () {
-                    selectedQueryNodes.push($(this).val());
-                   
-                });
-                
-                vscode.postMessage({command: 'resultstateChangeEvent',
-                                    resultStateTobeChange: selectedResultState, 
-                                    data: selectedQueryNodes});
+                $.each($("input[name='querySelected']:checked"), function () 
+                    {
+                        selectedQueryNodes.push($(this).val());
+                    });
+
+                if(mandatoryComment)
+                    bulkEnterComment();
+                else              
+                    vscode.postMessage({command: 'resultstateChangeEvent', resultStateTobeChange: selectedResultState, data: selectedQueryNodes});
                 });
 				
             $("#list").append("</table></body></html>");
