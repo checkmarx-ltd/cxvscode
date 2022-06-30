@@ -6,6 +6,7 @@ import { ScanNode } from '../model/ScanNode';
 import { SessionStorageService } from './sessionStorageService';
 import { SSOConstants } from '../model/ssoConstant';
 import { LoginChecks } from './loginChecks';
+import { CxSettings } from "./CxSettings";
 
 
 export class WebViews {
@@ -99,6 +100,7 @@ export class WebViews {
 				}
 				
 			}
+			query.mandatoryComment = CxSettings.getMandatoryCommentFlag();
 			query.usersList = usersList;
 			this.queryNode = query;
 			this.resultTablePanel.webview.postMessage(query);
@@ -416,6 +418,8 @@ export class WebViews {
 		let scanId = this.scanNode.scanId;
 		let nodes = this.queryNode.Result;
 
+		let mandatoryComment = CxSettings.getMandatoryCommentFlag();
+
 		const request = bulkComment === '' ? {"state" : selectedResultState} : {"state" : selectedResultState,"comment" : bulkComment};
 		//The below for loop updates the result state
 		for (var i = 0; i < rows.length; i++) {
@@ -431,6 +435,11 @@ export class WebViews {
 					catch (err) {
 						if (err.status == 404) {
 							this.log.error('This operation is not supported with CxSAST version in use.');
+						}
+						if(err.response.body.messageCode == 49797)
+						{
+							this.log.error("A mandatory comment is required while updating result state flag.");
+							this.queryNode.mandatoryCommentErrorMessage = "Set mandatory comment flag in extension settings to update result state flag.";
 						}
 					}	
 				}

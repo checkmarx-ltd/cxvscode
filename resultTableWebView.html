@@ -24,7 +24,6 @@
     </div>
 
     <script>
-        var mandatoryComment = false;
         function getPathId(){
             var commentId = $("td.editComment").attr("id");
             var rowNumber = commentId.split("-")[1];
@@ -123,6 +122,7 @@
                     desc.innerHTML=message.description.shortDescription;
                 }
             }else{
+                var mandatoryComment = message.mandatoryComment;
 
                 var assignUserDropdownHTML = "<select id='assignUserValue' name='assignUserValue'>";
                 for (i = 0; i < message.usersList.length; i++){
@@ -173,6 +173,8 @@
             } else {
                 descHtml = message.description.shortDescription;
             }
+            if(message.mandatoryCommentErrorMessage)
+                $("#list").append("<tr><td id ='mandCom' colspan='16' style='text-align:left; color:red'> "+ message.mandatoryCommentErrorMessage +"</td></tr>");
             $("#list").append("<tr><td id ='desc' colspan='16'> "+descHtml+"</td></tr>");
             $("#list").append("<table>");
 			var selectHTML = "<tr style='background:rgba(29,150,178,1)'><td>" +"<select id='resultStateDropDownList'>";
