@@ -14,6 +14,7 @@ const CX_FILE_EXTENSIONS: string = 'cx.fileExtensions';
 const CX_REPORT_PATH: string = 'cx.reportPath';
 const CX_ENABLE_USER_CREDENTIALS_LOGIN: string = 'cx.enableUserCredentialsLogin';
 const CX_SSL_CERT_PATH: string = 'cx.sslCertificatePath';
+const CX_ENABLE_MANDATORY_COMMENT_ON_RESULT_STATE_CHANGE: string = 'cx.mandatoryComment';
 
 export interface CxServerSettings {
     url: string;
@@ -193,6 +194,24 @@ export class CxSettings {
         else {
             return DEFAULT_FILE_EXTENSIONS;
         }
+    }
+
+    /**
+     * Stores mandatory comment in the settings.json
+     *
+     * @param isEnableMandatoryComment flag represents Mandatory Comment
+     */
+     public static async updateMandatoryCommentFlag(isEnableMandatoryComment: boolean) {
+        await vscode.workspace.getConfiguration().update(CX_ENABLE_MANDATORY_COMMENT_ON_RESULT_STATE_CHANGE, isEnableMandatoryComment);
+    }
+
+    /**
+     * Returns the current value of cx.folderExclusions setting
+     *
+     * @returns Folder exclusions as string
+     */
+    public static getMandatoryCommentFlag(): boolean {
+        return vscode.workspace.getConfiguration().get(CX_ENABLE_MANDATORY_COMMENT_ON_RESULT_STATE_CHANGE) as boolean;
     }
 
     public static async updateReportPath(reportPath: string) {
