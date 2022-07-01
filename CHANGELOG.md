@@ -1,4 +1,4 @@
-## 2020.3.1
+## 2022.3.1
 
 * First release generally available
 * Bind an existing project for scan
@@ -16,3 +16,7 @@
 * Unbind project
 * Silent mode - controls the amount of popup messages displayed to the user
 * Config as Code for selected attributes
+* Filter result table rows 
+* Change Result state of selected vulnerabilities along with adding comment on change
+* Assign user to selected vulnerabilities 
+* Add comment(s) to selected vulnerabilities
