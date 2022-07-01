@@ -436,9 +436,10 @@ export class WebViews {
 						if (err.status == 404) {
 							this.log.error('This operation is not supported with CxSAST version in use.');
 						}
+						//in case sast server flag is true but extension flag is false then updating result state throws error response with 49797 code. This if block tackles the error response.
 						if(err.response.body.messageCode == 49797)
 						{
-							this.log.error("A mandatory comment is required while updating result state flag.");
+							this.log.error("A comment is required while updating result state flag.");
 							this.queryNode.mandatoryCommentErrorMessage = "Set mandatory comment flag in extension settings to update result state flag.";
 						}
 					}	
