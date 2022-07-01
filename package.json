@@ -100,6 +100,10 @@
 				"cx.sslCertificatePath": {
 					"type": "string",
 					"description": "SSL certificate path."
+				},
+				"cx.mandatoryComment": {
+					"type": "boolean",
+					"description": "Enable Mandatory Comment for plugin for change in result state."
 				}
 			}
 		},

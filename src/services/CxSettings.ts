@@ -201,7 +201,7 @@ export class CxSettings {
      *
      * @param isEnableMandatoryComment flag represents Mandatory Comment
      */
-     public static async updateMandatoryCommentFlag(isEnableMandatoryComment: string) {
+     public static async updateMandatoryCommentFlag(isEnableMandatoryComment: boolean) {
         await vscode.workspace.getConfiguration().update(CX_ENABLE_MANDATORY_COMMENT_ON_RESULT_STATE_CHANGE, isEnableMandatoryComment);
     }
 
