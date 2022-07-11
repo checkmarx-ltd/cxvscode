@@ -15,8 +15,7 @@
 </head>
 
 <body>
-    <div style="text-align: center; ">
-       
+    <div style="text-align: center; ">     
         <table style="text-align: center;">
             <tbody id="list" class="list" style="text-align: center;">
             </tbody>
@@ -33,7 +32,7 @@
             $("#bulkInputCommentForm").css("display","block");
         }
         function bulkSubmitComment(){
-            var bulkInputComment = $("#bulkInputCommentValue").val();
+            var bulkInputComment = $("#bulkInputCommentValue").val();           
             if(bulkInputComment){
                 $("#bulkInputCommentForm").css("display","none");
                 $("#bulkInputCommentValue").val("");
@@ -45,8 +44,9 @@
             return bulkInputComment;
         }
         function enterComment(){    
-            $("#inputCommentForm").css("display","block");
-            var oldComment = $("td.editComment").html();
+            $("#inputCommentForm").css("display","block");              
+            var edit = $("td.editComment").find('img').css("display","none");            
+            var oldComment = $("td.editComment").html();            
             $("#oldComment").html(oldComment); 
         }
         function submitComment(){
@@ -55,6 +55,7 @@
                 $("#inputCommentForm").css("display","none");
                 $("#inputCommentValue").val("");
                 $("td.editComment").text("Updating Comment to '" + inputComment.replace(/[\r\n]+/g," ") + "'"); 
+                $("td.editComment").find('img').css("display","block");   
             }
             else{
                 $("#commentValidation").text("Empty comment cannot be submitted.");
@@ -70,7 +71,8 @@
         function cancelComment(){
             $("#commentValidation").text("");
             $("#inputCommentForm").css("display","none");
-            $("#inputCommentValue").val("");
+            $("#inputCommentValue").val("");  
+            $("td.editComment").find('img').css("display","block");          
         }
         var end = 0;
         function filterRows(inputValue, column){
@@ -178,7 +180,7 @@
             $("#list").append("<tr><td id ='desc' colspan='16'> "+descHtml+"</td></tr>");
             $("#list").append("<table>");
 			var selectHTML = "<tr style='background:rgba(29,150,178,1)'><td>" +"<select id='resultStateDropDownList'>";
-                selectHTML = selectHTML + "<option>Result State</option>";
+                selectHTML = selectHTML + "<option value=''>Result State</option>";
             for (i = 0; i < message.resultStates.states.length; i = i + 1) {
                 selectHTML += "<option value='" + message.resultStates.states[i].name + "'>" + message.resultStates.states[i].name + "</option>";
             }
@@ -335,13 +337,19 @@
                     var selectedQueryNodes = [];
                     $.each($("input[name='querySelected']:checked"), function () {
                         selectedQueryNodes.push($(this).val());
-                    });
+                    });                                       
                     if(mandatoryComment){
                         var selectedResultState = $('#resultStateDropDownList option:selected').val();
+                        
+                        if(selectedResultState != ''){                            
                         selectedResultState = stateOrdinalDictionary[selectedResultState];
                         vscode.postMessage({command: 'resultstateChangeEvent', bulkComment: bulkInputComment, resultStateTobeChange: selectedResultState, data: selectedQueryNodes});
+                        }
+                        else{                          
+                        vscode.postMessage({command: 'bulkComments', bulkComment: bulkInputComment, data: selectedQueryNodes});
+                        }
                     }
-                    else{
+                    else{                        
                         vscode.postMessage({command: 'bulkComments', bulkComment: bulkInputComment, data: selectedQueryNodes});
                     }
                 }

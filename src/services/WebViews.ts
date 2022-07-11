@@ -78,7 +78,7 @@ export class WebViews {
 				var description = await this.httpClient.getRequest(`sast/scans/${this.scanNode.scanId}/results/${pathId}/shortDescription`);
 				query.description = description;
                 
-				} catch (err) {
+				} catch (err) {					
 					if (err.status == 404) {
 						query.description="";
 						query.mesg = "";
@@ -143,7 +143,9 @@ export class WebViews {
 					}
 				});
 		} catch (err) {
-			this.log.error(err);
+			if (err instanceof Error) {
+			this.log.error(err.message);
+			}
 		}
 	}
 
@@ -207,7 +209,9 @@ export class WebViews {
 					}
 				});
 		} catch (err) {
-			this.log.error(err);
+			if (err instanceof Error) {
+			this.log.error(err.message);
+			}
 		}
 	}
 
@@ -215,8 +219,8 @@ export class WebViews {
 		const request = {"comment" : comment};
 		try {
 			await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
-			comment = comment.replace(/[\r\n]+/g," ");
-			node.$.Remark = `New Comment,${comment}\r\n${node.$.Remark}`;	
+			comment = comment.replace(/[\r\n]+/g," ");			
+			node.$.Remark = `New Comment,${comment}\r\n${node.$.Remark}`;			
 		} catch (err) {
 			this.log.error(`The following error occurred while updating the user: ${err}`);
 		}
@@ -452,7 +456,7 @@ export class WebViews {
 		if(queries) {
 			for (let queryCtr = 0; queryCtr < queries.length; queryCtr++) { 
 				if(queries[queryCtr].$.id == this.queryNode.$.id && this.resultTablePanel){
-					this.queryNode = queries[queryCtr];
+					this.queryNode = queries[queryCtr];			
 					this.queryNode.mesg='onChange';
 					this.resultTablePanel.webview.postMessage(this.queryNode);
 					break;
