@@ -176,7 +176,7 @@
                 descHtml = message.description.shortDescription;
             }
             if(message.mandatoryCommentErrorMessage)
-                $("#list").append("<tr><td id ='mandCom' colspan='16' style='text-align:left; color:red'> "+ message.mandatoryCommentErrorMessage +"</td></tr>");
+                $("#list").append("<tr><td id ='mandCom' colspan='16' style='text-align:left; color:#FF3333'> "+ message.mandatoryCommentErrorMessage +"</td></tr>");
             $("#list").append("<tr><td id ='desc' colspan='16'> "+descHtml+"</td></tr>");
             $("#list").append("<table>");
 			var selectHTML = "<tr style='background:rgba(29,150,178,1)'><td>" +"<select id='resultStateDropDownList'>";

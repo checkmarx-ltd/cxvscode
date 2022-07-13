@@ -444,7 +444,7 @@ export class WebViews {
 						if(err.response.body.messageCode == 49797)
 						{
 							this.log.error("A comment is required while updating result state flag.");
-							this.queryNode.mandatoryCommentErrorMessage = "Set mandatory comment flag in extension settings to update result state flag.";
+							this.queryNode.mandatoryCommentErrorMessage = "Checkmarx SAST Server mandates comments while changing state of vulnerabilities. Enable 'Mandatory Comments' setting in Extension settings in Visual Source Code.";
 						}
 					}	
 				}
