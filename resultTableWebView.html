@@ -15,8 +15,7 @@
 </head>
 
 <body>
-    <div style="text-align: center; ">
-       
+    <div style="text-align: center; ">     
         <table style="text-align: center;">
             <tbody id="list" class="list" style="text-align: center;">
             </tbody>
@@ -29,9 +28,25 @@
             var rowNumber = commentId.split("-")[1];
             return $("#pathId-"+rowNumber).html();
         }
+        function bulkEnterComment(){
+            $("#bulkInputCommentForm").css("display","block");
+        }
+        function bulkSubmitComment(){
+            var bulkInputComment = $("#bulkInputCommentValue").val();           
+            if(bulkInputComment){
+                $("#bulkInputCommentForm").css("display","none");
+                $("#bulkInputCommentValue").val("");
+                //$("td.editComment").text("Updating Comment to '" + inputComment.replace(/[\r\n]+/g," ") + "'"); 
+            }
+            else{
+                $("#bulkCommentValidation").text("Empty comment cannot be submitted.");
+            } 
+            return bulkInputComment;
+        }
         function enterComment(){    
-            $("#inputCommentForm").css("display","block");
-            var oldComment = $("td.editComment").html();
+            $("#inputCommentForm").css("display","block");              
+            var edit = $("td.editComment").find('img').css("display","none");            
+            var oldComment = $("td.editComment").html();            
             $("#oldComment").html(oldComment); 
         }
         function submitComment(){
@@ -40,6 +55,7 @@
                 $("#inputCommentForm").css("display","none");
                 $("#inputCommentValue").val("");
                 $("td.editComment").text("Updating Comment to '" + inputComment.replace(/[\r\n]+/g," ") + "'"); 
+                $("td.editComment").find('img').css("display","block");   
             }
             else{
                 $("#commentValidation").text("Empty comment cannot be submitted.");
@@ -47,10 +63,16 @@
             
             return inputComment;
         }
+        function bulkCancelComment(){
+            $("#bulkCommentValidation").text("");
+            $("#bulkInputCommentForm").css("display","none");
+            $("#bulkInputCommentValue").val("");
+        }
         function cancelComment(){
             $("#commentValidation").text("");
             $("#inputCommentForm").css("display","none");
-            $("#inputCommentValue").val("");
+            $("#inputCommentValue").val("");  
+            $("td.editComment").find('img').css("display","block");          
         }
         var end = 0;
         function filterRows(inputValue, column){
@@ -102,6 +124,7 @@
                     desc.innerHTML=message.description.shortDescription;
                 }
             }else{
+                var mandatoryComment = message.mandatoryComment;
 
                 var assignUserDropdownHTML = "<select id='assignUserValue' name='assignUserValue'>";
                 for (i = 0; i < message.usersList.length; i++){
@@ -114,7 +137,7 @@
                 "<html>" +
                 "<head>" +
                 '<meta http-equiv="Content-type" content="text/html;charset=UTF-8">' +
-                "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} #inputCommentForm{display: none;	position: fixed; z-index: 1; padding-top: 100px; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgb(0,0,0); 	background-color: rgba(0,0,0,0.4);} #inputCommentForm-Content {	background-color: #fefefe;margin: auto;	padding: 10px 20px 20px 20px; border: 1px solid #888; width: 50%; overflow-x: auto; white-space: nowrap;} #submitCommentButton {background-color:rgba(29,150,178,0.8); border-radius: 5px; font-size: 15px; color:white; cursor: pointer; padding: 8px 12px 8px 12px; border: none} #cancelCommentButton { border-radius: 5px; font-size: 15px; color:black; cursor: pointer; padding: 8px 12px 8px 12px; border: none} #inputCommentValue {width: 80%; height: 100px; padding: 10px; foxt-size: 10px;} #submitCommentButton:hover { background-color:rgba(29,150,178,1) } #cancelCommentButton:hover { background-color:rgba(192,192,192,0.6) } input{padding: 5px 5px 5px 5px; border:none} ::placeholder{color: #d0d0d0}</style>" +
+                "<style>table{border-collapse:collapse; white-space: nowrap;}table,td,th{border:1px dotted #ccc; padding:5px;}th {background:rgba(29,150,178,1)} .selec {background:#444; color:#fff} select{border:none;} #inputCommentForm{display: none;	position: fixed; z-index: 1; padding-top: 100px; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgb(0,0,0); 	background-color: rgba(0,0,0,0.4);} #inputCommentForm-Content {	background-color: #fefefe;margin: auto;	padding: 10px 20px 20px 20px; border: 1px solid #888; width: 50%; overflow-x: auto; white-space: nowrap;} #submitCommentButton {background-color:rgba(29,150,178,0.8); border-radius: 5px; font-size: 15px; color:white; cursor: pointer; padding: 8px 12px 8px 12px; border: none} #cancelCommentButton { border-radius: 5px; font-size: 15px; color:black; cursor: pointer; padding: 8px 12px 8px 12px; border: none} #inputCommentValue {width: 80%; height: 100px; padding: 10px; foxt-size: 10px;} #submitCommentButton:hover { background-color:rgba(29,150,178,1) } #cancelCommentButton:hover { background-color:rgba(192,192,192,0.6) }  #bulkInputCommentForm{display: none;	position: fixed; z-index: 1; padding-top: 100px; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgb(0,0,0); 	background-color: rgba(0,0,0,0.4);} #bulkInputCommentForm-Content {	background-color: #fefefe;margin: auto;	padding: 10px 20px 20px 20px; border: 1px solid #888; width: 50%; overflow-x: auto; white-space: nowrap;} #bulkSubmitCommentButton {background-color:rgba(29,150,178,0.8); border-radius: 5px; font-size: 15px; color:white; cursor: pointer; padding: 8px 12px 8px 12px; border: none} #bulkCancelCommentButton { border-radius: 5px; font-size: 15px; color:black; cursor: pointer; padding: 8px 12px 8px 12px; border: none} #bulkInputCommentValue {width: 80%; height: 100px; padding: 10px; foxt-size: 10px;} #bulkSubmitCommentButton:hover { background-color:rgba(29,150,178,1) } #bulkCancelCommentButton:hover { background-color:rgba(192,192,192,0.6) } input{padding: 5px 5px 5px 5px; border:none} ::placeholder{color: #d0d0d0}</style>" +
 
                 "</head>" +
                 "<body>" +
@@ -131,6 +154,17 @@
                     '<h3 style="text-align: centre; color:black">Comment History</h3>' + 
                     '<span style="color:black" id="oldComment"></span></div>' +
                 '</div></div>'+
+                '<div id="bulkInputCommentForm">' + 
+		        '<div id="bulkInputCommentForm-Content">' + 
+                    '<p style="color:black; text-align: left; font-size: 20px; font-weight: bold; margin-top: 0px; margin- bottom: 0px">Add Comment</p>' +
+                    '<hr>' +
+                    '<textarea id="bulkInputCommentValue" row="6"></textarea><br><br>' +
+                    '<input type="submit" id="bulkSubmitCommentButton" name="bulkSubmitCommentButton" value="Submit">' +
+                    '<input type="submit" id="bulkCancelCommentButton" name="bulkCancelCommentButton" value="Cancel" style="margin-left:20px">' +
+                    '<br><span style="color:orange" id="bulkCommentValidation"></span>' + 
+                    '<hr>' + 
+                    '<div style="text-align: left">' +
+                '</div></div>'+
                 "<span id='header'></span>" +
                 "<table id='innertable'>"
             );
@@ -141,10 +175,12 @@
             } else {
                 descHtml = message.description.shortDescription;
             }
+            if(message.mandatoryCommentErrorMessage)
+                $("#list").append("<tr><td id ='mandCom' colspan='16' style='text-align:left; color:#FF3333'> "+ message.mandatoryCommentErrorMessage +"</td></tr>");
             $("#list").append("<tr><td id ='desc' colspan='16'> "+descHtml+"</td></tr>");
             $("#list").append("<table>");
 			var selectHTML = "<tr style='background:rgba(29,150,178,1)'><td>" +"<select id='resultStateDropDownList'>";
-                selectHTML = selectHTML + "<option>Result State</option>";
+                selectHTML = selectHTML + "<option value=''>Result State</option>";
             for (i = 0; i < message.resultStates.states.length; i = i + 1) {
                 selectHTML += "<option value='" + message.resultStates.states[i].name + "'>" + message.resultStates.states[i].name + "</option>";
             }
@@ -153,7 +189,8 @@
             for (i = 0; i < message.usersList.length; i++){
                 selectHTML += "<option value='" + message.usersList[i] + "'>" + message.usersList[i] + "</option>";
                 }
-            selectHTML +=  "</select></td></tr>";
+            selectHTML +=  "</select></td>";
+            selectHTML += "<td id='bulkComments'style='font-weight: bold'>Add Comment(s)</td></tr>";
             $("#list").append(selectHTML);
 
             //This is the fontend change area
@@ -245,7 +282,7 @@
                     "<td class='severity'>" + result.$.Severity + "</td>" +
                     "<td id='user-" + i + "'>" + result.$.AssignToUser + "</td>" + 
                     "<td style='text-align: left' id='comment-" + i + "'>" + 
-                        "<span>" + comment0  + "</span><br>" +
+                        "<span>" + comment0  + "</span><img id='penEditor-" + i + "' width='15' height='15' align='right'/><br>" +
                         "<span>" + comment1 + "</span><br>" +
                         "<span>" + comment2 + "</span><br>" +
                         "<span>" + comment3 + "</span><br>" +
@@ -262,9 +299,13 @@
                     vscode.postMessage({ path: result.Path,command: "onClick",clickedRow: i}); // Node was clicked, send it back
                 });    
 
+                $("#penEditor-"+i).attr('src','https://img.icons8.com/office/344/edit.png');
+
+
                 $("#comment-"+0).addClass("editComment");
                 var commentClick = $("#comment-" + i);
-                commentClick.on('click', function(){
+                var editClick = $("#penEditor-" + i);
+                editClick.on('click', function(){
                     $(".editComment").removeClass("editComment");
                     commentClick.addClass("editComment");
                     enterComment();
@@ -287,6 +328,36 @@
 
             $("#cancelCommentButton").click(function(){
                 cancelComment();
+            });
+
+            $("#bulkSubmitCommentButton").click(function(){
+                var bulkInputComment = bulkSubmitComment();
+                if(bulkInputComment)
+                {
+                    var selectedQueryNodes = [];
+                    $.each($("input[name='querySelected']:checked"), function () {
+                        selectedQueryNodes.push($(this).val());
+                    });                                       
+                    if(mandatoryComment){
+                        var selectedResultState = $('#resultStateDropDownList option:selected').val();
+                        
+                        if(selectedResultState != ''){                            
+                        selectedResultState = stateOrdinalDictionary[selectedResultState];
+                        vscode.postMessage({command: 'resultstateChangeEvent', bulkComment: bulkInputComment, resultStateTobeChange: selectedResultState, data: selectedQueryNodes});
+                        }
+                        else{                          
+                        vscode.postMessage({command: 'bulkComments', bulkComment: bulkInputComment, data: selectedQueryNodes});
+                        }
+                    }
+                    else{                        
+                        vscode.postMessage({command: 'bulkComments', bulkComment: bulkInputComment, data: selectedQueryNodes});
+                    }
+                }
+                
+            });
+
+            $("#bulkCancelCommentButton").click(function(){
+                bulkCancelComment();
             });
 
             $("#id-state").keyup(function() {
@@ -340,6 +411,18 @@
                 var input = $('#id-comments').val();
                 filterRows(input, 15);
             });
+
+            $("#bulkComments").hover(function(){
+                $("#bulkComments").css('cursor','pointer');
+                $("#bulkComments").css('background-color','rgba(57,141,255,0.8)');
+            }, function(){
+                $("#bulkComments").css('background-color','rgba(29,150,178,1)');
+            });
+
+            $("#bulkComments").on('click', function(){
+                bulkEnterComment(); 
+            });
+
             //On change  of assign user dropdown, selected rows are fetched and posts a message to typescript function.
             $('#assignUserDropDownList').on('change', function() {
                 var selectedAssignUser = $('#assignUserDropDownList option:selected').val();
@@ -350,18 +433,20 @@
                 vscode.postMessage({command: 'assignUser', assignUser: selectedAssignUser, data: selectedQueryNodes});
                 });
 
-			$('#resultStateDropDownList').on('change', function() {
+			$('#resultStateDropDownList').on('change', function() 
+            {
                 var selectedResultState = $('#resultStateDropDownList option:selected').val();
                 selectedResultState = stateOrdinalDictionary[selectedResultState];
                 var selectedQueryNodes = [];
-                $.each($("input[name='querySelected']:checked"), function () {
-                    selectedQueryNodes.push($(this).val());
-                   
-                });
-                
-                vscode.postMessage({command: 'resultstateChangeEvent',
-                                    resultStateTobeChange: selectedResultState, 
-                                    data: selectedQueryNodes});
+                $.each($("input[name='querySelected']:checked"), function () 
+                    {
+                        selectedQueryNodes.push($(this).val());
+                    });
+
+                if(mandatoryComment)
+                    bulkEnterComment();
+                else              
+                    vscode.postMessage({command: 'resultstateChangeEvent', resultStateTobeChange: selectedResultState, data: selectedQueryNodes});
                 });
 				
             $("#list").append("</table></body></html>");

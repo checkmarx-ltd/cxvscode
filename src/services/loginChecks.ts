@@ -63,8 +63,10 @@ export class LoginChecks  {
             /* Setting access token in context */ 
             this.storageManager.setValue<string>(SSOConstants.ACCESS_TOKEN, access_token);
         }catch (err) {
-            this.log.error(err);
+            if (err instanceof Error) {
+            this.log.error(err.message);
             vscode.window.showErrorMessage('Login failed - Not able to get access token from refresh token.');
+            }
         }
         
     }

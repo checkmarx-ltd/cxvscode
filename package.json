@@ -1,8 +1,8 @@
 {
 	"name": "cxvscode",
-	"displayName": "CxVSCode",
-	"description": "CxVSCode is a Checkmarx IDE extension that enables scanning/retrieving results on/from Checkmarx CxSAST",
-	"version": "2022.2.1",
+	"displayName": "Checkmarx SAST 9.x",
+	"description": "Checkmarx SAST 9.x is a Checkmarx IDE extension that enables scanning/retrieving results on/from Checkmarx CxSAST",
+	"version": "2022.3.2",
 	"publisher": "Checkmarx",
 	"icon": "resources/icons/Checkmarx.png",
 	"license": "SEE LICENSE IN checkmarx-license-terms.md",
@@ -100,6 +100,10 @@
 				"cx.sslCertificatePath": {
 					"type": "string",
 					"description": "SSL certificate path."
+				},
+				"cx.mandatoryComment": {
+					"type": "boolean",
+					"description": "This will make providing comments mandatory while changing result state of vulnerabilitie(s)."
 				}
 			}
 		},
@@ -352,7 +356,7 @@
 		"glob": "^7.1.6",
 		"mocha": "^7.1.1",
 		"tslint": "^5.20.0",
-		"typescript": "^3.6.4",
+		"typescript": "^4.3.2",
 		"vscode-test": "^1.2.2"
 	},
 	"dependencies": {
