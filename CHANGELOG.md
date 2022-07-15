@@ -1,4 +1,4 @@
-## 2022.3.1
+## 2022.3.3
 
 * Comment can be added to more than one vulnerability row at a time. 
   To do this, select checkboxes in front of each row where comment is to be  added and click the comment button.

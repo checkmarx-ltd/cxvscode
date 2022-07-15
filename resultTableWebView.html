@@ -25,8 +25,13 @@
 
     <script>
         function getPathId(){
-            var commentId = $("td.editComment").attr("id");
-            var rowNumber = commentId.split("-")[1];
+            if(!$("td").hasClass("editComment")){
+                $("td").addClass("editComment");
+            }            
+            var commentId = $("td.editComment").attr("id"); 
+            var encodeCommentId = encodeURI(commentId);                       
+            var rowNumber = encodeCommentId.split("-")[1];
+            //return $("#pathId-"+rowNumber).html();                        
             return $("#pathId-"+rowNumber).html();
         }
         function bulkEnterComment(){
@@ -47,8 +52,9 @@
         function enterComment(){    
             $("#inputCommentForm").css("display","block");              
             var edit = $("td.editComment").find('img').css("display","none");            
-            var oldComment = $("td.editComment").html();            
-            $("#oldComment").html(oldComment); 
+            var oldComment = $("td.editComment").html();   
+            var decodeHTML = encodeURI(oldComment);         
+            $("#oldComment").html(decodeURI(decodeHTML)); 
         }
         function submitComment(){
             var inputComment = $("#inputCommentValue").val();
