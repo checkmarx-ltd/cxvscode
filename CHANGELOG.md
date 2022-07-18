@@ -1,18 +1,6 @@
-## 2020.3.1
+## 2022.3.3
 
-* First release generally available
-* Bind an existing project for scan
-* Create a new project for scan
-* Execute CxSAST scan
-* Retrieve CxSAST results of scanned source code
-* Show vulnerabilities on Result Table and Attack Vector views
-* Save CxSAST scan report to external JSON file
-* Show vulnerability query description
-* Retrieve last scan results of bound project (without running a scan)
-* Ability to disable 'Scan Any File/Folder' buttons
-* Login - support credentials and SSO methods
-* Support incremental/full scans
-* Support Private/Public Scans
-* Unbind project
-* Silent mode - controls the amount of popup messages displayed to the user
-* Config as Code for selected attributes
+* Comment can be added to more than one vulnerability row at a time. 
+  To do this, select checkboxes in front of each row where comment is to be  added and click the comment button.
+* Edit icon image has added on each row. Clicking on this will bring up comment dialog. Functional      aspect of comment feature remains same for one vulnerability row.  
+* Plugin contains new settings to enable mandatory comment feature from the plugin side as well. 

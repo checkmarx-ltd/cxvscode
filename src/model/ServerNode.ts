@@ -685,13 +685,35 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 isIncremental: isIncremental,
                 presetId,
                 presetName,
-                scanTimeoutInMinutes: undefined,
+                scanTimeoutInMinutes: 120,
                 comment: '',
                 enablePolicyViolations: false,
                 vulnerabilityThreshold: false,
                 forceScan: false,
-                isPublic: !isPrivate
+                isPublic: !isPrivate,
+                postScanActionName: "",
+                postScanActionId: -1,
+                avoidDuplicateProjectScans:false,
+                projectCustomFields: "",
+                customFields: "",
+                failBuildForNewVulnerabilitiesEnabled: false,
+                failBuildForNewVulnerabilitiesSeverity: "",
+                generatePDFReport: false,
+                overrideProjectSettings: false,
+                // This gets used only in ADO plugin. adding here to resolve compileation issue.
+                cacert_chainFilePath: ""
             };
+
+            let proxyResult: ProxyConfig ={
+                proxyHost: '',
+                proxyPass:  '',
+                proxyPort: '',
+                proxyUser:  '',
+                proxyUrl:  '',
+                sastProxyUrl: '',
+                scaProxyUrl: '',
+                resolvedProxyUrl: ''
+    };
 
             const config: ScanConfig = {
                 sourceLocation: sourceLocation,
@@ -703,7 +725,8 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 cxOriginUrl: '',
                 enableDependencyScan: false,
                 enableSastScan: true,
-                sastConfig: sastConfig
+                sastConfig: sastConfig,
+                proxyConfig: proxyResult
             };
 
             this.format(config, sastConfig);

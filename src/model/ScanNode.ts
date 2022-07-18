@@ -192,7 +192,7 @@ Scan results location:  ${this.scanResult.sastScanResultsLink}
         if (!CxSettings.isQuiet()) {
             vscode.window.showInformationMessage(`Writing report to ${jsonReportPath}`);
         }
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             fs.writeFile(jsonReportPath, reportJson, err => {
                 if (err) {
                     reject(err);
