@@ -15,4 +15,4 @@ The Checkmarx SAST 9.x extension provides:
 * Edit icon image has added on each row. Clicking on this will bring up comment dialog. Functional   aspect of comment feature remains same for one vulnerability row.  
 * Plugin contains new settings to enable mandatory commnet feature from the plugin side as well. 
 
-To learn more about the Checkmarx SAST 9.x IDE extension features and capabilities, please refer to [Visual Studio Code Extension Page](https://checkmarx.atlassian.net/wiki/spaces/SD/pages/1760952772/Visual+Studio+Code+Extension+Plugin)
+To learn more about the Checkmarx SAST 9.x IDE extension features and capabilities, please refer to [Visual Studio Code Extension Page](https://checkmarx.com/resource/documents/en/34965-8128-visual-studio-code-extension-plugin.html)
