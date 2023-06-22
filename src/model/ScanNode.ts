@@ -49,9 +49,10 @@ export class ScanNode implements INode {
 
     public getTreeItem(isPortalTree:boolean): vscode.TreeItem {
         return {
-            label: this.chooseLabelName(),
+            label: this.queries || isPortalTree ? this.chooseLabelName() : this.chooseLabelName() + " (0 Vulnarability)",
             collapsibleState: this.queries && !isPortalTree ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
             contextValue: "scan_node",
+            tooltip : this.chooseLabelName(),
             iconPath: {
                 "light": path.join(__filename, "..", "..", "..", "resources", "icons", "light", "open-preview.svg"),
                 "dark": path.join(__filename, "..", "..", "..", "resources", "icons", "dark", "open-preview.svg")

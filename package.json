@@ -306,7 +306,7 @@
 				},
 				{
 					"command": "cxscanswin.saveReport",
-					"when": "view == cxscanswin && viewItem == scan_node",
+					"when": "view == cxscanswin && viewItem == scan_node && showSaveReport",
 					"group": "inline"
 				},
 				{
