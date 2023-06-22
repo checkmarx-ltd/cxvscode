@@ -47,10 +47,10 @@ export class ScanNode implements INode {
         return result;
     }
 
-    public getTreeItem(): vscode.TreeItem {
+    public getTreeItem(isPortalTree:boolean): vscode.TreeItem {
         return {
             label: this.chooseLabelName(),
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            collapsibleState: this.queries && !isPortalTree ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
             contextValue: "scan_node",
             iconPath: {
                 "light": path.join(__filename, "..", "..", "..", "resources", "icons", "light", "open-preview.svg"),

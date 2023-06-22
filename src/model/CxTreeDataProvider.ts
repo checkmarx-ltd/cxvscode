@@ -101,7 +101,7 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
 
     // Get Tree Item (Node)
     public getTreeItem(element: INode): Promise<vscode.TreeItem> | vscode.TreeItem {
-        return element.getTreeItem();
+        return element.getTreeItem(true);
     }
 
     // Get Children of Item (Nodes)
