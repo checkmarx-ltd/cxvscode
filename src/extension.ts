@@ -114,7 +114,7 @@ if(CxSettings.isWorkspaceOnlyScanEnabled()) {
 		await serverNode.unbindProject();
 		cxTreeDataProvider.refresh(serverNode);
 	}));
-	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.retrieveScanResults", async (scanNode: ScanNode) => {
+	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.clickToRetrieveScanResults", async (scanNode: ScanNode) => {
 		if (scanNode.parentNode.isLoggedIn()) {
 			// remove any entries that contain (potentially stale) results
 			if (context.subscriptions.length > numOfContextSubsForCxPortalWin) {

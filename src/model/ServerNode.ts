@@ -553,7 +553,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 
     public displayCurrentScanedSource() {
         if (this.currentScanedSource) {
-            vscode.commands.executeCommand("cxportalwin.retrieveScanResults", this.currentScanedSource);
+            vscode.commands.executeCommand("cxportalwin.clickToRetrieveScanResults", this.currentScanedSource);
         }
     }
 

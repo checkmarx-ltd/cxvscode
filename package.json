@@ -213,27 +213,11 @@
 				}
 			},
 			{
-				"command": "cxportalwin.retrieveScanResults",
-				"title": "Retrieve Scan Results",
-				"icon": {
-					"light": "resources/icons/light/search.svg",
-					"dark": "resources/icons/dark/search.svg"
-				}
-			},
-			{
 				"command": "cxscanswin.saveReport",
 				"title": "Save Report",
 				"icon": {
 					"light": "resources/icons/light/go-to-file.svg",
 					"dark": "resources/icons/dark/go-to-file.svg"
-				}
-			},
-			{
-				"command": "cxscanswin.seeQueryResults",
-				"title": "See Query Results",
-				"icon": {
-					"light": "resources/icons/light/search.svg",
-					"dark": "resources/icons/dark/search.svg"
 				}
 			},
 			{
@@ -300,18 +284,8 @@
 					"group": "inline"
 				},
 				{
-					"command": "cxportalwin.retrieveScanResults",
-					"when": "view == cxportalwin && viewItem == scan_node",
-					"group": "inline"
-				},
-				{
 					"command": "cxscanswin.saveReport",
 					"when": "view == cxscanswin && viewItem == scan_node && showSaveReport",
-					"group": "inline"
-				},
-				{
-					"command": "cxscanswin.seeQueryResults",
-					"when": "view == cxscanswin && viewItem == query_node",
 					"group": "inline"
 				},
 				{
