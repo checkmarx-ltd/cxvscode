@@ -438,6 +438,10 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         return chosenProject;
     }
 
+    private reverseProjectList(list: []) {
+        return list ? list.reverse() : list;
+    }
+
     public async bindProject() 
     {
         let chosenProject: vscode.QuickPickItem | undefined;
@@ -458,7 +462,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 
                 this.log.debug(`<performance> ${new Date()}: Fetching Projects for ${chosenTeam.label} team.`);
                 let projectList = await this.httpClient.getRequest(`projects?teamid=${teamId}`);
-                projectList = projectList.reverse();
+                this.reverseProjectList(projectList);
 
                 this.log.debug(`<performance> ${new Date()}: Fetched ${projectList.length} projects successfully.`);
                 
