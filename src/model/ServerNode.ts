@@ -458,6 +458,10 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 
                 this.log.debug(`<performance> ${new Date()}: Fetching Projects for ${chosenTeam.label} team.`);
                 let projectList = await this.httpClient.getRequest(`projects?teamid=${teamId}`);
+                if(projectList != null && projectList != undefined && projectList.length > 0) {
+                    projectList = projectList.reverse();
+                }
+                console.log("projectList :" , projectList)
                 this.log.debug(`<performance> ${new Date()}: Fetched ${projectList.length} projects successfully.`);
                 
                 if(projectList && projectList.length > 0) {
