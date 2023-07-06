@@ -458,7 +458,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 
                 this.log.debug(`<performance> ${new Date()}: Fetching Projects for ${chosenTeam.label} team.`);
                 let projectList = await this.httpClient.getRequest(`projects?teamid=${teamId}`);
-                projectList = projectList ? projectList.reverse() : projectList;
+                projectList = projectList.reverse();
 
                 this.log.debug(`<performance> ${new Date()}: Fetched ${projectList.length} projects successfully.`);
                 
