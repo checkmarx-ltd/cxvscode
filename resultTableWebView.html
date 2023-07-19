@@ -312,7 +312,11 @@
                 $("#comment-"+0).addClass("editComment");
                 var commentClick = $("#comment-" + i);
                 var editClick = $("#penEditor-" + i);
-                editClick.on('click', function(){
+                $(editClick).hover(function(){
+                    $(editClick).css('cursor','default');
+                });
+                editClick.on('click', function(e){
+                    e.stopPropagation();
                     $(".editComment").removeClass("editComment");
                     commentClick.addClass("editComment");
                     enterComment();
