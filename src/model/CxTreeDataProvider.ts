@@ -138,9 +138,16 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
         context.subscriptions.push(vscode.commands.registerCommand("cxscanswin.saveReport", async (scanNode: ScanNode) => {
             await scanNode.attachJsonReport();
         }));
-        context.subscriptions.push(vscode.commands.registerCommand("cxscanswin.seeQueryResults", (queryNode: QueryNode) => {
+
+        context.subscriptions.push(vscode.commands.registerCommand("cxscanswin.clickQueryNode", (queryNode: QueryNode) => {
             WebViews.webViews.queryResultClicked(queryNode.query);
         }));
+
+        context.subscriptions.push(vscode.commands.registerCommand("cxscanswin.clickNodeIfNoVulnarability", (queryNode: QueryNode) => {
+            this.log.info("There are no vulnerabilities");
+            vscode.window.showInformationMessage("There are no vulnerabilities");
+        }));
+		
         context.subscriptions.push(vscode.commands.registerCommand("cxscanswin.showQueryDescription", async (queryNode: QueryNode) => {
             await WebViews.webViews.createQueryDescriptionWebView(queryNode.query?.$.id);
         }));
