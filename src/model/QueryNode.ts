@@ -9,10 +9,10 @@ export class QueryNode implements INode {
         public parentNode: SeverityNode) {
     }
 
-    public getTreeItem(): vscode.TreeItem {
+    public getTreeItem(isPortalTree:boolean): vscode.TreeItem {
         return {
             label: this.query?.$.name + " (" + this.query?.Result.length + " found)",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
             contextValue: "query_node",
             iconPath: {
                 "light": Utility.getIconPerSeverity(this.query?.$.Severity, "light"),

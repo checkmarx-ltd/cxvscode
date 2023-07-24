@@ -101,7 +101,7 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
 
     // Get Tree Item (Node)
     public getTreeItem(element: INode): Promise<vscode.TreeItem> | vscode.TreeItem {
-        return element.getTreeItem();
+        return element.getTreeItem(true);
     }
 
     // Get Children of Item (Nodes)
@@ -128,6 +128,13 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     public async createTreeScans(context: vscode.ExtensionContext, element: ScanNode) {
         const cxTreeDataScans = new CxTreeScans(context, element, this.log);
         context.subscriptions.push(vscode.window.registerTreeDataProvider("cxscanswin", cxTreeDataScans));
+     
+        if(element.queries) {
+            vscode.commands.executeCommand('setContext', 'showSaveReport', true);
+        } else {
+            vscode.commands.executeCommand('setContext', 'showSaveReport', false);
+        }
+
         context.subscriptions.push(vscode.commands.registerCommand("cxscanswin.saveReport", async (scanNode: ScanNode) => {
             await scanNode.attachJsonReport();
         }));

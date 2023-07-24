@@ -9,8 +9,8 @@ export class SeverityNode implements INode {
     constructor(public readonly severityName: string, public queries: any[] | undefined, public parentNode: ScanNode) {
     }
 
-    public getTreeItem(): vscode.TreeItem {
-        return {
+    public getTreeItem(isPortalTree :boolean): vscode.TreeItem {
+            return {
             label: this.severityName,
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             contextValue: "severity_node",

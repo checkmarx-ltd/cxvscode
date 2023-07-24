@@ -33,7 +33,7 @@ export class CxTreeScans implements vscode.TreeDataProvider<INode> {
 
     // Get Tree Item (Node)
     public getTreeItem(element: INode): Promise<vscode.TreeItem> | vscode.TreeItem {
-        return element.getTreeItem();
+        return element.getTreeItem(false);
     }
 
     public async getChildren(element?: INode): Promise<INode[]> {
