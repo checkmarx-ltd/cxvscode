@@ -111,6 +111,7 @@ if(CxSettings.isWorkspaceOnlyScanEnabled()) {
 		cxTreeDataProvider.refresh(serverNode);
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.unbindProject", async (serverNode: ServerNode) => {
+		await cxTreeDataProvider.destroyTreeScans(context);
 		await serverNode.unbindProject();
 		cxTreeDataProvider.refresh(serverNode);
 	}));

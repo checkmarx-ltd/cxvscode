@@ -9,6 +9,7 @@ import { CxTreeScans } from './CxTreeScans';
 import { WebViews } from "../services/WebViews";
 import { QueryNode } from './QueryNode';
 import { SSOUriHandler } from '../services/SSOUriHandler';
+import { EmptyCxTreeScans } from "./EmptyCxTreeScans";
 
 export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     public _onDidChangeTreeData: vscode.EventEmitter<INode> = new vscode.EventEmitter<INode>();
@@ -123,6 +124,11 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
         if (Object.entries(server).length > 0) {
             this.serverNodes.push(new ServerNodeTreeItem(server.url, server.alias, this.log,this.vsCodeContext));
         }
+    }
+
+    public async destroyTreeScans(context: vscode.ExtensionContext) {
+        const emptyCxTreeDataScans = new EmptyCxTreeScans(context, this.log);
+        context.subscriptions.push(vscode.window.registerTreeDataProvider("cxscanswin", emptyCxTreeDataScans));
     }
 
     public async createTreeScans(context: vscode.ExtensionContext, element: ScanNode) {
