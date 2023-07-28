@@ -219,7 +219,7 @@ table-layout: fixed;
             }
             if(message.mandatoryCommentErrorMessage)
                 $("#list").append("<tr><td id ='mandCom' colspan='16' style='text-align:left; color:#FF3333'> "+ message.mandatoryCommentErrorMessage +"</td></tr>");
-            $("#list").append("<tr><td id ='desc' colspan='16' style='max-width: 1200px;white-space: initial;'> "+descHtml+"</td></tr>");
+            $("#list").append("<tr><td id ='desc' colspan='16' style='max-width: 1200px;text-align: left !important;padding-left: 10px !important;white-space: initial;'> "+descHtml+"</td></tr>");
             $("#list").append("<table >");
 			var selectHTML = "<tr style='background:rgba(29,150,178,1)'><td colspan='4'>" +"<select id='resultStateDropDownList'>";
                 selectHTML = selectHTML + "<option value=''>Result State</option>";
