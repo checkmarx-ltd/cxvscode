@@ -140,6 +140,8 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
         }));
 
         context.subscriptions.push(vscode.commands.registerCommand("cxscanswin.clickQueryNode", (queryNode: QueryNode) => {
+            WebViews.webViews.destroyWebViews();
+            WebViews.webViews.createWebViews(context);
             WebViews.webViews.queryResultClicked(queryNode.query);
         }));
 

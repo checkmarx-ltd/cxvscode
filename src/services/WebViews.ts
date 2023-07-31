@@ -316,7 +316,7 @@ export class WebViews {
 		}
 	}
 
-	private createWebViews(context: vscode.ExtensionContext) {
+	public createWebViews(context: vscode.ExtensionContext) {
 		// Creating three panel editors for the web views
 		vscode.commands.executeCommand('vscode.setEditorLayout', {
 			orientation: 1, groups: [
