@@ -47,6 +47,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.logout", async (serverNode: ServerNode) => {
 
 		await serverNode.logout();
+		await cxTreeDataProvider.destroyTreeScans(context);
 		cxTreeDataProvider.refresh(serverNode);
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.scanFile", async (serverNode: ServerNode) => {
@@ -112,6 +113,7 @@ if(CxSettings.isWorkspaceOnlyScanEnabled()) {
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.unbindProject", async (serverNode: ServerNode) => {
 		await serverNode.unbindProject();
+		await cxTreeDataProvider.destroyTreeScans(context);
 		cxTreeDataProvider.refresh(serverNode);
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cxportalwin.clickToRetrieveScanResults", async (scanNode: ScanNode) => {
