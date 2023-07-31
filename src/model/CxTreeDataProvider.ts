@@ -128,6 +128,7 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
 
     public async destroyTreeScans(context: vscode.ExtensionContext) {
         const emptyCxTreeDataScans = new EmptyCxTreeScans();
+        WebViews.webViews.destroyWebViews();
         context.subscriptions.push(vscode.window.registerTreeDataProvider("cxscanswin", emptyCxTreeDataScans));
     }
 
