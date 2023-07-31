@@ -9,6 +9,7 @@ import { CxTreeScans } from './CxTreeScans';
 import { WebViews } from "../services/WebViews";
 import { QueryNode } from './QueryNode';
 import { SSOUriHandler } from '../services/SSOUriHandler';
+import { EmptyCxTreeScans } from "./EmptyCxTreeScans";
 
 export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
     public _onDidChangeTreeData: vscode.EventEmitter<INode> = new vscode.EventEmitter<INode>();
@@ -101,7 +102,7 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
 
     // Get Tree Item (Node)
     public getTreeItem(element: INode): Promise<vscode.TreeItem> | vscode.TreeItem {
-        return element.getTreeItem();
+        return element.getTreeItem(true);
     }
 
     // Get Children of Item (Nodes)
@@ -125,15 +126,37 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
         }
     }
 
+    public async destroyTreeScans(context: vscode.ExtensionContext) {
+        const emptyCxTreeDataScans = new EmptyCxTreeScans();
+        WebViews.webViews.destroyWebViews();
+        context.subscriptions.push(vscode.window.registerTreeDataProvider("cxscanswin", emptyCxTreeDataScans));
+    }
+
     public async createTreeScans(context: vscode.ExtensionContext, element: ScanNode) {
         const cxTreeDataScans = new CxTreeScans(context, element, this.log);
         context.subscriptions.push(vscode.window.registerTreeDataProvider("cxscanswin", cxTreeDataScans));
+     
+        if(element.queries) {
+            vscode.commands.executeCommand('setContext', 'showSaveReport', true);
+        } else {
+            vscode.commands.executeCommand('setContext', 'showSaveReport', false);
+        }
+
         context.subscriptions.push(vscode.commands.registerCommand("cxscanswin.saveReport", async (scanNode: ScanNode) => {
             await scanNode.attachJsonReport();
         }));
-        context.subscriptions.push(vscode.commands.registerCommand("cxscanswin.seeQueryResults", (queryNode: QueryNode) => {
+
+        context.subscriptions.push(vscode.commands.registerCommand("cxscanswin.clickQueryNode", (queryNode: QueryNode) => {
+            WebViews.webViews.destroyWebViews();
+            WebViews.webViews.createWebViews(context);
             WebViews.webViews.queryResultClicked(queryNode.query);
         }));
+
+        context.subscriptions.push(vscode.commands.registerCommand("cxscanswin.clickNodeIfNoVulnarability", (queryNode: QueryNode) => {
+            this.log.info("There are no vulnerabilities");
+            vscode.window.showInformationMessage("There are no vulnerabilities");
+        }));
+		
         context.subscriptions.push(vscode.commands.registerCommand("cxscanswin.showQueryDescription", async (queryNode: QueryNode) => {
             await WebViews.webViews.createQueryDescriptionWebView(queryNode.query?.$.id);
         }));

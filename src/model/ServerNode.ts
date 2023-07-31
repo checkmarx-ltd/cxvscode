@@ -438,6 +438,10 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
         return chosenProject;
     }
 
+    private reverseProjectList(list: []) {
+        return list ? list.reverse() : list;
+    }
+
     public async bindProject() 
     {
         let chosenProject: vscode.QuickPickItem | undefined;
@@ -458,6 +462,8 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 
                 this.log.debug(`<performance> ${new Date()}: Fetching Projects for ${chosenTeam.label} team.`);
                 let projectList = await this.httpClient.getRequest(`projects?teamid=${teamId}`);
+                this.reverseProjectList(projectList);
+
                 this.log.debug(`<performance> ${new Date()}: Fetched ${projectList.length} projects successfully.`);
                 
                 if(projectList && projectList.length > 0) {
@@ -553,7 +559,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 
     public displayCurrentScanedSource() {
         if (this.currentScanedSource) {
-            vscode.commands.executeCommand("cxportalwin.retrieveScanResults", this.currentScanedSource);
+            vscode.commands.executeCommand("cxportalwin.clickToRetrieveScanResults", this.currentScanedSource);
         }
     }
 

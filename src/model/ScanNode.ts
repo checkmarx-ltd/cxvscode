@@ -47,11 +47,27 @@ export class ScanNode implements INode {
         return result;
     }
 
-    public getTreeItem(): vscode.TreeItem {
-        return {
-            label: this.chooseLabelName(),
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+    public getTreeItem(isPortalTree:boolean): vscode.TreeItem {
+        var command = {
+            command: isPortalTree ?  "cxportalwin.clickToRetrieveScanResults": "cxscanswin.clickNodeIfNoVulnarability",
+            title: "",
+            arguments:[this]
+        };
+        return (!isPortalTree && this.queries) ?  {
+            label:  this.chooseLabelName(),
+            collapsibleState: this.queries && !isPortalTree ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
             contextValue: "scan_node",
+            tooltip : this.chooseLabelName(),
+            iconPath: {
+                "light": path.join(__filename, "..", "..", "..", "resources", "icons", "light", "open-preview.svg"),
+                "dark": path.join(__filename, "..", "..", "..", "resources", "icons", "dark", "open-preview.svg")
+            }
+        } : {
+            label:  this.chooseLabelName(),
+            collapsibleState: this.queries && !isPortalTree ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
+            contextValue: "scan_node",
+            command : command,
+            tooltip : this.chooseLabelName(),
             iconPath: {
                 "light": path.join(__filename, "..", "..", "..", "resources", "icons", "light", "open-preview.svg"),
                 "dark": path.join(__filename, "..", "..", "..", "resources", "icons", "dark", "open-preview.svg")
