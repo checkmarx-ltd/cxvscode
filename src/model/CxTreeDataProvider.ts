@@ -128,6 +128,7 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
 
     public async destroyTreeScans(context: vscode.ExtensionContext) {
         const emptyCxTreeDataScans = new EmptyCxTreeScans(context, this.log);
+        WebViews.webViews.destroyWebViews();
         context.subscriptions.push(vscode.window.registerTreeDataProvider("cxscanswin", emptyCxTreeDataScans));
     }
 
@@ -146,6 +147,8 @@ export class CxTreeDataProvider implements vscode.TreeDataProvider<INode> {
         }));
 
         context.subscriptions.push(vscode.commands.registerCommand("cxscanswin.clickQueryNode", (queryNode: QueryNode) => {
+            WebViews.webViews.destroyWebViews();
+            WebViews.webViews.createWebViews(context);
             WebViews.webViews.queryResultClicked(queryNode.query);
         }));
 
