@@ -2,7 +2,7 @@
 	"name": "cxvscode",
 	"displayName": "Checkmarx SAST 9.x",
 	"description": "Checkmarx SAST 9.x is a Checkmarx IDE extension that enables scanning/retrieving results on/from Checkmarx CxSAST",
-	"version": "2023.2.1",
+	"version": "2023.2.2",
 	"publisher": "Checkmarx",
 	"icon": "resources/icons/Checkmarx.png",
 	"license": "SEE LICENSE IN checkmarx-license-terms.md",
