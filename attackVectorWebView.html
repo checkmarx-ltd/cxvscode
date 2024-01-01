@@ -24,22 +24,18 @@
                 vscode.postMessage({ msg: message[0].PathNode[0] });
     
                 var i = 0;
+				$("#nodes_table").innerHTML ="";
                 message[0].PathNode.forEach(path => {
-            var content = "<div id='node" + i + "' style='cursor:pointer; padding: 7px;display:inline-block;border-radius: 7px; border-style: solid; text-align: center; border-color: white;border-width: 1px;' >" + path.Name + '</div></br>';
+            var content = "<div class='myId' id='node" + i + "' style='cursor:pointer; padding: 7px;display:inline-block;border-radius: 7px; border-style: solid; text-align: center; border-color: white;border-width: 1px;' >" + path.Name + '</div></br>';
                     if (i != message[0].PathNode.length - 1) content += "<div style='padding: 7px;display:inline-block;'>" + '↓' + '</div></br>';
                     $("#nodes_table").innerHTML += content; 
                     $("#node" + 0).classList.add("selec");
-    
-                    var node = $("#node" + i);
-            node.onclick = function () {
-                        $(".selec").classList.remove("selec");
-                        node.classList.addClass("selec");
-                        vscode.postMessage({ msg: path }); // Node was clicked, send it back
-                    };
-    
                     i++;
                 });
+                
             });
+
+            
         </script>
 </body>
 
