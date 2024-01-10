@@ -13,6 +13,7 @@ import { LoginChecks } from "../services/loginChecks";
 import { LoginMethods } from './LoginMethods';
 import { SSOConstants } from './ssoConstant';
 import { SessionStorageService } from '../services/sessionStorageService';
+import { CxPluginDetails } from "./CxPluginDetails";
 
 export class ServerNode implements INode {
 
@@ -47,7 +48,7 @@ export class ServerNode implements INode {
 
         const baseUrl = url.resolve(this.sastUrl, 'CxRestAPI/');
 
-        this.httpClient = new HttpClient(baseUrl, "Visual-Studio-Code","", this.log,this.proxyConfig,CxSettings.getSSLCertPath());
+        this.httpClient = new HttpClient(baseUrl, "Visual-Studio-Code","", this.log,this.proxyConfig,CxSettings.getSSLCertPath(), CxPluginDetails.getPluginVersion());
 
         this.storageManager = new SessionStorageService(context.workspaceState);
 
