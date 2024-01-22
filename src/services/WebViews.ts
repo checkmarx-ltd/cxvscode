@@ -94,7 +94,12 @@ export class WebViews {
 			const userInfo = await this.httpClient.getPermissionsFromUserInfo();
 			
 			query.resultStates = resultStates;
-			query.manageResultsExploitabel = userInfo.manageResultsExploitabel;
+			query.manageResultsNotExploitabel = userInfo.manageResultsNotExploitabel;
+			query.manageResultsToVerify = userInfo.manageResultsToVerify;
+			query.manageResultsConfirmed = userInfo.manageResultsConfirmed;
+			query.manageResultsUrgent = userInfo.manageResultsUrgent;
+			query.manageResultsProposedNotExploitable = userInfo.manageResultsProposedNotExploitable;
+			query.manageResultsAccepted = userInfo.manageResultsAccepted;
 
 			let usersResponse = await this.httpClient.getRequest(`auth/AssignableUsers`);
 			let usersList: string[] = [];

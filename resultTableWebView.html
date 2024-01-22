@@ -225,13 +225,35 @@ table-layout: fixed;
 			var selectHTML = "<tr style='background:rgba(29,150,178,1)'><td colspan='4'>" +"<select id='resultStateDropDownList'>";
                 selectHTML = selectHTML + "<option value=''>Result State</option>";
             resultStates = message.resultStates.states;
+            
             for (i = 0; i < resultStates.length; i = i + 1) {
-                if(!message.manageResultsExploitabel)
-                {
-                    if(resultStates[i].id != '1' )
-                        selectHTML += "<option value='" + i + "'>" + resultStates[i].name + "</option>";
+                switch(resultStates[i].name) {
+                    case "To Verify":
+                        if(message.manageResultsToVerify) 
+                            selectHTML +="<option value='" + i + "'>" + resultStates[i].name + "</option>";
+                        break;
+                    case "Not Exploitable":
+                        if(message.manageResultsNotExploitabel) 
+                            selectHTML +="<option value='" + i + "'>" + resultStates[i].name + "</option>";
+                        break;
+                    case "Confirmed":
+                        if(message.manageResultsConfirmed) 
+                            selectHTML +="<option value='" + i + "'>" + resultStates[i].name + "</option>";
+                        break;
+                    case "Urgent":
+                        if(message.manageResultsUrgent) 
+                            selectHTML +="<option value='" + i + "'>" + resultStates[i].name + "</option>";
+                        break;
+                    case "Proposed Not Exploitable":
+                        if(message.manageResultsProposedNotExploitable) 
+                            selectHTML +="<option value='" + i + "'>" + resultStates[i].name + "</option>";
+                        break;
+                    case "Accepted":
+                        if(message.manageResultsAccepted) 
+                            selectHTML +="<option value='" + i + "'>" + resultStates[i].name + "</option>";
+                        break;
+                    default:
                 }
-                else selectHTML += "<option value='" + i + "'>" + resultStates[i].name + "</option>";
             }
             selectHTML +=  "</select></td>";
             selectHTML += "<td colspan='6'> <select id='assignUserDropDownList'> <option>Assign User</option>";
