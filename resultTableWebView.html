@@ -59,6 +59,7 @@ table-layout: fixed;
     </div>
 
     <script>
+        var resultStates;
         function getPathId(){
             if(!$("td").hasClass("editComment")){
                 $("td").addClass("editComment");
@@ -140,20 +141,20 @@ table-layout: fixed;
         }
 
         const vscode = acquireVsCodeApi();
-        const stateDictionary = {
-            '0': 'To Verify',
-            '1': 'Not Exploitable',
-            '2': 'Confirmed',
-            '3': 'Urgent',
-            '4': 'Proposed Not Exploitable'
-        };
-		const stateOrdinalDictionary = {
-            'To Verify':'0',
-            'Not Exploitable':'1' ,
-            'Confirmed':'2',
-            'Urgent':'3',
-            'Proposed Not Exploitable':'4' 
-        };
+        // const stateDictionary = {
+        //     '0': 'To Verify',
+        //     '1': 'Not Exploitable',
+        //     '2': 'Confirmed',
+        //     '3': 'Urgent',
+        //     '4': 'Proposed Not Exploitable'
+        // };
+		// const stateOrdinalDictionary = {
+        //     'To Verify':'0',
+        //     'Not Exploitable':'1' ,
+        //     'Confirmed':'2',
+        //     'Urgent':'3',
+        //     'Proposed Not Exploitable':'4' 
+        // };
         // Get messages
         window.addEventListener('message', event => {
             const message = event.data; // The JSON data our extension sent
@@ -223,8 +224,14 @@ table-layout: fixed;
             $("#list").append("<table >");
 			var selectHTML = "<tr style='background:rgba(29,150,178,1)'><td colspan='4'>" +"<select id='resultStateDropDownList'>";
                 selectHTML = selectHTML + "<option value=''>Result State</option>";
-            for (i = 0; i < message.resultStates.states.length; i = i + 1) {
-                selectHTML += "<option value='" + message.resultStates.states[i].name + "'>" + message.resultStates.states[i].name + "</option>";
+            resultStates = message.resultStates.states;
+            for (i = 0; i < resultStates.length; i = i + 1) {
+                if(!message.manageResultsExploitabel)
+                {
+                    if(resultStates[i].id != '1' )
+                        selectHTML += "<option value='" + i + "'>" + resultStates[i].name + "</option>";
+                }
+                else selectHTML += "<option value='" + i + "'>" + resultStates[i].name + "</option>";
             }
             selectHTML +=  "</select></td>";
             selectHTML += "<td colspan='6'> <select id='assignUserDropDownList'> <option>Assign User</option>";
@@ -310,7 +317,7 @@ table-layout: fixed;
                 $("#list").append("<tr style='cursor:pointer; vertical-align:top'" + " id='result" + i + "' >" +
 					"<td class='check'> <input type ='checkbox' id= 'checkbox-"+i+ "'name = 'querySelected' value = '"+result.Path[0].$.PathId+"'>"+"</td>"+
                     "<td class='id' id='pathId-" + i + "'  title='"+result.Path[0].$.PathId+"'>" + result.Path[0].$.PathId + "</td>" +
-                    "<td class='state' title='"+stateDictionary[result.$.state]+"'>" + stateDictionary[result.$.state] + "</td>" +
+                    "<td class='state' title='"+ resultStates[result.$.state].name +"'>" + resultStates[result.$.state].name + "</td>" +
                     "<td class='status' title='"+result.$.Status+"'>" + result.$.Status + "</td>" +
                     "<td class='name'  title='"+message.$.name+"'>" + message.$.name + "</td>" +
                     "<td class='sourcefolder'  title='"+srcFileName.slice(0,srcFileName.lastIndexOf("/"))+"'>" + srcFileName.slice(0,srcFileName.lastIndexOf("/")) + "</td>" +
@@ -388,7 +395,6 @@ table-layout: fixed;
                         var selectedResultState = $('#resultStateDropDownList option:selected').val();
                         
                         if(selectedResultState != ''){                            
-                        selectedResultState = stateOrdinalDictionary[selectedResultState];
                         vscode.postMessage({command: 'resultstateChangeEvent', bulkComment: bulkInputComment, resultStateTobeChange: selectedResultState, data: selectedQueryNodes});
                         }
                         else{                          
@@ -482,7 +488,6 @@ table-layout: fixed;
 			$('#resultStateDropDownList').on('change', function() 
             {
                 var selectedResultState = $('#resultStateDropDownList option:selected').val();
-                selectedResultState = stateOrdinalDictionary[selectedResultState];
                 var selectedQueryNodes = [];
                 $.each($("input[name='querySelected']:checked"), function () 
                     {

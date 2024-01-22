@@ -90,7 +90,11 @@ export class WebViews {
 			this.queryForDescription=query;
 
 			const resultStates: string[] = await this.httpClient.getRequest(`sast/result-states`);
+			
+			const userInfo = await this.httpClient.getPermissionsFromUserInfo();
+			
 			query.resultStates = resultStates;
+			query.manageResultsExploitabel = userInfo.manageResultsExploitabel;
 
 			let usersResponse = await this.httpClient.getRequest(`auth/AssignableUsers`);
 			let usersList: string[] = [];
