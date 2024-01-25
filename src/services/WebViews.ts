@@ -7,7 +7,6 @@ import { SessionStorageService } from './sessionStorageService';
 import { SSOConstants } from '../model/ssoConstant';
 import { LoginChecks } from './loginChecks';
 import { CxSettings } from "./CxSettings";
-import { promises } from 'dns';
 
 interface ResultStateApiResponse {
 	states: { id: number; name: string, isUserHavePermission:boolean }[]
@@ -462,7 +461,7 @@ export class WebViews {
 
 		const request = bulkComment === '' ? {"state" : selectedResultState} : {"state" : selectedResultState,"comment" : bulkComment};
 		//The below for loop updates the result state
-		var isErrorCatched = false;
+		let isErrorCatched = false;
 		for (var i = 0; i < rows.length; i++) {
 			var pathId = rows[i];
 			if(!isErrorCatched)
