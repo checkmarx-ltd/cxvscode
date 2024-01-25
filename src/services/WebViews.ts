@@ -130,14 +130,9 @@ export class WebViews {
 			let resultStatesWithPermissions: ResultStateDetails[] = await this.httpClient.getRequest(`sast/resultStates`);
 			for(let state of resultStates.states )
 			{
-				let permission : string = resultStatesWithPermissions.find((abc) => abc.id === state.id)?.permission || '';
+				let permission : string = resultStatesWithPermissions.find((abc) => abc.id === state.id)?.permission ?? '';
 				if(permission) state.isUserHavePermission = await this.httpClient.validateUserPermission(permission);
 			}
-			// for(let i=0;i<resultStates.states.length ;i++)
-			// {
-			// 	let permission : string = resultStatesWithPermissions.find((abc) => abc.id === resultStates.states[i].id)?.permission || '';
-			// 	if(permission) resultStates.states[i].isUserHavePermission = await this.httpClient.validateUserPermission(permission);
-			// }
 		}
 		catch(e){
 			if (e.status == 404) {
