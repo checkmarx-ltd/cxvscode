@@ -225,34 +225,11 @@ table-layout: fixed;
 			var selectHTML = "<tr style='background:rgba(29,150,178,1)'><td colspan='4'>" +"<select id='resultStateDropDownList'>";
                 selectHTML = selectHTML + "<option value=''>Result State</option>";
             resultStates = message.resultStates.states;
-            
-            for (i = 0; i < resultStates.length; i = i + 1) {
-                switch(resultStates[i].name) {
-                    case "To Verify":
-                        if(message.manageResultsToVerify) 
-                            selectHTML +="<option value='" + i + "'>" + resultStates[i].name + "</option>";
-                        break;
-                    case "Not Exploitable":
-                        if(message.manageResultsNotExploitabel) 
-                            selectHTML +="<option value='" + i + "'>" + resultStates[i].name + "</option>";
-                        break;
-                    case "Confirmed":
-                        if(message.manageResultsConfirmed) 
-                            selectHTML +="<option value='" + i + "'>" + resultStates[i].name + "</option>";
-                        break;
-                    case "Urgent":
-                        if(message.manageResultsUrgent) 
-                            selectHTML +="<option value='" + i + "'>" + resultStates[i].name + "</option>";
-                        break;
-                    case "Proposed Not Exploitable":
-                        if(message.manageResultsProposedNotExploitable) 
-                            selectHTML +="<option value='" + i + "'>" + resultStates[i].name + "</option>";
-                        break;
-                    case "Accepted":
-                        if(message.manageResultsAccepted) 
-                            selectHTML +="<option value='" + i + "'>" + resultStates[i].name + "</option>";
-                        break;
-                    default:
+            if(resultStates.length > 0)
+            {
+                for (i = 0; i < resultStates.length; i = i + 1) {
+                    if(resultStates[i].isUserHavePermission)
+                         selectHTML +="<option value='" + resultStates[i].id + "'>" + resultStates[i].name + "</option>";
                 }
             }
             selectHTML +=  "</select></td>";
@@ -336,10 +313,11 @@ table-layout: fixed;
                     comment4 = rest4;
                 }
             
+                let stateName=  resultStates[result.$.state]? resultStates[result.$.state].name :'';
                 $("#list").append("<tr style='cursor:pointer; vertical-align:top'" + " id='result" + i + "' >" +
 					"<td class='check'> <input type ='checkbox' id= 'checkbox-"+i+ "'name = 'querySelected' value = '"+result.Path[0].$.PathId+"'>"+"</td>"+
                     "<td class='id' id='pathId-" + i + "'  title='"+result.Path[0].$.PathId+"'>" + result.Path[0].$.PathId + "</td>" +
-                    "<td class='state' title='"+ resultStates[result.$.state].name +"'>" + resultStates[result.$.state].name + "</td>" +
+                    "<td class='state' title='"+ stateName  +"'>" + stateName  + "</td>" +
                     "<td class='status' title='"+result.$.Status+"'>" + result.$.Status + "</td>" +
                     "<td class='name'  title='"+message.$.name+"'>" + message.$.name + "</td>" +
                     "<td class='sourcefolder'  title='"+srcFileName.slice(0,srcFileName.lastIndexOf("/"))+"'>" + srcFileName.slice(0,srcFileName.lastIndexOf("/")) + "</td>" +
@@ -415,15 +393,17 @@ table-layout: fixed;
                     });                                       
                     if(mandatoryComment){
                         var selectedResultState = $('#resultStateDropDownList option:selected').val();
+
+                        var selectedResultStateText = $('#resultStateDropDownList option:selected').text();
                         
-                        if(selectedResultState != ''){                            
-                        vscode.postMessage({command: 'resultstateChangeEvent', bulkComment: bulkInputComment, resultStateTobeChange: selectedResultState, data: selectedQueryNodes});
+                        if(selectedResultState != ''){                         
+                        vscode.postMessage({command: 'resultstateChangeEvent', bulkComment: bulkInputComment, resultStateTobeChange: selectedResultState, data: selectedQueryNodes, resultStateText : selectedResultStateText});
                         }
                         else{                          
                         vscode.postMessage({command: 'bulkComments', bulkComment: bulkInputComment, data: selectedQueryNodes});
                         }
                     }
-                    else{                        
+                    else{                      
                         vscode.postMessage({command: 'bulkComments', bulkComment: bulkInputComment, data: selectedQueryNodes});
                     }
                 }
@@ -510,16 +490,16 @@ table-layout: fixed;
 			$('#resultStateDropDownList').on('change', function() 
             {
                 var selectedResultState = $('#resultStateDropDownList option:selected').val();
+                var selectedResultStateText = $('#resultStateDropDownList option:selected').text();
                 var selectedQueryNodes = [];
                 $.each($("input[name='querySelected']:checked"), function () 
                     {
                         selectedQueryNodes.push($(this).val());
                     });
-
                 if(mandatoryComment)
                     bulkEnterComment();
                 else              
-                    vscode.postMessage({command: 'resultstateChangeEvent', resultStateTobeChange: selectedResultState, data: selectedQueryNodes});
+                    vscode.postMessage({command: 'resultstateChangeEvent', resultStateTobeChange: selectedResultState, data: selectedQueryNodes, resultStateText : selectedResultStateText});
                 });
 				
             $("#list").append("</table></body></html>");

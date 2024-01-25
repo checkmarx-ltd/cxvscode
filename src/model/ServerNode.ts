@@ -167,7 +167,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 this.log.info('Login successful');
                 vscode.window.showInformationMessage('Login successful');
                 this.storageManager.setValue<string>(SSOConstants.ACCESS_TOKEN, this.httpClient.accessToken);
-
+                await this.httpClient.getPermissionDetailsUsingJwtDecode(); 
                 if (this.isBoundToProject()) 
                 {
                     await this.retrieveLatestResults();
@@ -176,7 +176,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             else 
             {
                 await this.ssoLogin();
-            }         
+            }      
         }    
         catch (err) {
             this.log.error(err);
@@ -227,7 +227,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 let authURL: string = await this.httpClient.getAuthorizationCodeURL(this.authSSODetails);
                 
                 // Open browser windows for SAST server login for SSO
-                vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(authURL));
+                vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(authURL));  
                
         }catch (err) {
             this.log.error(err);
@@ -253,7 +253,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 
             /* Setting access token in context */ 
             this.storageManager.setValue<string>(SSOConstants.ACCESS_TOKEN, access_token);
-
+            await this.httpClient.getPermissionsFromUserInfo(); 
             if (this.isBoundToProject()) {
                 await this.retrieveLatestResults();
             }
