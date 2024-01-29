@@ -699,7 +699,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 isPublic: !isPrivate,
                 postScanActionName: "",
                 postScanActionId: -1,
-                avoidDuplicateProjectScans:false,
+                avoidDuplicateProjectScans: CxSettings.getAvoidDuplicateProjectScansInQueueFlag(),
                 projectCustomFields: "",
                 customFields: "",
                 failBuildForNewVulnerabilitiesEnabled: false,
@@ -709,7 +709,6 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 // This gets used only in ADO plugin. adding here to resolve compileation issue.
                 cacert_chainFilePath: ""
             };
-
             let proxyResult: ProxyConfig ={
                 proxyHost: '',
                 proxyPass:  '',
