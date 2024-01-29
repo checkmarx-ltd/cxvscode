@@ -8,6 +8,22 @@ import { SSOConstants } from '../model/ssoConstant';
 import { LoginChecks } from './loginChecks';
 import { CxSettings } from "./CxSettings";
 
+interface ResultStateApiResponse {
+	states: { id: number; name: string, isUserHavePermission:boolean }[]
+}
+
+interface ResultStateDetails {
+	id: number;
+	names: Name[];
+	permission: string;
+  }
+
+  interface Name {
+	languageId: number;
+	name: string;
+	isConstant: boolean;
+  }
+  
 
 export class WebViews {
 
@@ -89,8 +105,7 @@ export class WebViews {
 			query.clickedRow=0;
 			this.queryForDescription=query;
 
-			const resultStates: string[] = await this.httpClient.getRequest(`sast/result-states`);
-			query.resultStates = resultStates;
+			query.resultStates = await this.getResultStateWithPermission();
 
 			let usersResponse = await this.httpClient.getRequest(`auth/AssignableUsers`);
 			let usersList: string[] = [];
@@ -108,6 +123,26 @@ export class WebViews {
 
 	}
 
+	async getResultStateWithPermission()
+	{
+		const resultStates: ResultStateApiResponse = await this.httpClient.getRequest(`sast/result-states`);
+		try {
+			let resultStatesWithPermissions: ResultStateDetails[] = await this.httpClient.getRequest(`sast/resultStates`);
+			for(let state of resultStates.states )
+			{
+				let permission : string = resultStatesWithPermissions.find((abc) => abc.id === state.id)?.permission ?? '';
+				if(permission) state.isUserHavePermission = await this.httpClient.validateUserPermission(permission);
+			}
+		}
+		catch(e){
+			if (e.status == 404) {
+				resultStates.states.forEach( b => b.isUserHavePermission = true);
+			}
+		}
+		
+		return resultStates;
+	}
+	
 	private createAttackVectorWebView(context: vscode.ExtensionContext) {
 		this.attackVectorPanel = vscode.window.createWebviewPanel(
 			'attackVector',
@@ -177,9 +212,9 @@ export class WebViews {
 									switch (message.command) {
 										case 'resultstateChangeEvent':
 											if(message.bulkComment)
-												this.resultStateChanged(message.bulkComment, message.resultStateTobeChange, message.data);
+												this.resultStateChanged(message.bulkComment, message.resultStateTobeChange, message.data,message.resultStateText);
 											else
-												this.resultStateChanged('', message.resultStateTobeChange, message.data);
+												this.resultStateChanged('', message.resultStateTobeChange, message.data,message.resultStateText);
 										 	 return;
 										case 'onClick':
 											this.updateShortDescriptionForResult(message);
@@ -418,7 +453,7 @@ export class WebViews {
 		
 		}	
 	}
-	private async resultStateChanged(bulkComment: any, selectedResultState: any, rows: any){
+	private async resultStateChanged(bulkComment: any, selectedResultState: any, rows: any,resultStateText :any){
 		let scanId = this.scanNode.scanId;
 		let nodes = this.queryNode.Result;
 
@@ -426,27 +461,37 @@ export class WebViews {
 
 		const request = bulkComment === '' ? {"state" : selectedResultState} : {"state" : selectedResultState,"comment" : bulkComment};
 		//The below for loop updates the result state
+		let isErrorCatched = false;
 		for (var i = 0; i < rows.length; i++) {
 			var pathId = rows[i];
-			for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) { 
-				if( pathId == nodes[nodeCtr].Path[0].$.PathId) {
-					
-					try {
-						await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
-						nodes[nodeCtr].$.state = selectedResultState;	
-						nodes[nodeCtr].$.Remark = bulkComment === '' ? nodes[nodeCtr].$.Remark  : `New Comment,${bulkComment}\r\n${nodes[nodeCtr].$.Remark}`;					
-					} 
-					catch (err) {
-						if (err.status == 404) {
-							this.log.error('This operation is not supported with CxSAST version in use.');
-						}
-						//in case sast server flag is true but extension flag is false then updating result state throws error response with 49797 code. This if block tackles the error response.
-						if(err.response.body.messageCode == 49797)
-						{
-							this.log.error("A comment is required while updating result state flag.");
-							this.queryNode.mandatoryCommentErrorMessage = "Checkmarx SAST Server mandates comments while changing state of vulnerabilities. Enable 'Mandatory Comments' setting in Extension settings in Visual Source Code.";
-						}
-					}	
+			if(!isErrorCatched)
+			{
+				for (let nodeCtr = 0; nodeCtr < nodes.length; nodeCtr++) { 
+					if( pathId == nodes[nodeCtr].Path[0].$.PathId) {
+						
+						try {
+							await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
+							nodes[nodeCtr].$.state = selectedResultState;	
+							nodes[nodeCtr].$.Remark = bulkComment === '' ? nodes[nodeCtr].$.Remark  : `New Comment,${bulkComment}\r\n${nodes[nodeCtr].$.Remark}`;					
+						} 
+						catch (err) {
+							isErrorCatched = true;
+							if (err.status == 404) {
+								this.log.error('This operation is not supported with CxSAST version in use.');
+							}
+							else if (err.status == 403) {
+								this.log.error('You are not authorized to mark the selected vulnerability result as  ' + resultStateText);
+								vscode.window.showErrorMessage('You are not authorized to mark the selected vulnerability result as  ' + resultStateText);
+								break;
+							}
+							//in case sast server flag is true but extension flag is false then updating result state throws error response with 49797 code. This if block tackles the error response.
+							if(err.response.body.messageCode == 49797)
+							{
+								this.log.error("A comment is required while updating result state flag.");
+								this.queryNode.mandatoryCommentErrorMessage = "Checkmarx SAST Server mandates comments while changing state of vulnerabilities. Enable 'Mandatory Comments' setting in Extension settings in Visual Source Code.";
+							}
+						}	
+					}
 				}
 			}
 		}
