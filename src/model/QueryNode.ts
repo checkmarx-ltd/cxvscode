@@ -10,8 +10,11 @@ export class QueryNode implements INode {
     }
 
     public getTreeItem(isPortalTree:boolean): vscode.TreeItem {
+        const resultDetails: any[] = Object.values(this.query?.Result);
+
+        var resultsCount =  resultDetails.length > 0 ? resultDetails.filter( (abc )  =>  abc.$['state'] !== '1').length : 0;
         return {
-            label: this.query?.$.name + " (" + this.query?.Result.length + " found)",
+            label: this.query?.$.name + " (" + resultsCount + " found)",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             contextValue: "query_node",
             command : {
@@ -25,7 +28,7 @@ export class QueryNode implements INode {
             }
         };
     }
-
+    
     public async getChildren(): Promise<INode[]> {
         return [];
     }
