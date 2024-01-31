@@ -63,6 +63,7 @@ export class ServerNode implements INode {
             if (cxServerSettings) {
                 this.username = cxServerSettings.username;
                 this.password = cxServerSettings.password;
+                this.login();
                 if (cxServerSettings.project_id > 0) {
                     this.currBoundProject = new ProjectNode(cxServerSettings.project_id, cxServerSettings.team_id, cxServerSettings.project_name);
                 }
