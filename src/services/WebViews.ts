@@ -40,9 +40,9 @@ export class WebViews {
 	public queryForDescription :any ;
 	constructor(context: vscode.ExtensionContext, private scanNode: ScanNode,
 		private readonly log: Logger, private readonly httpClient: HttpClient) {
-		this.createWebViews(context);
 
 		this.storageManager = new SessionStorageService(context.workspaceState);
+		this.createWebViews(context);
 		this.accessToken = this.storageManager.getValue<string>(SSOConstants.ACCESS_TOKEN,'');
 		this.loginChecks =  new LoginChecks(log,context,this.httpClient);
 	}
@@ -54,11 +54,11 @@ export class WebViews {
 			vscode.window.showErrorMessage('Access token expired. Please login.');
 			return;
 		}
-		
-		
+		/*
 		if (this.queryDescriptionPanel) {
 			this.queryDescriptionPanel.dispose();
 		}
+		*/
 
 		this.log.info('Loading the HTML content...');
 
@@ -72,55 +72,47 @@ export class WebViews {
 		content += `<br/><br/><a href="${codeBashingLink}" target="_blank">CodeBashing Link</a>`;
 		content += "</body></html>";
 
-		this.queryDescriptionPanel = vscode.window.createWebviewPanel(
-			'queryDescription',
-			'Query Description',
-			vscode.ViewColumn.One,
-			{
-				enableScripts: true,
-				retainContextWhenHidden: true
-			}
-		);
+		if (! this.queryDescriptionPanel) 
+			this.queryDescriptionPanel = vscode.window.createWebviewPanel('queryDescription', 'Cx Query Description', vscode.ViewColumn.One, { enableScripts: true, retainContextWhenHidden: false });
+		this.queryDescriptionPanel.onDidDispose(() => { this.queryDescriptionPanel = undefined }, undefined, undefined);
 		this.queryDescriptionPanel.webview.html = content;
 	}
 
 	async queryResultClicked(query: any | undefined) {
-		if (this.resultTablePanel) 
-		{
-			let pathId = query.Result[0].Path[0].$.PathId;
-			try {
-				//to know webview its firstClick message
-				query.mesg = "firstClick";
-				var description = await this.httpClient.getRequest(`sast/scans/${this.scanNode.scanId}/results/${pathId}/shortDescription`);
-				query.description = description;
-                
-				} catch (err) {					
-					if (err.status == 404) {
-						query.description="";
-						query.mesg = "";
-						this.log.error('The short description of the result will not be displayed with CxSAST version in use.');
-					}
-			}
-			
-			query.clickedRow=0;
-			this.queryForDescription=query;
-
-			query.resultStates = await this.getResultStateWithPermission();
-
-			let usersResponse = await this.httpClient.getRequest(`auth/AssignableUsers`);
-			let usersList: string[] = [];
-			if(usersResponse){
-				for(let user of usersResponse){
-					usersList.push(user.username);
-				}
-				
-			}
-			query.mandatoryComment = CxSettings.getMandatoryCommentFlag();
-			query.usersList = usersList;
-			this.queryNode = query;
-			this.resultTablePanel.webview.postMessage(query);
+		if (!this.resultTablePanel) {
+			this.resultTablePanel = vscode.window.createWebviewPanel('resultTable', 'Cx Query Results', vscode.ViewColumn.Three, { enableScripts: true, retainContextWhenHidden: true });
+		} else if (!this.resultTablePanel.visible) {
+			this.resultTablePanel.reveal();
 		}
+		let pathId = query.Result[0].Path[0].$.PathId;
+		try {
+			//to know webview its firstClick message
+			query.mesg = "firstClick";
+			var description = await this.httpClient.getRequest(`sast/scans/${this.scanNode.scanId}/results/${pathId}/shortDescription`);
+			query.description = description;
+			
+			} catch (err) {					
+				if (err.status == 404) {
+					query.description="";
+					query.mesg = "";
+					this.log.error('The short description of the result will not be displayed with CxSAST version in use.');
+				}
+		}
+		
+		query.clickedRow=0;
+		this.queryForDescription=query;
 
+		query.resultStates = await this.getResultStateWithPermission();
+
+		let usersResponse = await this.httpClient.getRequest(`auth/AssignableUsers`);
+		let usersList: string[] = [];
+		if(usersResponse){
+			for(let user of usersResponse) usersList.push(user.username);
+		}
+		query.mandatoryComment = CxSettings.getMandatoryCommentFlag();
+		query.usersList = usersList;
+		this.queryNode = query;
+		this.resultTablePanel.webview.postMessage(query);
 	}
 
 	async getResultStateWithPermission()
@@ -144,16 +136,20 @@ export class WebViews {
 	}
 	
 	private createAttackVectorWebView(context: vscode.ExtensionContext) {
-		this.attackVectorPanel = vscode.window.createWebviewPanel(
-			'attackVector',
-			'Attack Vector',
-			vscode.ViewColumn.Two,
-			{
-				enableScripts: true,
-				retainContextWhenHidden: true
-			}
-		);
-
+		if (!this.attackVectorPanel) {
+			this.attackVectorPanel = vscode.window.createWebviewPanel(
+				'attackVector',
+				'Attack Vector',
+				vscode.ViewColumn.Two,
+				{
+					enableScripts: true,
+					retainContextWhenHidden: true
+				}
+			);
+		}
+		else if (!this.attackVectorPanel.visible) {
+			this.attackVectorPanel.reveal();
+		}
 		try {
 			const attackVectorViewPath: string = path.join(context.extensionPath, 'attackVectorWebView.html');
 			fs.readFile(attackVectorViewPath, "utf8",
@@ -161,39 +157,22 @@ export class WebViews {
 					if (this.attackVectorPanel) {
 						this.attackVectorPanel.webview.html = data;
 						// Handle messages from the webview
-						this.attackVectorPanel.webview.onDidReceiveMessage(
-							message => {
-								this.attackVectorNodeClicked(message.msg);
-							},
-							undefined,
-							context.subscriptions
-						);
-						this.attackVectorPanel.onDidDispose(
-							() => {
-								this.attackVectorPanel = undefined;
-							},
-							undefined,
-							context.subscriptions
-						);
+						this.attackVectorPanel.webview.onDidReceiveMessage(message => { this.attackVectorNodeClicked(message.msg)},undefined,context.subscriptions);
+						this.attackVectorPanel.onDidDispose(() => {this.attackVectorPanel = undefined;},undefined,context.subscriptions);
 					}
 				});
 		} catch (err) {
-			if (err instanceof Error) {
-			this.log.error(err.message);
-			}
+			if (err instanceof Error) this.log.error(err.message);
 		}
 	}
 
 	private createResultTableWebView(context: vscode.ExtensionContext) {
-		this.resultTablePanel = vscode.window.createWebviewPanel(
-			'resultTable',
-			'Result Table',
-			vscode.ViewColumn.Three,
-			{
-				enableScripts: true,
-				retainContextWhenHidden: true
-			}
-		);
+		if (!this.resultTablePanel){
+			this.resultTablePanel = vscode.window.createWebviewPanel('resultTable', 'Cx Query Results', vscode.ViewColumn.Three, { enableScripts: true, retainContextWhenHidden: true });
+		}
+		else if (!this.resultTablePanel.visible) {
+			this.resultTablePanel.reveal();
+		}
 		try {
 			const resultTableViewPath: string = path.join(context.extensionPath, 'resultTableWebView.html');
 			fs.readFile(resultTableViewPath, "utf8",
@@ -204,32 +183,29 @@ export class WebViews {
 						// Handle messages from the webview
 						this.resultTablePanel.webview.onDidReceiveMessage(
 							async message => {
-								
-								if (this.attackVectorPanel) {
-									this.attackVectorPanel.webview.postMessage(message.path);
-								}
-								if(this.resultTablePanel) {
-									switch (message.command) {
-										case 'resultstateChangeEvent':
-											if(message.bulkComment)
-												this.resultStateChanged(message.bulkComment, message.resultStateTobeChange, message.data,message.resultStateText);
-											else
-												this.resultStateChanged('', message.resultStateTobeChange, message.data,message.resultStateText);
-										 	 return;
-										case 'onClick':
-											this.updateShortDescriptionForResult(message);
-											return;
-										case 'updateComment':
-											this.updateUserComment(message.inputCommentValue, message.pathId);
-											return;
-										case 'assignUser':
-											this.assignUser(message.assignUser, message.data);
-											return;
-										case 'bulkComments':
-											this.addBulkComments(message.bulkComment, message.data);
-											return;
-									  }
-								}
+								if (this.attackVectorPanel) this.attackVectorPanel.webview.postMessage(message.path);
+								switch (message.command) {
+									case 'assignUser':
+										this.assignUser(message.assignUser, message.data);
+										return;
+									case 'bulkComments':
+										this.addBulkComments(message.bulkComment, message.data);
+										return;
+									case 'onClick':
+										this.updateShortDescriptionForResult(message);
+										return;
+									case 'resultstateChangeEvent':
+										if(message.bulkComment)
+											this.resultStateChanged(message.bulkComment, message.resultStateTobeChange, message.data,message.resultStateText);
+										else
+											this.resultStateChanged('', message.resultStateTobeChange, message.data,message.resultStateText);
+										  return;
+									case 'updateComment':
+										this.updateUserComment(message.inputCommentValue, message.pathId);
+										return;
+									default:
+										this.log.error(`Unexpected message.command received: ${message.command}`);
+								  }
 							},
 							undefined,
 							context.subscriptions
@@ -255,7 +231,7 @@ export class WebViews {
 		try {
 			await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
 			comment = comment.replace(/[\r\n]+/g," ");			
-			node.$.Remark = `New Comment,${comment}\r\n${node.$.Remark}`;			
+			node.$.Remark = `${comment}\r\n${node.$.Remark}`;		
 		} catch (err) {
 			this.log.error(`The following error occurred while updating the user: ${err}`);
 		}
@@ -269,9 +245,7 @@ export class WebViews {
 		for (let row of rows) {
 			let pathId = row;
 			for (let node of nodes) { 
-				if( pathId == node.Path[0].$.PathId) {
-					await this.apiCallToUpdateComment(node, scanId, pathId, comment);	
-				}
+				if( pathId == node.Path[0].$.PathId) await this.apiCallToUpdateComment(node, scanId, pathId, comment);
 			}
 		}
 
@@ -295,7 +269,7 @@ export class WebViews {
 		const request = {"userAssignment" : assignUser};
 		try {
 			await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
-			node.$.AssignToUser = `${assignUser}`;
+			node.$.AssignToUser = assignUser;
 		} catch (err) {
 			this.log.error(`The following error occurred while updating the user: ${err}`);
 		}
@@ -308,10 +282,8 @@ export class WebViews {
 		//loop to fetch pathId of all selected rows one by one.
 		for (let row of rows) {
 			let pathId = row;
-			for (let node of nodes) { 
-				if( pathId == node.Path[0].$.PathId) {
-					await this.apiCallToUpdateUser(node, scanId, pathId, assignUser);	
-				}
+			for (let node of nodes) {
+				if (pathId == node.Path[0].$.PathId) await this.apiCallToUpdateUser(node, scanId, pathId, assignUser);
 			}
 		}
 
@@ -337,7 +309,6 @@ export class WebViews {
 			this.queryForDescription.mesg = "vsCode";
 			let description = await this.httpClient.getRequest(`sast/scans/${scanId}/results/${pathId}/shortDescription`);
 			this.queryForDescription.description = description;
-		
 		} catch (err) {
 			if (err.status == 404) {
 				this.queryForDescription.description="";
@@ -346,32 +317,38 @@ export class WebViews {
 			}
 		}
 		this.queryForDescription.clickedRow = message.clickedRow;
-		if(this.resultTablePanel){
-			this.resultTablePanel.webview.postMessage(this.queryForDescription);
-		}
+		if(this.resultTablePanel) this.resultTablePanel.webview.postMessage(this.queryForDescription);
 	}
 
 	public createWebViews(context: vscode.ExtensionContext) {
 		// Creating three panel editors for the web views
-		vscode.commands.executeCommand('vscode.setEditorLayout', {
-			orientation: 1, groups: [
-				{ groups: [{ groups: [{}], size: 0.7 }, { groups: [{}], size: 0.3 }], size: 0.7 },
-				{ groups: [{}], size: 0.3 }
-			]
-		});
+		if (!this.attackVectorPanel || !this.resultTablePanel) {
+			vscode.commands.executeCommand('vscode.setEditorLayout', {
+				orientation: 1, groups: [
+					{ groups: [{ groups: [{}], size: 0.82 }, { groups: [{}], size: 0.18 }], size: 0.68 },
+					{ groups: [{}], size: 0.32 }
+				]
+			});
+		} else {
+			if (!this.attackVectorPanel.visible) this.attackVectorPanel.reveal();
+			if (!this.resultTablePanel.visible)  this.resultTablePanel.reveal();
+		}
 		this.createAttackVectorWebView(context);
 		this.createResultTableWebView(context);
 	}
 
 	destroyWebViews() {
+		if (this.queryDescriptionPanel) {
+            this.queryDescriptionPanel.dispose();
+			this.queryDescriptionPanel = undefined;
+        }
 		if (this.attackVectorPanel) {
 			this.attackVectorPanel.dispose();
+			this.attackVectorPanel = undefined;
 		}
 		if (this.resultTablePanel) {
 			this.resultTablePanel.dispose();
-		}
-		if (this.queryDescriptionPanel) {
-			this.queryDescriptionPanel.dispose();
+			this.resultTablePanel = undefined;
 		}
 	}
 
@@ -401,40 +378,31 @@ export class WebViews {
 
 	private attackVectorNodeClicked(node: any) {
 		let fullSourcePath: string = '';
-		if (this.scanNode.isScannedByVSC) {
+		if (this.scanNode.isScannedByVSC)
 			fullSourcePath = this.scanNode.isFolder ? this.scanNode.sourceLocation + path.sep + (path.sep === "/" ? node.FileName[0] : node.FileName[0].replace(/[/]/g, '\\')) : this.scanNode.sourceLocation;
-		} else {
+		else
 			fullSourcePath = this.getFullSourcePathIfExistsForBoundProject(node.FileName[0]);
-		}
 
 		const uri = vscode.Uri.file(fullSourcePath);
 		let found: boolean = this.isTextEditorVisible(node, fullSourcePath);
-		if (!found) {
-			vscode.commands.executeCommand('vscode.open', uri, vscode.ViewColumn.One).then(() => {
-				found = this.isTextEditorVisible(node, fullSourcePath);
-			});
-		}
-		
+		if (!found)
+			vscode.commands.executeCommand('vscode.open', uri, vscode.ViewColumn.One).then(() => { found = this.isTextEditorVisible(node, fullSourcePath)});
 	}
 	private async updateUserComment(inputCommentValue: any, pathId: any)
 	{
 		let scanId= this.scanNode.scanId;
 		let nodes = this.queryNode.Result;
-		const request = {
-			"comment" : inputCommentValue
-		};
+		const request = { "comment" : inputCommentValue };
 		try {
 			await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
 			for (const nodeIterator of nodes) {
 				if( pathId == nodeIterator.Path[0].$.PathId ) {
 					inputCommentValue = inputCommentValue.replace(/[\r\n]+/g," ");
-					nodeIterator.$.Remark = `New Comment,${inputCommentValue}\r\n${nodeIterator.$.Remark}`;	
+					nodeIterator.$.Remark = `${inputCommentValue}\r\n${nodeIterator.$.Remark}`;
 				}
 			}
 		} catch (err) {
-			if (err.status == 404) {
-				this.log.error('This operation is not supported with CxSAST version in use.');
-			}
+			if (err.status == 404) this.log.error('This operation is not supported with CxSAST version in use.');
 		}
 		
 		let queries:  any[] | undefined;
@@ -456,7 +424,7 @@ export class WebViews {
 	private async resultStateChanged(bulkComment: any, selectedResultState: any, rows: any,resultStateText :any){
 		let scanId = this.scanNode.scanId;
 		let nodes = this.queryNode.Result;
-
+		this.queryNode.mandatoryCommentErrorMessage = "";
 		let mandatoryComment = CxSettings.getMandatoryCommentFlag();
 
 		const request = bulkComment === '' ? {"state" : selectedResultState} : {"state" : selectedResultState,"comment" : bulkComment};
@@ -476,20 +444,21 @@ export class WebViews {
 						} 
 						catch (err) {
 							isErrorCatched = true;
-							if (err.status == 404) {
-								this.log.error('This operation is not supported with CxSAST version in use.');
-							}
+							this.queryNode.mandatoryCommentErrorMessage = err.response.body.messageCode;
+							if (err.status == 404) this.log.error('This operation is not supported with CxSAST version in use.');
 							else if (err.status == 403) {
 								this.log.error('You are not authorized to mark the selected vulnerability result as  ' + resultStateText);
 								vscode.window.showErrorMessage('You are not authorized to mark the selected vulnerability result as  ' + resultStateText);
 								break;
 							}
 							//in case sast server flag is true but extension flag is false then updating result state throws error response with 49797 code. This if block tackles the error response.
-							if(err.response.body.messageCode == 49797)
-							{
-								this.log.error("A comment is required while updating result state flag.");
-								this.queryNode.mandatoryCommentErrorMessage = "Checkmarx SAST Server mandates comments while changing state of vulnerabilities. Enable 'Mandatory Comments' setting in Extension settings in Visual Source Code.";
-							}
+							if (err.response.body.messageCode == 49797) {
+                                this.log.error("A comment is required for updating the Result State.");
+                                //this.queryNode.mandatoryCommentErrorMessage = "A comment is required for updating the Result State. Please update your Extension settings accordingly.";
+							} else if (err.response.body.messageCode == 49798) {
+                                this.log.error("A comment is required for updating the Result State to Not Exploitable.");
+                                //this.queryNode.mandatoryCommentErrorMessage = "A comment is required for updating the Result State to Not Exploitable. Please update your Extension settings accordingly.";
+                            }
 						}	
 					}
 				}
@@ -522,12 +491,9 @@ export class WebViews {
 		}
 		if (fullSourcePath && fullSourcePath.length) {
 			fullSourcePath = path.sep === "/" ? fullSourcePath : fullSourcePath.replace(/[/]/g, '\\');
-		}
-		else {
+		} else {
 			fullSourcePath = sastFileName;
 		}
 		return fullSourcePath;
 	}
 }
-
-
