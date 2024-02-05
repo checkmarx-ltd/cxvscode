@@ -204,7 +204,7 @@ export class WebViews {
 										this.updateUserComment(message.inputCommentValue, message.pathId);
 										return;
 									default:
-										this.log.error(`Unexpected message.command received: ${message.command}`);
+										if(message.command) this.log.error(`Unexpected message.command received: ${message.command}`);
 								  }
 							},
 							undefined,

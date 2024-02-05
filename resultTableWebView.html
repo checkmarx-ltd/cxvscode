@@ -23,7 +23,7 @@
         
         .success 						{ color: var(--vscode-editor-foreground) !important }
         
-        #statusMessage 					{ position: relative; display: inline-block; width: 540px; min-height: 16px; top: 0px;  }
+        #statusMessage 					{ position: relative; display: inline-block; width: auto; min-height: 16px; top: 0px;  }
         #commentError					{ position: absolute; left: 25px }
         
         #prevPageButton, 
@@ -286,18 +286,20 @@ switch (results.mesg) {
                 strictAll = true;
                 showStatusMessage("Server Setting detected: Comment required for changing Result State.<br>Plugin-configuration adjusted, please retry.<br>", STATUS_DISPLAY_TIMEOUT * 3);
                 break;
-                
             case 49798:
                 strictNE  = true;
                 strictAll = false;
                 showStatusMessage("Server Setting deteced: Comment required for changing Result State to Not Exploitable.<br>Plugin-configuration adjusted, please retry.", STATUS_DISPLAY_TIMEOUT * 3);
                 break;
-                
+            case 49814:
+                strictNE  = true;
+                strictAll = false;
+                showStatusMessage("Server Setting deteced: Comment required for changing Result State to Proposed Not Exploitable.<br>Plugin-configuration adjusted, please retry.", STATUS_DISPLAY_TIMEOUT * 3);
+                break;
             case "":
             case undefined:
                 showStatusMessage(INFO_RESULTS_SAVED, STATUS_DISPLAY_TIMEOUT);
                 break;
-
             default:
                 showStatusMessage(ERR_UNEXPECTED_MESSAGE + "#" + results.mandatoryCommentErrorMessage + "#", STATUS_DISPLAY_TIMEOUT * 3);
         }
@@ -311,7 +313,7 @@ switch (results.mesg) {
 // Populate Result State dropdown (using one extra dummy label option) and hookup event-handler
 var html = "";
 for (var i = 0; i < results.resultStates.states.length; i++) { if(results.resultStates.states[i].isUserHavePermission) html += "<option value='" + i + "'>" + results.resultStates.states[i].name + "</option>" }
-resultStateSelect.innerHTML = "<option disabled> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Result State</option>" + html;
+resultStateSelect.innerHTML = "<option disabled class=''> Result State</option>" + html;
 resultStateFilter.innerHTML = "<option value=''> - </option>" + html;
 resultStateSelect.onchange  = changeResultState;
 resultStateFilter.onchange  = filterResult;
@@ -320,7 +322,7 @@ resultStateFilter.onchange  = filterResult;
 html = "";
 results.usersList = results.usersList.sort();
 for (var i = 0; i < results.usersList.length; i++) { html += "<option value='" + results.usersList[i] + "'>" + results.usersList[i] + "</option>" }
-assignUserSelect.innerHTML = "<option disabled selected>&nbsp; &nbsp; &nbsp; &nbsp; Assign User &nbsp; &nbsp; </option><option value=''>[ Nobody ]</option>" + html;
+assignUserSelect.innerHTML = "<option disabled selected>Assign User</option><option value=''>[ Nobody ]</option>" + html;
 assignUserFilter.innerHTML = "<option value=''> - </option>" + html;
 assignUserSelect.onchange  = changeAssignUser;
 assignUserFilter.onchange  = filterResult;
