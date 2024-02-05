@@ -203,7 +203,7 @@
 
 // Some UI configuration settings
 const STATUS_DISPLAY_TIMEOUT 	= 3000; 			// Timeout in ms before auto-hiding an Status Message
-const SHOW_LOADING_THRESHOLD	= 10;				// Threshold in number of selected Results for showing the 'loading' spinner when performing a Bulk update
+const SHOW_LOADING_THRESHOLD	= 1;				// Threshold in number of selected Results for showing the 'loading' spinner when performing a Bulk update
 
 // Dynamic text and UI related constants
 const INFO_MANDATORY_COMMENTS	= "<span class='placeholder'>Comments are mandatory for Result State updates. Please enter a comment and click the [Save] button to continue.</span>";
@@ -313,7 +313,7 @@ switch (results.mesg) {
 // Populate Result State dropdown (using one extra dummy label option) and hookup event-handler
 var html = "";
 for (var i = 0; i < results.resultStates.states.length; i++) { if(results.resultStates.states[i].isUserHavePermission) html += "<option value='" + i + "'>" + results.resultStates.states[i].name + "</option>" }
-resultStateSelect.innerHTML = "<option disabled class=''> Result State</option>" + html;
+resultStateSelect.innerHTML = "<option disabled selected class=''> Result State</option>" + html;
 resultStateFilter.innerHTML = "<option value=''> - </option>" + html;
 resultStateSelect.onchange  = changeResultState;
 resultStateFilter.onchange  = filterResult;
@@ -503,7 +503,7 @@ function changeResultState() {
 		if ((strictNE && newValue == 1) || strictAll) return showComment( { target: { tagName: "SELECT" } } );
 
 		vscode.postMessage({command: "resultstateChangeEvent", resultStateTobeChange: newValue, data: pathIds });
-		if (pathIds.length >= SHOW_LOADING_THRESHOLD -1) statusMessage.classList.add("loading");
+		if (pathIds.length > SHOW_LOADING_THRESHOLD) statusMessage.classList.add("loading");
 
 		// Only reset after 'post' to not have the user redo the existing selection on a retry
 		checkboxAll.checked = false;
@@ -524,7 +524,7 @@ function changeAssignUser() {
 	var pathIds = getSelectedPathIds();
 	if (pathIds.length >= 1) {
 		var newValue = assignUserSelect.options[assignUserSelect.selectedIndex].value;
-		if (pathIds.length >= SHOW_LOADING_THRESHOLD -1) statusMessage.classList.add("loading");
+		if (pathIds.length > SHOW_LOADING_THRESHOLD) statusMessage.classList.add("loading");
 		vscode.postMessage({command: "assignUser", assignUser: newValue, data: pathIds });
 		checkboxAll.checked = false;							// Only reset on 'success' to not have the user redo the existing selection on a retry
 	} else {
@@ -654,7 +654,7 @@ function saveComment() {
 		} else {
 			vscode.postMessage({command: 'bulkComments', bulkComment: comment, data: pathIds });
 		}
-		if (pathIds.length >= SHOW_LOADING_THRESHOLD -1) statusMessage.classList.add("loading");
+		if (pathIds.length > SHOW_LOADING_THRESHOLD) statusMessage.classList.add("loading");
 		checkboxAll.checked = false;
 	
 	}
