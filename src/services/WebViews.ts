@@ -109,7 +109,6 @@ export class WebViews {
 		if(usersResponse){
 			for(let user of usersResponse) usersList.push(user.username);
 		}
-		query.mandatoryComment = CxSettings.getMandatoryCommentFlag();
 		query.usersList = usersList;
 		this.queryNode = query;
 		this.resultTablePanel.webview.postMessage(query);
@@ -199,7 +198,7 @@ export class WebViews {
 											this.resultStateChanged(message.bulkComment, message.resultStateTobeChange, message.data,message.resultStateText);
 										else
 											this.resultStateChanged('', message.resultStateTobeChange, message.data,message.resultStateText);
-										  return;
+										return;
 									case 'updateComment':
 										this.updateUserComment(message.inputCommentValue, message.pathId);
 										return;
@@ -425,9 +424,8 @@ export class WebViews {
 		let scanId = this.scanNode.scanId;
 		let nodes = this.queryNode.Result;
 		this.queryNode.mandatoryCommentErrorMessage = "";
-		let mandatoryComment = CxSettings.getMandatoryCommentFlag();
 
-		const request = bulkComment === '' ? {"state" : selectedResultState} : {"state" : selectedResultState,"comment" : bulkComment};
+		const request = bulkComment === '' || bulkComment === undefined? {"state" : selectedResultState} : {"state" : selectedResultState,"comment" : bulkComment};
 		//The below for loop updates the result state
 		let isErrorCatched = false;
 		for (var i = 0; i < rows.length; i++) {
@@ -454,10 +452,8 @@ export class WebViews {
 							//in case sast server flag is true but extension flag is false then updating result state throws error response with 49797 code. This if block tackles the error response.
 							if (err.response.body.messageCode == 49797) {
                                 this.log.error("A comment is required for updating the Result State.");
-                                //this.queryNode.mandatoryCommentErrorMessage = "A comment is required for updating the Result State. Please update your Extension settings accordingly.";
 							} else if (err.response.body.messageCode == 49798) {
                                 this.log.error("A comment is required for updating the Result State to Not Exploitable.");
-                                //this.queryNode.mandatoryCommentErrorMessage = "A comment is required for updating the Result State to Not Exploitable. Please update your Extension settings accordingly.";
                             }
 						}	
 					}

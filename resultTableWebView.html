@@ -545,7 +545,7 @@ function clickResultRow(e) {
 		if (previous) previous.classList.remove("selected");
 		target.classList.add("selected");
 	}
-	var i = target.id.split('_')[1];
+	var i = target.id.split('_')[1] != undefined ? target.id.split('_')[1] : target.parentNode.parentNode.id.split('_')[1];
 	vscode.postMessage({ path: results.Result[i].Path, command: "onClick", clickedRow: i });
 }
 
