@@ -71,7 +71,7 @@
         th.noResize						{ resize: none }
         
         td.break 						{ white-space: nowrap; overflow-wrap: anywhere }
-        td.numeric						{ width: 40px; text-align: right }
+		td.numeric						{ width: 40px; text-align: right }
         td.vcenter						{ text-align: center; vertical-align: middle; padding: 2px 0px }
         
         .display						{ display: inline-block !important }
@@ -92,9 +92,6 @@
         #existingComments				{ width: 100% }
         
         ::-webkit-scrollbar 			{ width: 15px !important }
-        
-        button.infoIcon						{ padding-right: 12px }
-        .infoIcon:after					{ float: right; content: '�'; font-size: 125%; font-weight: 400; line-height: 110%; position: relative }
         
         /* Spinner */
         .loading						{ width: 16px !important; height: 16px !important; top: 4px !important;
@@ -136,7 +133,7 @@
 					<button id="nextPageButton">&gt;</button>
 					<select id="resultStateSelect"	title="Assign Result-State to selected Result(s)"></select>
 					<select id="assignUserSelect" 	title="Assign User to selected Result(s)"></select>
-					<button id="addCommentButton" 	title="Add Comment to selected Result(s)" class="infoIcon"> &nbsp; Add Comment &nbsp; </button>
+					<button id="addCommentButton" 	title="Add Comment to selected Result(s)" > &nbsp; Add Comment(s) &nbsp; </button>
 					<div id="statusMessage"></div>
 				</td>
 				<td id="cxLogo"></td>
@@ -157,7 +154,7 @@
 				<th title="Destination Object">Dest Object</th>
 				<!-- <th title="Result Severity">Severity</th> //-->
 				<th title="Assigned User">User</th>
-				<!-- <th title="Comments" class="noResize">Comments</th> //-->
+				<th title="Comments" class="noResize">Comments</th> 
 			</tr>
 			<tr class="filters"> 
 				<td></td> 
@@ -174,7 +171,7 @@
 				<td><input type="text" name="destName" 		placeholder="Filter"   title="Enter Destination Object Name filter to apply"></td> 
 				<!-- <td></td> //-->
 				<td><select            name="assignedUser" 	id="assignUserFilter"  title="Select Assigned User Filter to apply"></select></td>
-				<!-- <td></td> //-->
+				<td></td> 
 			</tr>
 		</thead>
 		<tbody id="tbody"></tbody>
@@ -365,8 +362,8 @@ function renderResults(noAutoSelect) {
 	var rows = qsAll("#tbody tr");
 	for (var i=0; i < rows.length; i++) rows[i].onclick = clickResultRow;
 
-	var states = qsAll("#tbody tr .state");
-	for (var i=0; i < states.length; i++) states[i].onclick = showComment;
+	var comments = qsAll("#tbody tr .comment");
+	for (var i=0; i < comments.length; i++) comments[i].onclick = showComment;
 
 	// Auto-select the first item unless Filter is active
 	if (!noAutoSelect) {
@@ -409,19 +406,20 @@ for (var i=0; i < count; i++) {
 
     html += "<tr id='result_" 					 + (offset + i) + "' class='result'>" +
             "<td class='vcenter'><input value='" + result.Path[0].$.PathId + "' type='checkbox' name='querySelected'></td>" +
-            "<td class='numeric'>" 				 + result.Path[0].$.PathId + "</td>" +
-            "<td class='state" 		 		 + (noComment ? "" : " infoIcon") + "' title='" + comment + "'>" + state + "</td>" +
-            "<td>" 								 + result.$.Status + "</td>" +
-            "<td class='break'>" 				 + srcFolder + "</td>" +
-            "<td>"		 						 + srcFileName + "</td>" +
-            "<td class='numeric'>" 				 + result.Path[0].PathNode[0].Line + "</td>" +
-            "<td>" 								 + srcName + "</td>" +
-            "<td class='break'>"				 + destFolder + "</td>" +
-            "<td>" 								 + destFileName + "</td>" +
-            "<td class='numeric'>"				 + result.Path[0].PathNode[nodeCount].Line + "</td>" +
-            "<td>" 								 + destName + "</td>" +
-            /* "<td>"		 					 + result.$.Severity.replace("Information", "Info")  + "</td>" + */
-            "<td>" 								 + result.$.AssignToUser + "</td>" + 
+            "<td class='numeric' title='"+ result.Path[0].$.PathId +"'>" 				 + result.Path[0].$.PathId + "</td>" +
+            "<td class='state' title='" + state + "'>" + state + "</td>" +
+            "<td title='" + result.$.Status +"'>" 								 + result.$.Status + "</td>" +
+            "<td class='break' title='" + srcFolder +"'>" 				 + srcFolder + "</td>" +
+            "<td title='" + srcFileName +"'>"		 						 + srcFileName + "</td>" +
+            "<td class='numeric'  title='" + result.Path[0].PathNode[0].Line +"'>" 				 + result.Path[0].PathNode[0].Line + "</td>" +
+            "<td title='" + srcName +"'>" 								 + srcName + "</td>" +
+            "<td class='break' title='" + destFolder +"'>"				 + destFolder + "</td>" +
+            "<td title='" + destFileName +"'>" 								 + destFileName + "</td>" +
+            "<td class='numeric' title='" + result.Path[0].PathNode[nodeCount].Line +"'>"				 + result.Path[0].PathNode[nodeCount].Line + "</td>" +
+            "<td title='" + destName +"'>" 								 + destName + "</td>" +
+            "<td title='" + result.$.AssignToUser +"'>" 								 + result.$.AssignToUser + "</td>" + 
+			"<td  title='" + comment + "'><center><img class='comment' src='data:image/png;base64,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'  width='15' height='15' /></center>"
+             + "</td>" +
         "</tr>";
 }
 return html;
@@ -557,7 +555,7 @@ function clickResultRow(e) {
 // html is the body of the existing comment. It should already be sanitised before calling this function. 
 // Pressing the Escape key will cancel the comment.
 function showComment(e) {
-
+	
 	var source = e.target;
 	var html   = "";
 	var pathId = -1;	
@@ -602,6 +600,13 @@ function showComment(e) {
 			// Fetch Result details
 			pathId = source.parentNode.querySelector("input[type='checkbox']").value; 
 			html = source.parentNode.querySelector(".state").title; 
+			
+			break;
+		case "IMG":
+		
+			// Fetch Result details
+			pathId = source.parentNode.parentNode.parentNode.querySelector("input[type='checkbox']").value;
+			html = source.parentNode.parentNode.title;
 			
 			break;
 			
