@@ -135,7 +135,8 @@
 					<select id="resultStateSelect"	title="Assign Result-State to selected Result(s)"></select>
 					<select id="assignUserSelect" 	title="Assign User to selected Result(s)"></select>
 					<button id="addCommentButton" 	title="Add Comment to selected Result(s)" > &nbsp; Add Comment(s) &nbsp; </button>
-					<div id="statusMessage"></div>
+					<br/>
+					<div id="statusMessage" style="display: none;"></div>
 				</td>
 				<td id="cxLogo"></td>
 			</tr>
@@ -648,7 +649,7 @@ function saveComment() {
 		return false;
 	}
 	
-	if (commentPathId.value != "-1" &&  resultStateSelect.selectedIndex !== 0) {
+	if (commentPathId.value != "-1" &&  resultStateSelect.selectedIndex == 0) {
 		vscode.postMessage({command: 'updateComment', inputCommentValue: comment, pathId: commentPathId.value });
 	} else {
 		var pathIds = getSelectedPathIds();
@@ -678,6 +679,7 @@ function updateDescription() { description.innerHTML = (!results.description.sho
 
 // Show & Hide/Reset Action Error Message with optimal auto-hide timeout in ms.
 function showStatusMessage(html, timeout) { 
+	statusMessage.style.display = "block";
 	statusMessage.innerHTML = html; 
 	if (timeout) { 
 		if (timeoutRef) clearTimeout(timeoutRef); 
@@ -689,6 +691,7 @@ function showStatusMessage(html, timeout) {
 function resetStatusMessage() { 
 	statusMessage.innerHTML = "";
 	timeoutRef = null;
+	statusMessage.style.display = "none";
 }
 
 
