@@ -496,11 +496,12 @@ function changeResultState() {
 	if (pathIds.length >= 1) {
 
 		var newValue = resultStateSelect.options[resultStateSelect.selectedIndex].value;
+		var selectedResultStateText = resultStateSelect.options[resultStateSelect.selectedIndex].text;
 
 		// The saveComment function handles mandatoryComments with a "resultstateChangeEvent" too.
 		if ((strictNE && newValue == 1) || strictAll) return showComment( { target: { tagName: "SELECT" } } );
 
-		vscode.postMessage({command: "resultstateChangeEvent", resultStateTobeChange: newValue, data: pathIds });
+		vscode.postMessage({command: "resultstateChangeEvent", resultStateTobeChange: newValue, data: pathIds , resultStateText : selectedResultStateText});
 		if (pathIds.length > SHOW_LOADING_THRESHOLD) statusMessage.classList.add("loading");
 
 		// Only reset after 'post' to not have the user redo the existing selection on a retry
@@ -646,13 +647,13 @@ function saveComment() {
 		return false;
 	}
 	
-	if (commentPathId.value != "-1") {
+	if (commentPathId.value != "-1" &&  resultStateSelect.selectedIndex !== 0) {
 		vscode.postMessage({command: 'updateComment', inputCommentValue: comment, pathId: commentPathId.value });
 	} else {
 		var pathIds = getSelectedPathIds();
 		if (strictNE || strictAll ) {
 			if (resultStateSelect.selectedIndex != 0) { 
-				vscode.postMessage({command: 'resultstateChangeEvent', bulkComment: comment, resultStateTobeChange: resultStateSelect.options[resultStateSelect.selectedIndex].value, data: pathIds });
+				vscode.postMessage({command: 'resultstateChangeEvent', bulkComment: comment, resultStateTobeChange: resultStateSelect.options[resultStateSelect.selectedIndex].value, data: pathIds,resultStateText :resultStateSelect.options[resultStateSelect.selectedIndex].text });
 			} else {                          
 				vscode.postMessage({command: 'bulkComments', bulkComment: comment, data: pathIds });
 			}
