@@ -438,7 +438,7 @@ export class WebViews {
 						try {
 							await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
 							nodes[nodeCtr].$.state = selectedResultState;	
-							nodes[nodeCtr].$.Remark = bulkComment === '' ? nodes[nodeCtr].$.Remark  : `New Comment,${bulkComment}\r\n${nodes[nodeCtr].$.Remark}`;					
+							nodes[nodeCtr].$.Remark = bulkComment === '' || bulkComment === undefined? nodes[nodeCtr].$.Remark  : `New Comment,${bulkComment}\r\n${nodes[nodeCtr].$.Remark}`;					
 						} 
 						catch (err) {
 							isErrorCatched = true;
