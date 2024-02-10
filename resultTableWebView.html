@@ -45,9 +45,10 @@
         thead 							{ position: sticky; top: 0px; background-color: var(--vscode-tab-activeBackground) }
         td, th 							{ min-width: 20px; width: 0; padding: 2px 3px } 
         th, tr.results td 				{ border-right: 1px solid var(--vscode-panel-background) }
-        th 								{ resize: horizontal; overflow: hidden; white-space: nowrap; padding: 2px 5px; 
+        th 								{ overflow: hidden; white-space: nowrap;  
                                           background-color: var(--cx-bg-color); color: var(--cx-fg-color) } 
         td								{ vertical-align: top }
+		th div 							{resize: horizontal;overflow: hidden;display: block;width: auto;height: 100%;padding: 0px 10px;}
         
         tr.actionBar td					{ padding: 8px 0 }
         tr.actionBar button,
@@ -141,20 +142,20 @@
 
 			<tr class="header">
 				<th title="Select All Results" class="noResize"><input type="checkbox" id="checkboxAll"></th>
-				<th title="Id">Id</th>
-				<th title="Result State">Result State</th>
-				<th title="Status">Status</th>
-				<th title="Source Folder">Source Folder</th>
-				<th title="Source Filename">Source File</th>
-				<th title="Source Line" class="numeric">Src Line</th>
-				<th title="Source Object">Src Object</th>
-				<th title="Destination Folder">Destination Folder</th>
-				<th title="Destination Filename">Destination File</th>
-				<th title="Destination Line" class="numeric">Dest Line</th>
-				<th title="Destination Object">Dest Object</th>
+				<th title="Id"><div>Id</div></th>
+				<th title="Result State"><div>Result State</div></th>
+				<th title="Status"><div>Status</div></th>
+				<th title="Source Folder"><div>Source Folder</div></th>
+				<th title="Source Filename"><div>Source File</div></th>
+				<th title="Source Line" class="numeric"><div>Src Line</div></th>
+				<th title="Source Object"><div>Src Object</div></th>
+				<th title="Destination Folder"><div>Destination Folder</div></th>
+				<th title="Destination Filename"><div>Destination File</div></th>
+				<th title="Destination Line" class="numeric"><div>Dest Line</div></th>
+				<th title="Destination Object"><div>Dest Object</div></th>
 				<!-- <th title="Result Severity">Severity</th> //-->
-				<th title="Assigned User">User</th>
-				<th title="Comments" class="noResize">Comments</th> 
+				<th title="Assigned User"><div>User</div></th>
+				<th title="Comments"><div>Comments</div></th> 
 			</tr>
 			<tr class="filters"> 
 				<td></td> 
