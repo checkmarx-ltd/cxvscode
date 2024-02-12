@@ -54,11 +54,6 @@ export class WebViews {
 			vscode.window.showErrorMessage('Access token expired. Please login.');
 			return;
 		}
-		/*
-		if (this.queryDescriptionPanel) {
-			this.queryDescriptionPanel.dispose();
-		}
-		*/
 
 		this.log.info('Loading the HTML content...');
 

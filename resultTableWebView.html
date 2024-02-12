@@ -317,7 +317,7 @@ resultStateFilter.onchange  = filterResult;
 // Populate Assigned User dropdown (using one extra dummy label option) and hookup event-handler
 html = "";
 results.usersList = results.usersList.sort();
-for (var i = 0; i < results.usersList.length; i++) { html += "<option value='" + results.usersList[i] + "'>" + results.usersList[i] + "</option>" }
+for (var j = 0; j < results.usersList.length; j++) { html += "<option value='" + results.usersList[j] + "'>" + results.usersList[j] + "</option>" }
 assignUserSelect.innerHTML = "<option disabled selected>Assign User</option><option value=''>[ Nobody ]</option>" + html;
 assignUserFilter.innerHTML = "<option value=''> - </option>" + html;
 assignUserSelect.onchange  = changeAssignUser;
@@ -362,7 +362,7 @@ function renderResults(noAutoSelect) {
 	for (var i=0; i < rows.length; i++) rows[i].onclick = clickResultRow;
 
 	var comments = qsAll("#tbody tr .comment");
-	for (var i=0; i < comments.length; i++) comments[i].onclick = showComment;
+	for (var j=0; j < comments.length; j++) comments[j].onclick = showComment;
 
 	// Auto-select the first item unless Filter is active
 	if (!noAutoSelect) {
