@@ -475,7 +475,7 @@ function filterResult(e) {
 function getSelectedPathIds() {
 	var nodes  = qsAll("#tbody tr input[type='checkbox']:checked");
 	var values = [];
-	for (var i=0; i < nodes.length; i++) values.push(nodes[i].value);
+	for (let node of nodes) values.push(node.value);
 	return (values.length < 1) ? [qs("#tbody tr.selected input[type='checkbox']").value] : values;
 }
 
@@ -483,7 +483,8 @@ function getSelectedPathIds() {
 // Handle Select All Checkbox changes
 function checkboxAllChange() {
 	var checkboxes = qsAll("#tbody tr input[type='checkbox']");
-	for (var i=0; i < checkboxes.length; i++) checkboxes[i].checked = checkboxAll.checked;
+	
+	for (let value of checkboxes) value.checked = checkboxAll.checked;
 }
 
 
@@ -720,7 +721,7 @@ window.onload = function start() {
 
 	// Hookup the Column Filter event-handlers
 	var filters = qsAll("tr.filters INPUT[type='text']");
-	for (var i=0; i < filters.length; i++) filters[i].onkeyup = filterResult;
+	for (let value of filters) value.onkeyup = filterResult;
 
 	// Route [ESC] press to Cancel button click
 	commentOverlay.onkeyup = function handleEscape(e) { if (e.keyCode == 27) cancelComment() }
