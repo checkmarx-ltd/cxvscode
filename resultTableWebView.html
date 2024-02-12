@@ -30,7 +30,6 @@
         #nextPageButton					{ display: none }
         #prevPageButton:disabled, 
         #nextPageButton:disabled,
-        #prevPageButton:disabled:hover,
         #prevPageButton:disabled:hover	{ cursor: default; color: var(--vscode-disabledForeground); background-color: var(--vscode-tab-inactiveBackground) }
         
         
@@ -143,21 +142,21 @@
 			</tr>
 
 			<tr class="header">
-				<th title="Select All Results" class="noResize"><input type="checkbox" id="checkboxAll"></th>
-				<th title="Id"><div>Id</div></th>
-				<th title="Result State"><div>Result State</div></th>
-				<th title="Status"><div>Status</div></th>
-				<th title="Source Folder"><div>Source Folder</div></th>
-				<th title="Source Filename"><div>Source File</div></th>
-				<th title="Source Line" class="numeric"><div>Src Line</div></th>
-				<th title="Source Object"><div>Src Object</div></th>
-				<th title="Destination Folder"><div>Destination Folder</div></th>
-				<th title="Destination Filename"><div>Destination File</div></th>
-				<th title="Destination Line" class="numeric"><div>Dest Line</div></th>
-				<th title="Destination Object"><div>Dest Object</div></th>
+				<th title="Select All Results" class="noResize" scope="col"><input type="checkbox" id="checkboxAll"></th>
+				<th title="Id" scope="col"><div>Id</div></th>
+				<th title="Result State" scope="col"><div>Result State</div></th>
+				<th title="Status" scope="col"><div>Status</div></th>
+				<th title="Source Folder" scope="col"><div>Source Folder</div></th>
+				<th title="Source Filename" scope="col"><div>Source File</div></th>
+				<th title="Source Line" class="numeric" scope="col"><div>Src Line</div></th>
+				<th title="Source Object" scope="col"><div>Src Object</div></th>
+				<th title="Destination Folder" scope="col"><div>Destination Folder</div></th>
+				<th title="Destination Filename" scope="col"><div>Destination File</div></th>
+				<th title="Destination Line" class="numeric" scope="col"><div>Dest Line</div></th>
+				<th title="Destination Object" scope="col"><div>Dest Object</div></th>
 				<!-- <th title="Result Severity">Severity</th> //-->
-				<th title="Assigned User"><div>User</div></th>
-				<th title="Comments"><div>Comments</div></th> 
+				<th title="Assigned User" scope="col"><div>User</div></th>
+				<th title="Comments" scope="col"><div>Comments</div></th> 
 			</tr>
 			<tr class="filters"> 
 				<td></td> 
