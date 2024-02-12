@@ -123,7 +123,7 @@
 </head>
 
 <body>
-    <table id="results">
+    <table id="results" aria-describedby="queryresults">
 		<thead>
 			<tr><td id="description" colspan="14"></td></tr>
 			<tr class="actionBar">
@@ -335,7 +335,7 @@ function changePageSizeAndRefresh() { currentPage = 1; renderResults() }
 // Render Results HTML output and handle Paging logic
 function renderResults(noAutoSelect) {
 	var pageSize = pageSizeSelect.options[pageSizeSelect.selectedIndex].innerText;
-	var length   = (resultsFiltered ? resultsFiltered : results).Result.length;
+	var length   = ( resultsFiltered || results).Result.length;
 	var offset   = (currentPage-1) * pageSize;
 	var count    = Math.min(pageSize, length - offset);
 
