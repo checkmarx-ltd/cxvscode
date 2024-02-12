@@ -317,7 +317,7 @@ resultStateFilter.onchange  = filterResult;
 // Populate Assigned User dropdown (using one extra dummy label option) and hookup event-handler
 html = "";
 results.usersList = results.usersList.sort();
-for (var j = 0; j < results.usersList.length; j++) { html += "<option value='" + results.usersList[j] + "'>" + results.usersList[j] + "</option>" }
+for (let user of results.usersList) { html += "<option value='" + user + "'>" + user + "</option>" }
 assignUserSelect.innerHTML = "<option disabled selected>Assign User</option><option value=''>[ Nobody ]</option>" + html;
 assignUserFilter.innerHTML = "<option value=''> - </option>" + html;
 assignUserSelect.onchange  = changeAssignUser;
