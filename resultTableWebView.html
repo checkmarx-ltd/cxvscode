@@ -426,7 +426,7 @@ return html;
 }
 function filterResult(e) {
 	var propName = e.target.name;
-	var filter   = (propName == "state" || propName == "assignedUser") ? e.target.options[e.target.selectedIndex].value : e.target.value.toUpperCase(); 
+	var filter   = getFilterDetails(e);
 	var matches  = [];
 
 	currentPage = 1;
@@ -434,12 +434,12 @@ function filterResult(e) {
 	if (filter == "") {
 		resultsFiltered = null;	// Reset back to raw Results
 	} else {
-
-		for (var i=0; i < results.Result.length; i++) {
-			var result			= results.Result[i];
+		for (let nodeDetails of results.Result) {
+			var result			= nodeDetails;
 			var nodeCount		= result.Path[0].PathNode.length -1;
-			
 			var state 			= result.$.state;
+			var status 			= result.$.Status.toUpperCase();
+			var user			= result.$.AssignToUser
 			var srcFile			= String(result.Path[0].PathNode[0].FileName).toUpperCase();
 			var srcFolder       = srcFile.slice(0, srcFile.lastIndexOf("/"));
 			var srcFileName 	= srcFile.slice(srcFile.lastIndexOf("/") +1);
@@ -454,22 +454,29 @@ function filterResult(e) {
 			// Handle property search. We use the '&&' as an inline if-statement to prevent the switch statement from becoming too lengthy.
 			switch (propName) {
 				case "state":			state.indexOf(filter) 			> -1 && matches.push(result); break;
+				case "status":			status.indexOf(filter) 			> -1 && matches.push(result); break;
 				case "srcFolder":		srcFolder.indexOf(filter) 		> -1 && matches.push(result); break;
 				case "srcFileName":		srcFileName.indexOf(filter) 	> -1 && matches.push(result); break;
 				case "srcLine":			srcLine == parseInt(filter) 		 && matches.push(result); break;
 				case "srcName":			srcName.indexOf(filter) 		> -1 && matches.push(result); break;
 				case "destFolder":		destFolder.indexOf(filter) 		> -1 && matches.push(result); break;
-				case "destFileName":	destFileName.indexOf(filter) 	> -1 && matches.push(result); break;
+				case "destFilename":	destFileName.indexOf(filter) 	> -1 && matches.push(result); break;
 				case "destLine":		destLine == parseInt(filter)		 && matches.push(result); break;
 				case "destName":		destName.indexOf(filter) 		> -1 && matches.push(result); break;
+				case "assignedUser":	user.indexOf(filter) 			> -1 && matches.push(result); break;
 				default:
 			}
 		}
-
 		resultsFiltered = { Result : matches };
 	}
 	renderResults(true);	// Render new results without auto-select of first Result
 	e.stopPropagation();
+}
+
+function getFilterDetails(e)
+{
+	var propName = e.target.name;
+	return (propName == "state" || propName == "assignedUser") ? e.target.options[e.target.selectedIndex].value : e.target.value.toUpperCase(); 
 }
 
 // Return all checbox-selected PathIds for bulk operations.
@@ -477,7 +484,7 @@ function getSelectedPathIds() {
 	var nodes  = qsAll("#tbody tr input[type='checkbox']:checked");
 	var values = [];
 	for (let node of nodes) values.push(node.value);
-	return (values.length < 1) ? [qs("#tbody tr.selected input[type='checkbox']").value] : values;
+	return (values.length < 0) ? [qs("#tbody tr.selected input[type='checkbox']").value] : values;
 }
 
 
