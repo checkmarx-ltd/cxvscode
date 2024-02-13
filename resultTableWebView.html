@@ -359,10 +359,11 @@ function renderResults(noAutoSelect) {
 	
 	// Hookup click-event handlers for all results
 	var rows = qsAll("#tbody tr");
-	for (var i=0; i < rows.length; i++) rows[i].onclick = clickResultRow;
+	for (let row of rows) row.onclick = clickResultRow;
 
 	var comments = qsAll("#tbody tr .comment");
-	for (var j=0; j < comments.length; j++) comments[j].onclick = showComment;
+
+	for (let result of comments) result.onclick = showComment;
 
 	// Auto-select the first item unless Filter is active
 	if (!noAutoSelect) {
@@ -399,7 +400,7 @@ for (var i=0; i < count; i++) {
     var noComment		= false;
 
     // Encode comments HtmlAttribute proof
-    for (var n=0; n < comments.length; n++) comment += htmlEscape(comments[n]).trim() + "\n"; 
+	for (let result of comments) comment += htmlEscape(result).trim() + "\n"; 
     noComment = (comment.replaceAll("\n", "").length < 1);
     if (noComment) comment = "No comment yet... Click to add a comment.";
 
