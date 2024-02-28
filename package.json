@@ -101,10 +101,6 @@
 					"type": "string",
 					"description": "SSL certificate path."
 				},
-				"cx.mandatoryComment": {
-					"type": "boolean",
-					"description": "This will make providing comments mandatory while changing result state of vulnerabilitie(s)."
-				},
 				"cx.avoidDuplicateProjectScansInQueue": {
 					"type": "boolean",
 					"description": "Avoid duplicate project scans in queue."
