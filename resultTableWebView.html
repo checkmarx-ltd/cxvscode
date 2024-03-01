@@ -730,10 +730,11 @@ window.onload = function start() {
 	// Hookup the Column Filter event-handlers
 	var filters = qsAll("tr.filters INPUT[type='text']");
 	for (let value of filters) value.onkeyup = filterResult;
-
-	// Route [ESC] press to Cancel button click
-	commentOverlay.onkeyup = function handleEscape(e) { if (e.keyCode == 27) cancelComment() }
-
 }
+document.addEventListener('keydown', function(event) {
+	// Route [ESC] press to Cancel button click
+	var commentDiv = document.getElementById('commentOverlay');
+    if (commentDiv.className == "flex" && event.keyCode == 27) cancelComment();
+});
 </script>
 </html>
