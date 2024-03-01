@@ -17,7 +17,7 @@
         * 								{ box-sizing: border-box }
         body							{ display: none; padding: 0px 10px 4px 10px; background-color: var(--vscode-tab-activeBackground); color: var(--vscode-editor-foreground) }
         
-        #description 					{ padding: 5px 40px 0px 2px; white-space: initial; font-size: 105%; width: 90% }   
+        #description 					{ padding: 0px !important; white-space: initial; font-size: 105%; width: 90% }   
         
         #statusMessage, #commentError	{ color: var(--vscode-errorForeground) }
         
@@ -125,7 +125,7 @@
 <body>
     <table id="results" aria-describedby="queryresults">
 		<thead>
-			<tr><td id="description" colspan="14"></td></tr>
+			<tr><td id="description" colspan="13"></td></tr>
 			<tr class="actionBar">
 				<td colspan="13">
 					<select id="pageSizeSelect" title="Number of Results per Page to display"><option>1</option><option>2</option><option>5</option><option selected>10</option><option>20</option><option>50</option><option>100</option></select>
