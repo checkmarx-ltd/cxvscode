@@ -652,13 +652,17 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 
             let sourceLocation: string;
             sourceLocation = await this.getSourceLocation(isFolder,scanPath);
-
-            const isScanIncremental = await Utility.showPickString("Is scan incremental?", ['Yes', 'No']);
-            const isIncremental: boolean = Utility.modeIsEnabled(isScanIncremental);
-            if (isIncremental) {
-                this.showMessage('Scan is incremental');
-            } else {
-                this.showMessage('Scan is full');
+            
+            let isIncremental: boolean = false;
+            if (this.currBoundProject)
+            {
+                const isScanIncremental = await Utility.showPickString("Is scan incremental?", ['Yes', 'No']);
+                isIncremental = Utility.modeIsEnabled(isScanIncremental);
+                if (isIncremental) {
+                    this.showMessage('Scan is incremental');
+                } else {
+                    this.showMessage('Scan is full');
+                }
             }
             
             var isPrivate : boolean;

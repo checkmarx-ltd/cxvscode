@@ -17,7 +17,7 @@
         * 								{ box-sizing: border-box }
         body							{ display: none; padding: 0px 10px 4px 10px; background-color: var(--vscode-tab-activeBackground); color: var(--vscode-editor-foreground) }
         
-        #description 					{ padding: 5px 40px 0px 2px; white-space: initial; font-size: 105%; width: 90% }   
+        #description 					{ padding: 0px !important; white-space: initial; font-size: 105%; width: 90% }   
         
         #statusMessage, #commentError	{ color: var(--vscode-errorForeground) }
         
@@ -47,7 +47,7 @@
         th 								{ overflow: hidden; white-space: nowrap;  
                                           background-color: var(--cx-bg-color); color: var(--cx-fg-color) } 
         td								{ vertical-align: top }
-		th div 							{resize: horizontal;overflow: hidden;display: block;width: auto;height: 100%;padding: 0px 10px;}
+		th div 							{resize: horizontal;overflow: hidden;display: block;width: auto;height: 100%;padding: 0px 10px; min-width: calc(100% ) !important}
         
         tr.actionBar td					{ padding: 8px 0 }
         tr.actionBar button,
@@ -125,7 +125,7 @@
 <body>
     <table id="results" aria-describedby="queryresults">
 		<thead>
-			<tr><td id="description" colspan="14"></td></tr>
+			<tr><td id="description" colspan="13"></td></tr>
 			<tr class="actionBar">
 				<td colspan="13">
 					<select id="pageSizeSelect" title="Number of Results per Page to display"><option>1</option><option>2</option><option>5</option><option selected>10</option><option>20</option><option>50</option><option>100</option></select>
@@ -730,10 +730,11 @@ window.onload = function start() {
 	// Hookup the Column Filter event-handlers
 	var filters = qsAll("tr.filters INPUT[type='text']");
 	for (let value of filters) value.onkeyup = filterResult;
-
-	// Route [ESC] press to Cancel button click
-	commentOverlay.onkeyup = function handleEscape(e) { if (e.keyCode == 27) cancelComment() }
-
 }
+document.addEventListener('keydown', function(event) {
+	// Route [ESC] press to Cancel button click
+	var commentDiv = document.getElementById('commentOverlay');
+    if (commentDiv.className == "flex" && event.keyCode == 27) cancelComment();
+});
 </script>
 </html>
