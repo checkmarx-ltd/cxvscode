@@ -13,6 +13,7 @@ import { LoginChecks } from "../services/loginChecks";
 import { LoginMethods } from './LoginMethods';
 import { SSOConstants } from './ssoConstant';
 import { SessionStorageService } from '../services/sessionStorageService';
+import { CxPluginDetails } from "./CxPluginDetails";
 
 export class ServerNode implements INode {
 
@@ -47,7 +48,7 @@ export class ServerNode implements INode {
 
         const baseUrl = url.resolve(this.sastUrl, 'CxRestAPI/');
 
-        this.httpClient = new HttpClient(baseUrl, "Visual-Studio-Code","", this.log,this.proxyConfig,CxSettings.getSSLCertPath());
+        this.httpClient = new HttpClient(baseUrl, "Visual-Studio-Code","", this.log,this.proxyConfig,CxSettings.getSSLCertPath(), CxPluginDetails.getPluginVersion());
 
         this.storageManager = new SessionStorageService(context.workspaceState);
 
@@ -62,6 +63,7 @@ export class ServerNode implements INode {
             if (cxServerSettings) {
                 this.username = cxServerSettings.username;
                 this.password = cxServerSettings.password;
+                this.login();
                 if (cxServerSettings.project_id > 0) {
                     this.currBoundProject = new ProjectNode(cxServerSettings.project_id, cxServerSettings.team_id, cxServerSettings.project_name);
                 }
@@ -167,7 +169,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 this.log.info('Login successful');
                 vscode.window.showInformationMessage('Login successful');
                 this.storageManager.setValue<string>(SSOConstants.ACCESS_TOKEN, this.httpClient.accessToken);
-
+                await this.httpClient.getPermissionDetailsUsingJwtDecode(); 
                 if (this.isBoundToProject()) 
                 {
                     await this.retrieveLatestResults();
@@ -176,7 +178,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             else 
             {
                 await this.ssoLogin();
-            }         
+            }      
         }    
         catch (err) {
             this.log.error(err);
@@ -227,7 +229,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 let authURL: string = await this.httpClient.getAuthorizationCodeURL(this.authSSODetails);
                 
                 // Open browser windows for SAST server login for SSO
-                vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(authURL));
+                vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(authURL));  
                
         }catch (err) {
             this.log.error(err);
@@ -253,7 +255,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 
             /* Setting access token in context */ 
             this.storageManager.setValue<string>(SSOConstants.ACCESS_TOKEN, access_token);
-
+            await this.httpClient.getPermissionsFromUserInfo(); 
             if (this.isBoundToProject()) {
                 await this.retrieveLatestResults();
             }
@@ -650,13 +652,17 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
 
             let sourceLocation: string;
             sourceLocation = await this.getSourceLocation(isFolder,scanPath);
-
-            const isScanIncremental = await Utility.showPickString("Is scan incremental?", ['Yes', 'No']);
-            const isIncremental: boolean = Utility.modeIsEnabled(isScanIncremental);
-            if (isIncremental) {
-                this.showMessage('Scan is incremental');
-            } else {
-                this.showMessage('Scan is full');
+            
+            let isIncremental: boolean = false;
+            if (this.currBoundProject)
+            {
+                const isScanIncremental = await Utility.showPickString("Is scan incremental?", ['Yes', 'No']);
+                isIncremental = Utility.modeIsEnabled(isScanIncremental);
+                if (isIncremental) {
+                    this.showMessage('Scan is incremental');
+                } else {
+                    this.showMessage('Scan is full');
+                }
             }
             
             var isPrivate : boolean;
@@ -699,7 +705,7 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 isPublic: !isPrivate,
                 postScanActionName: "",
                 postScanActionId: -1,
-                avoidDuplicateProjectScans:false,
+                avoidDuplicateProjectScans: CxSettings.getAvoidDuplicateProjectScansInQueueFlag(),
                 projectCustomFields: "",
                 customFields: "",
                 failBuildForNewVulnerabilitiesEnabled: false,
@@ -709,7 +715,6 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 // This gets used only in ADO plugin. adding here to resolve compileation issue.
                 cacert_chainFilePath: ""
             };
-
             let proxyResult: ProxyConfig ={
                 proxyHost: '',
                 proxyPass:  '',

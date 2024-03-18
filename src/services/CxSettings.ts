@@ -14,7 +14,7 @@ const CX_FILE_EXTENSIONS: string = 'cx.fileExtensions';
 const CX_REPORT_PATH: string = 'cx.reportPath';
 const CX_ENABLE_USER_CREDENTIALS_LOGIN: string = 'cx.enableUserCredentialsLogin';
 const CX_SSL_CERT_PATH: string = 'cx.sslCertificatePath';
-const CX_ENABLE_MANDATORY_COMMENT_ON_RESULT_STATE_CHANGE: string = 'cx.mandatoryComment';
+const CX_AVOID_DUPLICATE_PROJECT_SCANS_IN_QUEUE  : string = 'cx.avoidDuplicateProjectScansInQueue';
 
 export interface CxServerSettings {
     url: string;
@@ -199,19 +199,19 @@ export class CxSettings {
     /**
      * Stores mandatory comment in the settings.json
      *
-     * @param isEnableMandatoryComment flag represents Mandatory Comment
+     * @param isEnableAvoidDuplicateProjectScansInQueue flag represents Avoid duplicate project scans in queue
      */
-     public static async updateMandatoryCommentFlag(isEnableMandatoryComment: boolean) {
-        await vscode.workspace.getConfiguration().update(CX_ENABLE_MANDATORY_COMMENT_ON_RESULT_STATE_CHANGE, isEnableMandatoryComment);
+    public static async updateAvoidDuplicateProjectScansInQueueFlag(isEnableAvoidDuplicateProjectScansInQueue: boolean) {
+        await vscode.workspace.getConfiguration().update(CX_AVOID_DUPLICATE_PROJECT_SCANS_IN_QUEUE, isEnableAvoidDuplicateProjectScansInQueue);
     }
 
     /**
-     * Returns the current value of cx.folderExclusions setting
+     * Returns the current value of cx.avoidDuplicateProjectScansInQueue setting
      *
-     * @returns Folder exclusions as string
+     * @returns Avoid duplicate project scans in queue as boolean
      */
-    public static getMandatoryCommentFlag(): boolean {
-        return vscode.workspace.getConfiguration().get(CX_ENABLE_MANDATORY_COMMENT_ON_RESULT_STATE_CHANGE) as boolean;
+    public static getAvoidDuplicateProjectScansInQueueFlag(): boolean {
+        return vscode.workspace.getConfiguration().get(CX_AVOID_DUPLICATE_PROJECT_SCANS_IN_QUEUE) as boolean;
     }
 
     public static async updateReportPath(reportPath: string) {
