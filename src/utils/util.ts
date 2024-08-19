@@ -63,17 +63,20 @@ export class Utility {
     public static getIconPerSeverity(severity: string, colorTheme: string): string {
         let iconPath: string = "";
         switch (severity) {
+            case "Critical":
+                iconPath = path.join(__filename, "..", "..", "..", "resources", "icons", colorTheme, "Critical.png");
+                break;
             case "High":
-                iconPath = path.join(__filename, "..", "..", "..", "resources", "icons", colorTheme, "error.svg");
+                iconPath = path.join(__filename, "..", "..", "..", "resources", "icons", colorTheme, "High.png");
                 break;
             case "Medium":
-                iconPath = path.join(__filename, "..", "..", "..", "resources", "icons", colorTheme, "warning.svg");
+                iconPath = path.join(__filename, "..", "..", "..", "resources", "icons", colorTheme, "Medium.png");
                 break;
             case "Low":
-                iconPath = path.join(__filename, "..", "..", "..", "resources", "icons", colorTheme, "field.svg");
+                iconPath = path.join(__filename, "..", "..", "..", "resources", "icons", colorTheme, "Low.png");
                 break;
             case "Information":
-                iconPath = path.join(__filename, "..", "..", "..", "resources", "icons", colorTheme, "info.svg");
+                iconPath = path.join(__filename, "..", "..", "..", "resources", "icons", colorTheme, "Information.png");
                 break;
         }
         return iconPath;
