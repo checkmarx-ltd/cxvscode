@@ -133,6 +133,7 @@ export class ScanNode implements INode {
         const statistics: any = await this.httpClient.getRequest(`sast/scans/${this.scanId}/resultsStatistics`);
 
         this.scanResult.scanId = this.scanId;
+        this.scanResult.criticalResults = statistics.criticalSeverity;
         this.scanResult.highResults = statistics.highSeverity;
         this.scanResult.mediumResults = statistics.mediumSeverity;
         this.scanResult.lowResults = statistics.lowSeverity;
@@ -148,7 +149,10 @@ export class ScanNode implements INode {
     }
 
     private printStatistics() {
-        this.log.info(`----------------------------Checkmarx Scan Results(CxSAST):-------------------------------
+        if(this.scanResult.criticalResults != undefined)
+        {
+            this.log.info(`----------------------------Checkmarx Scan Results(CxSAST):-------------------------------
+Critical severity results: ${this.scanResult.criticalResults}
 High severity results: ${this.scanResult.highResults}
 Medium severity results: ${this.scanResult.mediumResults}
 Low severity results: ${this.scanResult.lowResults}
@@ -157,6 +161,19 @@ Info severity results: ${this.scanResult.infoResults}
 Scan results location:  ${this.scanResult.sastScanResultsLink}
 ------------------------------------------------------------------------------------------
 `);
+
+        }
+        else{
+            this.log.info(`----------------------------Checkmarx Scan Results(CxSAST):-------------------------------
+High severity results: ${this.scanResult.highResults}
+Medium severity results: ${this.scanResult.mediumResults}
+Low severity results: ${this.scanResult.lowResults}
+Info severity results: ${this.scanResult.infoResults}
+                
+Scan results location:  ${this.scanResult.sastScanResultsLink}
+------------------------------------------------------------------------------------------
+                `);
+        }   
     }
 
     private async addDetailedReportToScanResults() {

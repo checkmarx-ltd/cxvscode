@@ -713,7 +713,9 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
                 generatePDFReport: false,
                 overrideProjectSettings: false,
                 // This gets used only in ADO plugin. adding here to resolve compileation issue.
-                cacert_chainFilePath: ""
+                cacert_chainFilePath: "",
+                enableSastBranching : false,
+                masterBranchProjectName: ''
             };
             let proxyResult: ProxyConfig ={
                 proxyHost: '',
