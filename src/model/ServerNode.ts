@@ -296,8 +296,8 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             contextValue: "server_node",
             iconPath: {
-                "light": path.join(__filename, "..", "..", "..", "resources", "icons", "light", "editor-layout.svg"),
-                "dark": path.join(__filename, "..", "..", "..", "resources", "icons", "dark", "editor-layout.svg")
+                "light": vscode.Uri.file(path.join(__filename, "..", "..", "..", "resources", "icons", "light", "editor-layout.svg")),
+                "dark": vscode.Uri.file(path.join(__filename, "..", "..", "..", "resources", "icons", "dark", "editor-layout.svg"))
             }
         };
     }
