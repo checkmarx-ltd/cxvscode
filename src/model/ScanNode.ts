@@ -59,8 +59,8 @@ export class ScanNode implements INode {
             contextValue: "scan_node",
             tooltip : this.chooseLabelName(),
             iconPath: {
-                "light": path.join(__filename, "..", "..", "..", "resources", "icons", "light", "open-preview.svg"),
-                "dark": path.join(__filename, "..", "..", "..", "resources", "icons", "dark", "open-preview.svg")
+                "light": vscode.Uri.file(path.join(__filename, "..", "..", "..", "resources", "icons", "light", "open-preview.svg")),
+                "dark": vscode.Uri.file(path.join(__filename, "..", "..", "..", "resources", "icons", "dark", "open-preview.svg"))
             }
         } : {
             label:  this.chooseLabelName(),
@@ -69,8 +69,8 @@ export class ScanNode implements INode {
             command : command,
             tooltip : this.chooseLabelName(),
             iconPath: {
-                "light": path.join(__filename, "..", "..", "..", "resources", "icons", "light", "open-preview.svg"),
-                "dark": path.join(__filename, "..", "..", "..", "resources", "icons", "dark", "open-preview.svg")
+                "light": vscode.Uri.file(path.join(__filename, "..", "..", "..", "resources", "icons", "light", "open-preview.svg")),
+                "dark": vscode.Uri.file(path.join(__filename, "..", "..", "..", "resources", "icons", "dark", "open-preview.svg"))
             }
         };
     }
