@@ -15,8 +15,8 @@ export class SeverityNode implements INode {
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             contextValue: "severity_node",
             iconPath: {
-                "light": Utility.getIconPerSeverity(this.severityName, "light"),
-                "dark": Utility.getIconPerSeverity(this.severityName, "dark")
+                "light": vscode.Uri.file(Utility.getIconPerSeverity(this.severityName, "light")),
+                "dark": vscode.Uri.file(Utility.getIconPerSeverity(this.severityName, "dark"))
             }
         };
     }
