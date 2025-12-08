@@ -758,6 +758,12 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             let errorMsg = err;
             let messageDetails = undefined;
             try {
+                if (err?.response?.text) {
+                    const parsed = JSON.parse(err.response.text);
+                    if (parsed?.message) {
+                        messageDetails = parsed.message;
+                    }
+                }
                 // Try err.response.text (stringified JSON)
                 if (!messageDetails && err && err.response && typeof err.response.text === 'string') {
                     const errObj = JSON.parse(err.response.text);
