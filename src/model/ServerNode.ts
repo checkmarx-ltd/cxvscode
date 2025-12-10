@@ -777,10 +777,14 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             if (messageDetails) {
                 errorMsg = messageDetails;
             } else {
-                errorMsg = JSON.stringify(err);
+                if (err) {
+                    errorMsg = JSON.stringify(err).trim();
+                    errorMsg = (errorMsg === "{}") ? "" : errorMsg;
+                }
             }
-            this.log.error(err+" ("+errorMsg+")");
-            vscode.window.showErrorMessage(err+" ("+errorMsg+")");
+            errorMsg = errorMsg ? `${err} (${errorMsg})` : `${err}`;
+            this.log.error(errorMsg);
+            vscode.window.showErrorMessage(errorMsg);
         }
     }
 }
