@@ -121,7 +121,6 @@ export class WebViews {
 			}
 		}
 		catch(e){
-			this.log.info(`Old API (sast/resultStates) failed, trying new API (sast/resultStates/safe)`);
 			try {
 				let resultStatesWithPermissions: ResultStateDetails[] = await this.httpClient.getRequest(`sast/resultStates/safe`);
 				for(let state of resultStates.states )
