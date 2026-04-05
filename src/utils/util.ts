@@ -60,6 +60,35 @@ export class Utility {
         return decryptedPass;
     }
 
+    private static extractMessageDetails(parsed: any): string | undefined {
+        return parsed?.messageDetails || parsed?.message || parsed?.error_description || undefined;
+    }
+
+    private static buildErrorMsg(err: any): string {
+        if (err?.message) {
+            return err.message;
+        }
+        const fallback = JSON.stringify(err).trim();
+        return fallback === '{}' ? '' : fallback;
+    }
+
+    public static handleError(err: any, log: any, baseMessage?: string): void {
+        let messageDetails: string | undefined;
+        try {
+            if (err?.response?.text) {
+                const parsed = JSON.parse(err.response.text);
+                messageDetails = Utility.extractMessageDetails(parsed);
+            }
+        } catch (parseErr) {
+            log.error('Failed to parse error response: ' + parseErr);
+        }
+        const errorMsg = messageDetails || Utility.buildErrorMsg(err);
+        const prefix = baseMessage || err?.message || 'Error';
+        const display: string = errorMsg ? `${prefix} (${errorMsg})` : `${prefix}`;
+        log.error(display);
+        vscode.window.showErrorMessage(display);
+    }
+
     public static getIconPerSeverity(severity: string, colorTheme: string): string {
         let iconPath: string = "";
         switch (severity) {

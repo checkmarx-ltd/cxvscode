@@ -7,6 +7,7 @@ import { SessionStorageService } from './sessionStorageService';
 import { SSOConstants } from '../model/ssoConstant';
 import { LoginChecks } from './loginChecks';
 import { CxSettings } from "./CxSettings";
+import { Utility } from "../utils/util";
 
 interface ResultStateApiResponse {
 	states: { id: number; name: string, isUserHavePermission:boolean }[]
@@ -241,7 +242,7 @@ export class WebViews {
 			comment = comment.replace(/[\r\n]+/g," ");			
 			node.$.Remark = `${comment}\r\n${node.$.Remark}`;		
 		} catch (err) {
-			this.log.error(`The following error occurred while updating the user: ${err}`);
+			Utility.handleError(err, this.log, 'The following error occurred while updating the comment');
 		}
 	}
 
@@ -279,7 +280,7 @@ export class WebViews {
 			await this.httpClient.patchRequest(`sast/scans/${scanId}/results/${pathId}`, request);
 			node.$.AssignToUser = assignUser;
 		} catch (err) {
-			this.log.error(`The following error occurred while updating the user: ${err}`);
+			Utility.handleError(err, this.log, 'The following error occurred while updating the user');
 		}
 	}
 
@@ -412,7 +413,7 @@ export class WebViews {
 		} catch (err) {
 			if (err.status == 404) this.log.error('This operation is not supported with CxSAST version in use.');
 		}
-		
+
 		let queries:  any[] | undefined;
 		queries = this.scanNode.queries;
 		if(queries) 
