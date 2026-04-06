@@ -296,8 +296,8 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             contextValue: "server_node",
             iconPath: {
-                "light": path.join(__filename, "..", "..", "..", "resources", "icons", "light", "editor-layout.svg"),
-                "dark": path.join(__filename, "..", "..", "..", "resources", "icons", "dark", "editor-layout.svg")
+                "light": vscode.Uri.file(path.join(__filename, "..", "..", "..", "resources", "icons", "light", "editor-layout.svg")),
+                "dark": vscode.Uri.file(path.join(__filename, "..", "..", "..", "resources", "icons", "dark", "editor-layout.svg"))
             }
         };
     }
@@ -754,8 +754,37 @@ File extensions: ${formatOptionalString(sastConfig.fileExtension)}
             const projectId: number = await this.getProjectId(this.currBoundProject);
             this.addSource(sourceLocation, scanResults.scanId, projectId, isFolder);
         } catch (err) {
-            this.log.error(err);
-            vscode.window.showErrorMessage(err.message);
+            // Inserted improved error message extraction and logging
+            let errorMsg = err;
+            let messageDetails = undefined;
+            try {
+                if (err?.response?.text) {
+                    const parsed = JSON.parse(err.response.text);
+                    if (parsed?.message) {
+                        messageDetails = parsed.message;
+                    }
+                }
+                // Try err.response.text (stringified JSON)
+                if (!messageDetails && err && err.response && typeof err.response.text === 'string') {
+                    const errObj = JSON.parse(err.response.text);
+                    if (errObj && errObj.messageDetails) {
+                        messageDetails = errObj.messageDetails;
+                    }
+                }
+            } catch (parseErr) {
+                // Ignore JSON parse errors
+            }
+            if (messageDetails) {
+                errorMsg = messageDetails;
+            } else {
+                if (err) {
+                    errorMsg = JSON.stringify(err).trim();
+                    errorMsg = (errorMsg === "{}") ? "" : errorMsg;
+                }
+            }
+            errorMsg = errorMsg ? `${err} (${errorMsg})` : `${err}`;
+            this.log.error(errorMsg);
+            vscode.window.showErrorMessage(errorMsg);
         }
     }
 }

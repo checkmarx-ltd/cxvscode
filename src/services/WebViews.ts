@@ -121,8 +121,22 @@ export class WebViews {
 			}
 		}
 		catch(e){
-			if (e.status == 404) {
-				resultStates.states.forEach( b => b.isUserHavePermission = true);
+			try {
+				let resultStatesWithPermissions: ResultStateDetails[] = await this.httpClient.getRequest(`sast/resultStates/safe`);
+				for(let state of resultStates.states )
+				{
+					let permission : string = resultStatesWithPermissions.find((abc) => abc.id === state.id)?.permission ?? '';
+					if(permission) {
+						state.isUserHavePermission = await this.httpClient.validateUserPermission(permission);
+					} else {
+						state.isUserHavePermission = true;
+					}
+				}
+			}
+			catch(e){
+				if (e.status == 404) {
+					resultStates.states.forEach( b => b.isUserHavePermission = true);
+				}
 			}
 		}
 		

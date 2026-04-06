@@ -23,8 +23,8 @@ export class QueryNode implements INode {
                 arguments: [this]
             },
             iconPath: {
-                "light": Utility.getIconPerSeverity(this.query?.$.Severity, "light"),
-                "dark": Utility.getIconPerSeverity(this.query?.$.Severity, "dark")
+                "light": vscode.Uri.file(Utility.getIconPerSeverity(this.query?.$.Severity, "light")),
+                "dark": vscode.Uri.file(Utility.getIconPerSeverity(this.query?.$.Severity, "dark"))
             }
         };
     }

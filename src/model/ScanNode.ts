@@ -59,8 +59,8 @@ export class ScanNode implements INode {
             contextValue: "scan_node",
             tooltip : this.chooseLabelName(),
             iconPath: {
-                "light": path.join(__filename, "..", "..", "..", "resources", "icons", "light", "open-preview.svg"),
-                "dark": path.join(__filename, "..", "..", "..", "resources", "icons", "dark", "open-preview.svg")
+                "light": vscode.Uri.file(path.join(__filename, "..", "..", "..", "resources", "icons", "light", "open-preview.svg")),
+                "dark": vscode.Uri.file(path.join(__filename, "..", "..", "..", "resources", "icons", "dark", "open-preview.svg"))
             }
         } : {
             label:  this.chooseLabelName(),
@@ -69,8 +69,8 @@ export class ScanNode implements INode {
             command : command,
             tooltip : this.chooseLabelName(),
             iconPath: {
-                "light": path.join(__filename, "..", "..", "..", "resources", "icons", "light", "open-preview.svg"),
-                "dark": path.join(__filename, "..", "..", "..", "resources", "icons", "dark", "open-preview.svg")
+                "light": vscode.Uri.file(path.join(__filename, "..", "..", "..", "resources", "icons", "light", "open-preview.svg")),
+                "dark": vscode.Uri.file(path.join(__filename, "..", "..", "..", "resources", "icons", "dark", "open-preview.svg"))
             }
         };
     }
@@ -120,8 +120,35 @@ export class ScanNode implements INode {
             this.printStatistics();
             await this.addDetailedReportToScanResults();
         } catch (err) {
-            this.log.error(err);
-            vscode.window.showErrorMessage(err.message);
+            let errorMsg = err;
+            let messageDetails = undefined;
+            try {
+                if (err?.response?.text) {
+                    const parsed = JSON.parse(err.response.text);
+                    if (parsed?.message) {
+                        messageDetails = parsed.message;
+                    }
+                }
+                if (!messageDetails && err && err.response && typeof err.response.text === 'string') {
+                    const errObj = JSON.parse(err.response.text);
+                    if (errObj && errObj.messageDetails) {
+                        messageDetails = errObj.messageDetails;
+                    }
+                }
+            } catch (parseErr) {
+                // Ignore JSON parse errors
+            }
+            if (messageDetails) {
+                errorMsg = messageDetails;
+            } else {
+                if (err) {
+                    errorMsg = JSON.stringify(err).trim();
+                    errorMsg = (errorMsg === "{}") ? "" : errorMsg;
+                }
+            }
+            errorMsg = errorMsg ? `${err} (${errorMsg})` : `${err}`;
+            this.log.error(errorMsg);
+            vscode.window.showErrorMessage(errorMsg);
         }
     }
 
