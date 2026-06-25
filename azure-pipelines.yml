@@ -16,11 +16,11 @@ steps:
   displayName: 'Install Node.js'
 
 - script: |
-    npm install --no-optional
+    npm ci --ignore-scripts
   displayName: 'npm install'
 
 - script: |
-    npm install -g vsce
+    npm install -g vsce --ignore-scripts
   displayName: 'install Visual Studio Code Extensions'
 
 - script: |
