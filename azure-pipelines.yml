@@ -10,6 +10,18 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
+- script: |
+    if [ -f package-lock.json ] && [ -f yarn.lock ]; then
+      echo "ERROR: Both package-lock.json and yarn.lock found."
+      exit 1
+    fi
+    if [ ! -f package-lock.json ]; then
+      echo "ERROR: package-lock.json not found. This repository must use npm with a committed package-lock.json."
+      exit 1
+    fi
+    echo "Lockfile policy check passed: package-lock.json and yarn.lock do not coexist."
+  displayName: 'Verify single lockfile (Supply Chain Policy)'
+
 - task: NodeTool@0
   inputs:
     versionSpec: '20.x'
